@@ -1,0 +1,11 @@
+{
+  "workflowNamePrefix": "Vibe Printing -",
+  "allowedWorkflowIds": [
+    "FB17-iHmx4MTPLpdotAgi"
+  ],
+  "notes": [
+    "This file is the local safety rail for Codex-driven n8n work.",
+    "Only workflows with the Vibe Printing prefix or an allowlisted ID are in scope.",
+    "This is not server-side isolation. Real isolation requires a separate n8n user, project, or instance."
+  ]
+}

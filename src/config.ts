@@ -3,6 +3,8 @@ export interface AppConfig {
   defaultTheme: string;
   n8nApiKey?: string;
   n8nBaseUrl?: string;
+  n8nScopeFile: string;
+  n8nWorkflowPrefix: string;
   openAiApiKey?: string;
   openAiFastModel: string;
   openAiTextModel: string;
@@ -32,6 +34,8 @@ export function loadConfig(): AppConfig {
     defaultTheme: readEnv("DEFAULT_CHANNEL_THEME") ?? "compressed-curiosity",
     n8nApiKey: readEnv("N8N_API_KEY"),
     n8nBaseUrl: readEnv("N8N_BASE_URL"),
+    n8nScopeFile: readEnv("N8N_SCOPE_FILE") ?? "n8n.scope.json",
+    n8nWorkflowPrefix: readEnv("N8N_WORKFLOW_PREFIX") ?? "Vibe Printing -",
     openAiApiKey: readEnv("OPENAI_API_KEY"),
     openAiFastModel: readEnv("OPENAI_FAST_MODEL") ?? "gpt-4o-mini",
     openAiTextModel: readEnv("OPENAI_TEXT_MODEL") ?? "gpt-5.1",
@@ -40,4 +44,3 @@ export function loadConfig(): AppConfig {
     youTubeChannelId: readEnv("YOUTUBE_CHANNEL_ID")
   };
 }
-
