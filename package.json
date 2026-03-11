@@ -1,0 +1,17 @@
+{
+  "name": "vibe-printing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Planning and pipeline contracts for automated AI-generated YouTube Shorts.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "plan": "tsx src/index.ts",
+    "check": "npm run build"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
+
