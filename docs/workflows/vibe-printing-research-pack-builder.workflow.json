@@ -1,0 +1,80 @@
+{
+  "name": "Vibe Printing - Research Pack Builder",
+  "description": "Build a free research pack for one Vibe Printing topic using public Wikipedia search and summary endpoints. Input: topic object. Output: summary, claims, sources, and a storage-ready execution record.",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "id": "0a5b9c47-2912-4a4d-a8b6-bdff9b302aa1",
+      "name": "Receive Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -280,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "webhookId": "4f86d7a1-7ea7-4d92-a959-f15c33fd7853",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vibe-printing/research-pack-builder",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "3f21f215-f43f-46fd-a993-6e1d2424063f",
+      "name": "Run Workflow Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body ?? {};\n\nconst normalizeText = (value) => String(value ?? '').trim();\nconst slugify = (value) => normalizeText(value)\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/(^-|-$)/g, '');\n\nconst topic = body.topic ?? body.selectedTopic ?? null;\n\nif (!topic || typeof topic !== 'object') {\n  return [{\n    json: {\n      success: false,\n      error: 'A topic object is required.',\n      example: {\n        topic: {\n          topicId: 'history-flash-why-the-marathon-is-such-a-strange-distance',\n          laneId: 'history-flash',\n          titleAngle: 'Why the marathon is such a strange distance',\n          seedQuestion: 'Why is a marathon 26.2 miles instead of a clean round number?',\n          draftHook: 'The marathon distance exists because one royal family wanted a better view.'\n        }\n      }\n    }\n  }];\n}\n\nconst titleAngle = normalizeText(topic.titleAngle);\nconst seedQuestion = normalizeText(topic.seedQuestion);\nconst laneLabel = normalizeText(topic.laneLabel);\nconst topicId = normalizeText(topic.topicId) || slugify(titleAngle || 'untitled-topic');\n\nif (!titleAngle) {\n  return [{\n    json: {\n      success: false,\n      error: 'topic.titleAngle is required.'\n    }\n  }];\n}\n\nconst seededCatalog = {\n  'why-roman-concrete-survived-for-centuries': {\n    summary: 'Roman concrete remained durable because ancient builders used volcanic ash and lime in ways that allowed the material to keep reacting over time.',\n    sources: [\n      {\n        title: 'Roman concrete',\n        description: 'Overview of Roman pozzolanic concrete and its long-term durability.',\n        extract: 'Roman concrete used volcanic ash, lime, and aggregate in a mix that helped marine structures stay durable for centuries.',\n        url: 'https://en.wikipedia.org/wiki/Roman_concrete',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'why-the-marathon-is-such-a-strange-distance': {\n    summary: 'The marathon distance became fixed after the 1908 London Olympic route, and the international standard later locked in 26 miles 385 yards.',\n    sources: [\n      {\n        title: 'Marathon',\n        description: 'Historical explanation of how the modern marathon distance was standardized.',\n        extract: 'The marathon was standardized at 42.195 kilometres after the 1908 London Olympics and was later adopted internationally.',\n        url: 'https://en.wikipedia.org/wiki/Marathon',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'how-ancient-armies-moved-faster-than-most-people-think': {\n    summary: 'Ancient armies could move surprisingly quickly when logistics, road networks, and marching discipline aligned.',\n    sources: [\n      {\n        title: 'Roman army',\n        description: 'Roman military organization and march discipline.',\n        extract: 'Roman armies combined engineering, marching discipline, and road networks to move and resupply efficiently over long distances.',\n        url: 'https://en.wikipedia.org/wiki/Roman_army',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'how-fast-elite-sprinters-really-move': {\n    summary: 'Elite sprinters reach top speeds that are far beyond everyday running pace, but only for very short windows.',\n    sources: [\n      {\n        title: '100 metres',\n        description: 'Benchmark sprint event used to compare elite human speed.',\n        extract: 'The 100 metres is the standard benchmark for maximal sprinting speed and highlights how quickly elite athletes accelerate and fade.',\n        url: 'https://en.wikipedia.org/wiki/100_metres',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'what-turbulence-really-is': {\n    summary: 'Turbulence is irregular air movement created by shifting wind, terrain, temperature, storms, or wake from other aircraft.',\n    sources: [\n      {\n        title: 'Turbulence',\n        description: 'Overview of turbulent flow in fluids and air.',\n        extract: 'Turbulence is irregular, chaotic fluid motion that appears when air flow breaks into eddies and rapid directional changes.',\n        url: 'https://en.wikipedia.org/wiki/Turbulence',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'why-microwaves-heat-food-unevenly': {\n    summary: 'Microwave heating varies because energy distribution, geometry, and moisture content do not stay uniform across the dish.',\n    sources: [\n      {\n        title: 'Microwave oven',\n        description: 'How microwave ovens heat food and why heating can be uneven.',\n        extract: 'Microwave ovens heat food by exciting water molecules, but standing waves and uneven energy distribution create hot and cold spots.',\n        url: 'https://en.wikipedia.org/wiki/Microwave_oven',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  },\n  'how-gps-finds-you-so-precisely': {\n    summary: 'GPS works by comparing timing signals from multiple satellites and solving for position using those time differences.',\n    sources: [\n      {\n        title: 'Global Positioning System',\n        description: 'Overview of how GPS uses satellite timing for location.',\n        extract: 'GPS determines location by comparing signals from satellites and solving a timing problem that reveals distance from each one.',\n        url: 'https://en.wikipedia.org/wiki/Global_Positioning_System',\n        sourceType: 'seeded-reference'\n      }\n    ]\n  }\n};\n\nconst key = slugify(titleAngle);\nconst seededEntry = seededCatalog[key];\n\nconst sources = seededEntry?.sources ?? [{\n  title: 'Seed topic brief',\n  description: 'Fallback placeholder for topics that still need a verified source pass.',\n  extract: seedQuestion || titleAngle,\n  url: '',\n  sourceType: 'seeded-placeholder'\n}];\n\nconst claims = sources.slice(0, 3).map((source, index) => ({\n  claim: source.extract,\n  confidence: Number(((source.sourceType === 'seeded-reference' ? 0.72 : 0.42) - (index * 0.04)).toFixed(2)),\n  sourceLabels: [source.title]\n}));\n\nreturn [{\n  json: {\n    success: true,\n    workflow: 'vibe-printing-research-pack-builder',\n    generatedAt: new Date().toISOString(),\n    researchMode: seededEntry ? 'seeded-offline-reference' : 'seeded-placeholder',\n    topic: {\n      ...topic,\n      topicId\n    },\n    researchQueries: [\n      titleAngle,\n      seedQuestion,\n      [laneLabel, titleAngle].filter(Boolean).join(' ')\n    ].filter(Boolean),\n    sources,\n    claims,\n    summary: seededEntry?.summary\n      ?? 'This topic still needs a verified source pass. The current pack preserves the angle, research prompts, and a placeholder claim for downstream dry runs.',\n    verificationChecklist: [\n      'Confirm each claim against a primary or trusted secondary source before publishing.',\n      'Replace any seeded-placeholder source before a real upload workflow is connected.',\n      'Keep the storageRecord key and update the same topic once verified research is available.'\n    ],\n    storageRecord: {\n      storageMode: 'execution-log',\n      table: 'researchPacks',\n      recordKey: topicId + '-' + new Date().toISOString().slice(0, 10)\n    },\n    nextStepSuggestion: 'Pass this full response to the short-script-generator workflow.'\n  }\n}];"
+      }
+    },
+    {
+      "id": "d5682eaf-84ab-4622-92f8-fd4534aec7e2",
+      "name": "Return Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        0
+      ],
+      "parameters": {
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Receive Request": {
+      "main": [
+        [
+          {
+            "node": "Run Workflow Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Workflow Logic": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

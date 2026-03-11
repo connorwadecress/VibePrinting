@@ -1,0 +1,80 @@
+{
+  "name": "Vibe Printing - Short Script Generator",
+  "description": "Generate a short-form script pack from a Vibe Printing research pack without paid models. Input: topic plus researchPack. Output: shortScript, titles, description draft, and operator mode.",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "id": "0a5b9c47-2912-4a4d-a8b6-bdff9b302aa1",
+      "name": "Receive Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -280,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "webhookId": "204fce2a-6b24-4f16-baf4-faffb5106479",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vibe-printing/short-script-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "3f21f215-f43f-46fd-a993-6e1d2424063f",
+      "name": "Run Workflow Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body ?? {};\n\nconst normalizeText = (value) => String(value ?? '').trim();\nconst clamp = (value, min, max) => {\n  if (!Number.isFinite(value)) {\n    return min;\n  }\n\n  return Math.min(max, Math.max(min, Math.floor(value)));\n};\nconst lowerFirst = (value) => value.length === 0 ? value : value.charAt(0).toLowerCase() + value.slice(1);\n\nconst researchPack = body.researchPack ?? body.research ?? null;\nconst topic = body.topic ?? researchPack?.topic ?? null;\n\nif (!topic || typeof topic !== 'object') {\n  return [{\n    json: {\n      success: false,\n      error: 'A topic object is required.'\n    }\n  }];\n}\n\nif (!researchPack || typeof researchPack !== 'object') {\n  return [{\n    json: {\n      success: false,\n      error: 'A researchPack object is required.'\n    }\n  }];\n}\n\nconst titleAngle = normalizeText(topic.titleAngle);\nconst seedQuestion = normalizeText(topic.seedQuestion);\nconst hook = normalizeText(topic.draftHook) || 'Most people miss the real reason this happens.';\nconst targetDurationSeconds = clamp(Number(body.targetDurationSeconds ?? 38), 30, 50);\nconst claims = Array.isArray(researchPack.claims) ? researchPack.claims : [];\nconst topClaim = normalizeText(claims[0]?.claim) || normalizeText(researchPack.summary) || seedQuestion;\nconst supportClaim = normalizeText(claims[1]?.claim) || topClaim;\nconst titleAngleStem = titleAngle.replace(/\\?$/, '');\nconst payoffLine = /^why\\s+/i.test(titleAngleStem)\n  ? 'That is because ' + lowerFirst(titleAngleStem.replace(/^why\\s+/i, '')) + '.'\n  : 'That is why ' + lowerFirst(titleAngleStem) + '.';\n\nconst beats = [\n  {\n    beatIndex: 1,\n    narration: hook,\n    visualIntent: 'Cold open with a hard contrast image and oversized motion text.'\n  },\n  {\n    beatIndex: 2,\n    narration: 'The question is simple: ' + seedQuestion,\n    visualIntent: 'Introduce the problem with a familiar visual or one-line setup.'\n  },\n  {\n    beatIndex: 3,\n    narration: topClaim,\n    visualIntent: 'Reveal the main mechanism with kinetic text and one supporting visual.'\n  },\n  {\n    beatIndex: 4,\n    narration: supportClaim,\n    visualIntent: 'Layer in one extra detail that makes the fact feel memorable.'\n  },\n  {\n    beatIndex: 5,\n    narration: payoffLine + ' Follow for more compressed curiosity.',\n    visualIntent: 'Resolve with the payoff line and a short branded end card.'\n  }\n];\n\nconst titleOptions = [\n  titleAngle,\n  'The real reason ' + lowerFirst(titleAngle.replace(/\\?$/, '')),\n  'Explained fast: ' + titleAngle\n];\n\nreturn [{\n  json: {\n    success: true,\n    workflow: 'vibe-printing-short-script-generator',\n    generatedAt: new Date().toISOString(),\n    topic,\n    researchPack,\n    shortScript: {\n      hook,\n      payoff: payoffLine,\n      callToAction: 'Follow for more compressed curiosity.',\n      totalDurationSeconds: targetDurationSeconds,\n      beats\n    },\n    metadataPack: {\n      titleOptions,\n      descriptionDraft: titleAngle + '. AI-assisted research and writing draft pending fact check before publish.',\n      tags: ['shorts', 'history', 'science', 'curiosity', String(topic.laneId ?? 'vibe-printing')],\n      disclosureRequired: true,\n      operatorMode: topic.riskLevel === 'medium' ? 'review-required' : 'shadow-review'\n    },\n    nextStepSuggestion: 'Pass shortScript and metadataPack to the production-packet-builder workflow.'\n  }\n}];"
+      }
+    },
+    {
+      "id": "d5682eaf-84ab-4622-92f8-fd4534aec7e2",
+      "name": "Return Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        0
+      ],
+      "parameters": {
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Receive Request": {
+      "main": [
+        [
+          {
+            "node": "Run Workflow Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Workflow Logic": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

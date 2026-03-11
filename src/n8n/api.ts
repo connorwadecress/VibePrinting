@@ -25,6 +25,8 @@ export interface N8nWorkflowDefinition {
   nodes: N8nNode[];
   connections: Record<string, unknown>;
   settings: Record<string, unknown>;
+  description?: string | null;
+  active?: boolean;
 }
 
 export interface N8nWorkflow extends N8nWorkflowDefinition {
@@ -69,7 +71,18 @@ function extractWorkflowDefinition(input: unknown): N8nWorkflowDefinition {
     name: String(candidate.name),
     nodes: candidate.nodes as N8nNode[],
     connections: (candidate.connections ?? {}) as Record<string, unknown>,
-    settings: (candidate.settings ?? {}) as Record<string, unknown>
+    settings: (candidate.settings ?? {}) as Record<string, unknown>,
+    description: typeof candidate.description === "string" ? candidate.description : undefined,
+    active: typeof candidate.active === "boolean" ? candidate.active : undefined
+  };
+}
+
+function buildWorkflowRequestBody(definition: N8nWorkflowDefinition): Omit<N8nWorkflowDefinition, "active" | "description"> {
+  return {
+    name: definition.name,
+    nodes: definition.nodes,
+    connections: definition.connections,
+    settings: definition.settings
   };
 }
 
@@ -133,9 +146,10 @@ export class ScopedN8nClient {
     const definition = extractWorkflowDefinition(input);
     assertWorkflowNameInScope(definition.name, scope);
 
-    const workflow = await this.request<N8nWorkflow>("POST", "/workflows", {
-      body: definition
+    const created = await this.request<N8nWorkflow>("POST", "/workflows", {
+      body: buildWorkflowRequestBody(definition)
     });
+    const workflow = await this.syncWorkflowActivation(created, definition.active);
 
     await registerWorkflow(this.scopeFile, scope, workflow);
     return workflow;
@@ -148,9 +162,10 @@ export class ScopedN8nClient {
     assertWorkflowInScope(current, scope);
     assertWorkflowNameInScope(next.name, scope);
 
-    const updated = await this.request<N8nWorkflow>("PUT", `/workflows/${encodeURIComponent(workflowId)}`, {
-      body: next
+    const saved = await this.request<N8nWorkflow>("PUT", `/workflows/${encodeURIComponent(workflowId)}`, {
+      body: buildWorkflowRequestBody(next)
     });
+    const updated = await this.syncWorkflowActivation(saved, next.active);
 
     await registerWorkflow(this.scopeFile, scope, updated);
     return updated;
@@ -200,6 +215,20 @@ export class ScopedN8nClient {
     }
 
     return response.json();
+  }
+
+  private async syncWorkflowActivation(workflow: N8nWorkflow, desiredActive?: boolean): Promise<N8nWorkflow> {
+    if (desiredActive === undefined || workflow.active === desiredActive) {
+      return workflow;
+    }
+
+    const route = desiredActive
+      ? `/workflows/${encodeURIComponent(workflow.id)}/activate`
+      : `/workflows/${encodeURIComponent(workflow.id)}/deactivate`;
+
+    return this.request<N8nWorkflow>("POST", route, {
+      body: {}
+    });
   }
 
   private async request<T>(method: string, route: string, options?: RequestOptions): Promise<T> {

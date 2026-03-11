@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "plan": "tsx src/index.ts",
     "n8n": "tsx src/n8n-cli.ts",
+    "export:workflows": "tsx src/n8n-export.ts",
     "check": "npm run build"
   },
   "devDependencies": {

@@ -1,0 +1,80 @@
+{
+  "name": "Vibe Printing - Production Packet Builder",
+  "description": "Convert a short script into voice, video, scene, assembly, and publish stubs for a Vibe Printing YouTube Short. This is a dry-run handoff contract for later real providers.",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "nodes": [
+    {
+      "id": "0a5b9c47-2912-4a4d-a8b6-bdff9b302aa1",
+      "name": "Receive Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -280,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "webhookId": "b1940d03-02b5-4933-a3e4-3c3b2d490553",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vibe-printing/production-packet-builder",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "3f21f215-f43f-46fd-a993-6e1d2424063f",
+      "name": "Run Workflow Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body ?? {};\n\nconst normalizeText = (value) => String(value ?? '').trim();\nconst clamp = (value, min, max) => {\n  if (!Number.isFinite(value)) {\n    return min;\n  }\n\n  return Math.min(max, Math.max(min, Math.floor(value)));\n};\n\nconst topic = body.topic ?? body.researchPack?.topic ?? null;\nconst shortScript = body.shortScript ?? body.script ?? null;\nconst metadataPack = body.metadataPack ?? null;\n\nif (!topic || typeof topic !== 'object') {\n  return [{\n    json: {\n      success: false,\n      error: 'A topic object is required.'\n    }\n  }];\n}\n\nif (!shortScript || typeof shortScript !== 'object') {\n  return [{\n    json: {\n      success: false,\n      error: 'A shortScript object is required.'\n    }\n  }];\n}\n\nconst beats = Array.isArray(shortScript.beats) ? shortScript.beats : [];\nif (beats.length === 0) {\n  return [{\n    json: {\n      success: false,\n      error: 'shortScript.beats must contain at least one beat.'\n    }\n  }];\n}\n\nconst totalDurationSeconds = clamp(Number(shortScript.totalDurationSeconds ?? 38), 30, 60);\nconst secondsPerBeat = Math.max(4, Math.floor(totalDurationSeconds / beats.length));\n\nconst scenePlan = beats.map((beat, index) => ({\n  sceneIndex: index + 1,\n  seconds: secondsPerBeat,\n  prompt: 'Vertical cinematic explainer visual for \"' + normalizeText(topic.titleAngle) + '\". ' + normalizeText(beat.visualIntent) + ' Clean background, high contrast, no burned-in text.',\n  captions: [normalizeText(beat.narration)]\n}));\n\nconst voiceoverPlan = {\n  provider: 'openai-tts-or-manual',\n  mode: 'dry-run',\n  voice: 'alloy',\n  style: 'curious, confident, fast but clear',\n  segments: beats.map((beat, index) => ({\n    segmentIndex: index + 1,\n    startSecond: index * secondsPerBeat,\n    durationSeconds: secondsPerBeat,\n    text: normalizeText(beat.narration)\n  })),\n  estimatedCharacters: beats.reduce((total, beat) => total + normalizeText(beat.narration).length, 0)\n};\n\nconst videoPlan = {\n  provider: 'sora-or-stock-footage',\n  mode: 'dry-run',\n  aspectRatio: '9:16',\n  shots: scenePlan.map((scene) => ({\n    sceneIndex: scene.sceneIndex,\n    prompt: scene.prompt,\n    targetSeconds: scene.seconds,\n    fallback: 'Use stock footage plus motion graphics if a model render is unavailable.'\n  }))\n};\n\nconst descriptionDraft = normalizeText(metadataPack?.descriptionDraft)\n  || normalizeText(topic.titleAngle) + '. AI-assisted script and production draft pending review.';\n\nreturn [{\n  json: {\n    success: true,\n    workflow: 'vibe-printing-production-packet-builder',\n    generatedAt: new Date().toISOString(),\n    topic,\n    shortScript,\n    scenePlan,\n    voiceoverPlan,\n    videoPlan,\n    assemblyManifest: {\n      format: 'mp4',\n      resolution: '1080x1920',\n      frameRate: 30,\n      captionsMode: 'burned-in',\n      scenes: scenePlan,\n      audioMix: {\n        narration: 'primary',\n        musicBed: 'optional-low',\n        loudnessTarget: '-14 LUFS'\n      }\n    },\n    publishPackage: {\n      title: normalizeText(metadataPack?.titleOptions?.[0]) || normalizeText(topic.titleAngle),\n      description: descriptionDraft,\n      tags: Array.isArray(metadataPack?.tags) ? metadataPack.tags : ['shorts', 'vibe-printing'],\n      scheduledSlot: normalizeText(topic.publishSlot) || '11:00',\n      disclosureRequired: metadataPack?.disclosureRequired !== false\n    },\n    operatorChecklist: [\n      'Swap dry-run voiceoverPlan for a real TTS call once credits are available.',\n      'Swap dry-run videoPlan for real renders or stock footage collection.',\n      'Do one final factual and disclosure review before any upload workflow is connected.'\n    ],\n    nextStepSuggestion: 'Use this packet as the handoff contract to real voice, video, and publishing workflows.'\n  }\n}];"
+      }
+    },
+    {
+      "id": "d5682eaf-84ab-4622-92f8-fd4534aec7e2",
+      "name": "Return Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        0
+      ],
+      "parameters": {
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Receive Request": {
+      "main": [
+        [
+          {
+            "node": "Run Workflow Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Workflow Logic": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,7 +1,11 @@
 {
   "workflowNamePrefix": "Vibe Printing -",
   "allowedWorkflowIds": [
-    "FB17-iHmx4MTPLpdotAgi"
+    "1fxakamttXxqTbTm",
+    "9GTGT2h6K5ktcAEC",
+    "FB17-iHmx4MTPLpdotAgi",
+    "MZ0LvzWXzPnIoevw",
+    "VR7EDLwbHqkTXYkr"
   ],
   "notes": [
     "This file is the local safety rail for Codex-driven n8n work.",
