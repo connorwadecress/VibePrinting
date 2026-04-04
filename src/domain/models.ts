@@ -1,38 +1,14 @@
-export type ContentLaneId =
-  | "history-flash"
-  | "human-limits"
-  | "everyday-systems";
-
 export type RiskLevel = "low" | "medium" | "high";
-
-export type PipelineStageName =
-  | "topic-discovery"
-  | "research-pack"
-  | "script-generation"
-  | "voiceover"
-  | "scene-plan"
-  | "video-render"
-  | "assembly"
-  | "gensec-review"
-  | "publish";
 
 export interface ContentLane {
   description: string;
   exampleHooks: string[];
-  id: ContentLaneId;
+  id: string;
   targetDurationSeconds: number;
 }
 
-export interface ChannelTheme {
-  contentLanes: ContentLane[];
-  description: string;
-  id: string;
-  publishSlots: string[];
-  thesis: string;
-}
-
 export interface TopicCandidate {
-  laneId: ContentLaneId;
+  laneId: string;
   noveltyScore: number;
   riskLevel: RiskLevel;
   seedQuestion: string;
@@ -90,14 +66,6 @@ export interface PublishPackage {
   title: string;
 }
 
-export interface PipelineStageBlueprint {
-  name: PipelineStageName;
-  output: string;
-  purpose: string;
-}
-
-// --- MVP additions ---
-
 export interface StockClip {
   id: number;
   url: string;
@@ -120,41 +88,22 @@ export interface VoiceoverResult {
   subtitles: SubtitleEntry[];
 }
 
-export interface AssemblyManifest {
-  voiceover: VoiceoverResult;
-  clips: StockClip[];
-  scenes: ScenePlanWithKeywords[];
-  script: ShortScript;
-  outputPath: string;
-}
-
 export interface ScenePlanWithKeywords extends ScenePlan {
   searchKeywords: string[];
 }
 
-export interface PipelineContext {
-  runId: string;
-  workDir: string;
-  config: import("../config.js").AppConfig;
+/**
+ * Mutable accumulator passed through pipeline stages.
+ * Each stage reads what it needs and writes its output here.
+ */
+export interface PipelineState {
+  lane?: ContentLane;
+  topic?: TopicCandidate;
+  research?: ResearchPack;
+  script?: ShortScript;
+  scenes?: ScenePlanWithKeywords[];
+  voiceover?: VoiceoverResult;
+  clips?: StockClip[];
+  outputVideoPath?: string;
+  uploadResults?: import("./interfaces/uploader.js").UploadResult[];
 }
-
-export interface TikTokUploadResult {
-  publishId: string;
-  videoUrl: string;
-  title: string;
-}
-
-export interface PipelineResult {
-  topic: TopicCandidate;
-  research: ResearchPack;
-  script: ShortScript;
-  scenes: ScenePlanWithKeywords[];
-  voiceover: VoiceoverResult;
-  clips: StockClip[];
-  outputVideoPath: string;
-  youTubeVideoId?: string;
-  youTubeVideoUrl?: string;
-  tikTokPublishId?: string;
-  tikTokVideoUrl?: string;
-}
-

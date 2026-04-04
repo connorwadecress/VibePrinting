@@ -37,7 +37,6 @@ export interface AppConfig {
 
   // Channel
   defaultDailyTarget: number;
-  defaultTheme: string;
 
   // Legacy n8n (kept for existing code)
   n8nApiKey?: string;
@@ -90,7 +89,6 @@ export function loadConfig(): AppConfig {
     tempDir: readEnv("TEMP_DIR") ?? "./output/.tmp",
 
     defaultDailyTarget: readInt("DEFAULT_DAILY_TARGET", 3),
-    defaultTheme: readEnv("DEFAULT_CHANNEL_THEME") ?? "compressed-curiosity",
 
     n8nApiKey: readEnv("N8N_API_KEY"),
     n8nBaseUrl: readEnv("N8N_BASE_URL"),

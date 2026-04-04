@@ -1,0 +1,40 @@
+import Anthropic from "@anthropic-ai/sdk";
+import type { LlmClient } from "../../domain/interfaces/llm-client.js";
+import { log } from "../../utils/logger.js";
+
+export class ClaudeClient implements LlmClient {
+  private readonly client: Anthropic;
+  private lastRequestMs = 0;
+  private readonly minGapMs = 1000;
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly model: string = "claude-haiku-4-5-20251001",
+  ) {
+    this.client = new Anthropic({ apiKey });
+  }
+
+  async generateJSON<T>(systemPrompt: string, userPrompt: string): Promise<T> {
+    await this.rateLimit();
+    log("llm", `Claude request (${this.model})`);
+
+    const message = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      system: systemPrompt + "\n\nRespond with valid JSON only. No markdown, no code fences.",
+      messages: [{ role: "user", content: userPrompt }],
+    });
+
+    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    const cleaned = text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+    return JSON.parse(cleaned) as T;
+  }
+
+  private async rateLimit(): Promise<void> {
+    const elapsed = Date.now() - this.lastRequestMs;
+    if (elapsed < this.minGapMs) {
+      await new Promise((r) => setTimeout(r, this.minGapMs - elapsed));
+    }
+    this.lastRequestMs = Date.now();
+  }
+}

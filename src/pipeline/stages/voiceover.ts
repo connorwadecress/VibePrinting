@@ -1,22 +1,23 @@
-import type { ShortScript, VoiceoverResult } from "../../domain/models.js";
-import type { AppConfig } from "../../config.js";
-import { generateVoiceover } from "../../providers/tts.js";
+import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
+import type { PipelineState } from "../../domain/models.js";
 import path from "node:path";
 
-export async function createVoiceover(
-  script: ShortScript,
-  workDir: string,
-  config: AppConfig,
-): Promise<VoiceoverResult> {
-  // Build full narration text from script parts
-  const parts = [
-    script.hook,
-    ...script.beats.map((b) => b.narration),
-    script.payoff,
-    script.callToAction,
-  ];
-  const narrationText = parts.join(" ");
+export class VoiceoverStage implements PipelineStage {
+  readonly name = "voiceover";
 
-  const outputPath = path.join(workDir, "voiceover.mp3");
-  return generateVoiceover(narrationText, outputPath, config.ttsVoice, config.ttsRate);
+  async execute(state: PipelineState, context: StageContext): Promise<void> {
+    const script = state.script;
+    if (!script) throw new Error("No script in pipeline state");
+
+    const parts = [
+      script.hook,
+      ...script.beats.map((b) => b.narration),
+      script.payoff,
+      script.callToAction,
+    ];
+    const narrationText = parts.join(" ");
+
+    const outputPath = path.join(context.workDir, "voiceover.mp3");
+    state.voiceover = await context.tts.synthesize(narrationText, outputPath);
+  }
 }

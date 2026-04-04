@@ -1,0 +1,30 @@
+{
+  "id": "my-channel",
+  "displayName": "My Channel",
+  "thesis": "Short description of what your channel is about and the style of content you produce.",
+  "contentLanes": [
+    {
+      "id": "general",
+      "description": "Wide-ranging topics — surprising facts, explanations, and stories.",
+      "targetDurationSeconds": 35,
+      "exampleHooks": [
+        "Why does X actually work?",
+        "The real reason behind Y"
+      ]
+    }
+  ],
+  "publishSlots": ["11:00", "15:00", "19:00"],
+  "branding": {
+    "tags": ["Shorts", "YouTube Shorts"],
+    "hashtags": ["#Shorts", "#FYP"],
+    "youTubeCategory": "22"
+  },
+  "ttsVoice": "en-US-GuyNeural",
+  "ttsRate": "+10%",
+  "genSecDefaults": {
+    "blockedReasons": [],
+    "disclosureRequired": true,
+    "riskLevel": "medium",
+    "safeToAutoPublish": false
+  }
+}

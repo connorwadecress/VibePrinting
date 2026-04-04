@@ -1,5 +1,5 @@
-import type { TopicCandidate, ResearchPack } from "../../domain/models.js";
-import type { LlmClient } from "../../providers/llm.js";
+import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
+import type { PipelineState, ResearchPack } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You are a fact researcher for a YouTube Shorts channel.
@@ -21,19 +21,24 @@ Respond with a JSON object:
 
 Include 3-6 claims. Prefer "strong" claims with well-known sources (Wikipedia, established institutions, peer-reviewed research). Mark anything uncertain as "tentative."`;
 
-export async function buildResearchPack(
-  llm: LlmClient,
-  topic: TopicCandidate,
-): Promise<ResearchPack> {
-  log("research-pack", `Researching: "${topic.titleAngle}"`);
+export class ResearchPackStage implements PipelineStage {
+  readonly name = "research-pack";
 
-  const userPrompt = `Topic: "${topic.titleAngle}"
+  async execute(state: PipelineState, context: StageContext): Promise<void> {
+    const topic = state.topic;
+    if (!topic) throw new Error("No topic in pipeline state");
+
+    log(this.name, `Researching: "${topic.titleAngle}"`);
+
+    const userPrompt = `Topic: "${topic.titleAngle}"
 Seed question: ${topic.seedQuestion}
 Lane: ${topic.laneId}
 
 Build a research pack with factual claims that would support a 30-45 second YouTube Short about this topic. Focus on the most surprising and concrete facts.`;
 
-  const pack = await llm.generateJSON<ResearchPack>(SYSTEM_PROMPT, userPrompt);
-  log("research-pack", `Research complete: ${pack.claims.length} claims`);
-  return pack;
+    const pack = await context.llm.generateJSON<ResearchPack>(SYSTEM_PROMPT, userPrompt);
+    log(this.name, `Research complete: ${pack.claims.length} claims`);
+
+    state.research = pack;
+  }
 }

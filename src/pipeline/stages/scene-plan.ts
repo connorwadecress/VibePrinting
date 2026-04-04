@@ -1,5 +1,5 @@
-import type { ShortScript, ScenePlanWithKeywords } from "../../domain/models.js";
-import type { LlmClient } from "../../providers/llm.js";
+import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
+import type { PipelineState, ScenePlanWithKeywords } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You are a visual planner for YouTube Shorts. Convert script beats into scene plans with stock footage search keywords.
@@ -25,17 +25,20 @@ Respond with JSON array:
 
 Keep keywords concrete and visual: "ancient roman building" not "historical concept". Pexels has stock footage, so think about what footage exists: cities, nature, people, technology, food, sports, etc.`;
 
-export async function planScenes(
-  llm: LlmClient,
-  script: ShortScript,
-): Promise<ScenePlanWithKeywords[]> {
-  log("scene-plan", "Planning scenes...");
+export class ScenePlanStage implements PipelineStage {
+  readonly name = "scene-plan";
 
-  const beatsText = script.beats
-    .map((b) => `Beat ${b.beatIndex}: "${b.narration}" (Visual: ${b.visualIntent})`)
-    .join("\n");
+  async execute(state: PipelineState, context: StageContext): Promise<void> {
+    const script = state.script;
+    if (!script) throw new Error("No script in pipeline state");
 
-  const userPrompt = `Script:
+    log(this.name, "Planning scenes...");
+
+    const beatsText = script.beats
+      .map((b) => `Beat ${b.beatIndex}: "${b.narration}" (Visual: ${b.visualIntent})`)
+      .join("\n");
+
+    const userPrompt = `Script:
 Hook: "${script.hook}"
 ${beatsText}
 Payoff: "${script.payoff}"
@@ -44,19 +47,21 @@ Total duration: ~${script.totalDurationSeconds} seconds
 
 Plan scenes for this script. Ensure total scene durations roughly match ${script.totalDurationSeconds} seconds. Include a scene for the hook and a scene for the payoff.`;
 
-  const MAX_RETRIES = 3;
-  let lastError: Error | undefined;
+    const MAX_RETRIES = 3;
+    let lastError: Error | undefined;
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const scenes = await llm.generateJSON<ScenePlanWithKeywords[]>(SYSTEM_PROMPT, userPrompt);
-      log("scene-plan", `Planned ${scenes.length} scenes`);
-      return scenes;
-    } catch (err: any) {
-      lastError = err;
-      log("scene-plan", `Attempt ${attempt}/${MAX_RETRIES} failed (${err.message}) — retrying...`);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const scenes = await context.llm.generateJSON<ScenePlanWithKeywords[]>(SYSTEM_PROMPT, userPrompt);
+        log(this.name, `Planned ${scenes.length} scenes`);
+        state.scenes = scenes;
+        return;
+      } catch (err: any) {
+        lastError = err;
+        log(this.name, `Attempt ${attempt}/${MAX_RETRIES} failed (${err.message}) — retrying...`);
+      }
     }
-  }
 
-  throw new Error(`Scene planning failed after ${MAX_RETRIES} attempts: ${lastError?.message}`);
+    throw new Error(`Scene planning failed after ${MAX_RETRIES} attempts: ${lastError?.message}`);
+  }
 }

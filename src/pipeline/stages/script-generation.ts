@@ -1,10 +1,5 @@
-import type {
-  TopicCandidate,
-  ResearchPack,
-  ShortScript,
-  ContentLane,
-} from "../../domain/models.js";
-import type { LlmClient } from "../../providers/llm.js";
+import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
+import type { PipelineState, ShortScript } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts.
@@ -33,19 +28,22 @@ Respond with JSON:
   "totalDurationSeconds": number
 }`;
 
-export async function generateScript(
-  llm: LlmClient,
-  topic: TopicCandidate,
-  research: ResearchPack,
-  lane: ContentLane,
-): Promise<ShortScript> {
-  log("script", `Writing script for: "${topic.titleAngle}"`);
+export class ScriptGenerationStage implements PipelineStage {
+  readonly name = "script-generation";
 
-  const claimsList = research.claims
-    .map((c) => `- ${c.claim} [${c.confidence}]`)
-    .join("\n");
+  async execute(state: PipelineState, context: StageContext): Promise<void> {
+    const { topic, research, lane } = state;
+    if (!topic) throw new Error("No topic in pipeline state");
+    if (!research) throw new Error("No research in pipeline state");
+    if (!lane) throw new Error("No lane in pipeline state");
 
-  const userPrompt = `Topic: "${topic.titleAngle}"
+    log(this.name, `Writing script for: "${topic.titleAngle}"`);
+
+    const claimsList = research.claims
+      .map((c) => `- ${c.claim} [${c.confidence}]`)
+      .join("\n");
+
+    const userPrompt = `Topic: "${topic.titleAngle}"
 Lane: ${lane.id} (${lane.description})
 Target duration: ${lane.targetDurationSeconds} seconds
 
@@ -56,7 +54,9 @@ Summary: ${research.summary}
 
 Write a YouTube Short script. Make the hook irresistible. Use the strongest research claims to build surprise. End with a satisfying payoff.`;
 
-  const script = await llm.generateJSON<ShortScript>(SYSTEM_PROMPT, userPrompt);
-  log("script", `Script: ${script.beats.length} beats, ~${script.totalDurationSeconds}s`);
-  return script;
+    const script = await context.llm.generateJSON<ShortScript>(SYSTEM_PROMPT, userPrompt);
+    log(this.name, `Script: ${script.beats.length} beats, ~${script.totalDurationSeconds}s`);
+
+    state.script = script;
+  }
 }
