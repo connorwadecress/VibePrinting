@@ -5,3 +5,5 @@ artifacts/
 output/
 *.log
 
+
+.vercel

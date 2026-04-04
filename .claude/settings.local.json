@@ -11,7 +11,21 @@
       "Bash(npx -y json -a name version description)",
       "Bash(npx ffprobe:*)",
       "Bash(node -e \"const path = require\\('@ffmpeg-installer/ffmpeg'\\).path; const { execSync } = require\\('child_process'\\); const out = execSync\\(path + ' -i output/run-20260403-224125/final.mp4 2>&1', {encoding:'utf8'}\\).toString\\(\\); console.log\\(out\\)\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git worktree:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(npx vercel:*)",
+      "Bash(curl -s -X POST \"https://api.vercel.com/v10/projects?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"vibe-printing\"\",\"\"framework\"\":null,\"\"outputDirectory\"\":\"\"public\"\"}')",
+      "Bash(taskkill //F //IM \"vercel.exe\")",
+      "Bash(taskkill //F //IM \"node.exe\" //FI \"WINDOWTITLE eq vercel*\")",
+      "Bash(curl -s -X POST \"https://api.vercel.com/v10/projects/prj_2S8HXm1UoGlmouAfa0A8R0ZcPPDF/domains?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"signaldrop.space\"\"}')",
+      "Bash(curl -s -X POST \"https://api.vercel.com/v10/projects/prj_2S8HXm1UoGlmouAfa0A8R0ZcPPDF/domains?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"www.signaldrop.space\"\",\"\"redirect\"\":\"\"signaldrop.space\"\",\"\"redirectStatusCode\"\":308}')",
+      "Bash(curl -s \"https://api.vercel.com/v9/projects/prj_2S8HXm1UoGlmouAfa0A8R0ZcPPDF/domains?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\")",
+      "Bash(nslookup signaldrop.space)",
+      "Bash(curl -s -X POST \"https://api.vercel.com/v3/domains/signaldrop.space/records?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"\"\",\"\"type\"\":\"\"TXT\"\",\"\"value\"\":\"\"tiktok-developers-site-verification=EGgoecFa1gLyqxxUFkiGDyK4p4xmU9Ww\"\"}')",
+      "Bash(nslookup -type=TXT signaldrop.space)"
     ]
   }
 }

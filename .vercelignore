@@ -1,0 +1,11 @@
+node_modules
+output
+src
+docs
+branding
+*.ts
+*.ps1
+tsconfig.json
+package-lock.json
+.env
+.env.*
