@@ -1,180 +1,254 @@
 # n8n Workflow Spec
 
-## Key assumption
+## Decision
 
-Your `n8n` instance is hosted.
+Use `n8n` as the primary orchestrator.
 
-That means this repo should not be treated as code that `n8n` can run locally on demand unless we deploy it somewhere reachable. The clean design is:
+Do not treat hosted `n8n` as a shell for chaining code nodes together unless there is no native node or external API path available.
 
-- `n8n` handles orchestration, retries, approvals, and publishing
-- this repo becomes a small HTTP worker service for prompts, scoring, schemas, and GenSec decisions
+Recommended split:
 
-## MVP workflow
+- `n8n`: scheduling, fan-out, approvals, retries, credentials, provider calls, publishing, lightweight state
+- repo-side worker: only for things `n8n` is bad at, mainly media assembly, prompt/schema versioning, and policy logic that becomes too large for workflow nodes
 
-### Workflow A: daily batch
+This is the cleaner design for your use case because the platform already gives us:
+
+- `OpenAI` nodes for text, image, audio, and video operations
+- `YouTube` node support for upload and update flows
+- `Execute Sub-workflow` for composition
+- `HTTP Request` for providers that do not have first-class nodes
+- `Data Store` or external tables for lightweight run state
+
+## What Should Stay Out Of n8n
+
+Keep these outside hosted `n8n`:
+
+- `ffmpeg` composition
+- any local filesystem assumptions
+- long-running custom binaries
+- heavy prompt libraries and policy code that want normal source control and tests
+
+If we need caption burn-in, clip concatenation, ducking, or final export normalization, that should run in a small external worker or automation, not inside hosted `n8n`.
+
+## Recommended Workflow Tree
+
+### Parent workflow: `Vibe Printing - Daily Batch`
 
 Purpose:
 
-- generate a queue of candidate Shorts
-- prepare assets
-- hold for review or auto-publish if allowed
+- decide what to make today
+- generate one or more Shorts
+- hold for review
+- publish only after explicit approval
 
-Recommended nodes:
+Recommended shape:
 
 1. `Schedule Trigger`
-2. `Set` channel config
-3. `HTTP Request` to worker: `/topics/generate`
-4. `Split Out` or `Loop Over Items`
-5. `HTTP Request` to worker: `/research/build`
-6. `OpenAI` text operation or worker: `/scripts/generate`
-7. `HTTP Request` to worker: `/gensec/text-check`
-8. `IF` blocked?
-9. `OpenAI` audio or speech generation
-10. `OpenAI` video generation or external provider call
-11. `HTTP Request` to worker: `/assembly/manifest`
-12. media assembly step
-13. `HTTP Request` to worker: `/gensec/final-check`
-14. `IF` auto-publish allowed?
-15. `YouTube` upload video
-16. notification or review queue
+2. `Data Store` or external table lookup for recent topics, blocked angles, and prior runs
+3. `Execute Sub-workflow`: `Topic Planner`
+4. `Loop Over Items`
+5. `Execute Sub-workflow`: `Research Pack`
+6. `Execute Sub-workflow`: `Script Pack`
+7. `OpenAI` moderation or classification check
+8. `IF` blocked or review-required
+9. `Execute Sub-workflow`: `Voiceover`
+10. `Execute Sub-workflow`: `Visual Plan`
+11. `Execute Sub-workflow`: `Video Render`
+12. `HTTP Request` to assembly worker
+13. `Review queue` notification
+14. `IF` approved
+15. `YouTube` upload
+16. `Data Store` or external table update for run state and analytics keys
 
-## Suggested worker endpoints
+## Recommended Sub-workflows
 
-### `POST /topics/generate`
+### `Vibe Printing - Topic Planner`
 
-Input:
+Use:
 
-- theme id
-- lane ids
-- recent topic history
-- daily target
+- current workflow as the starter
+- eventually upgrade to `OpenAI` structured output if we want live topic ideation instead of seeded lane logic
 
 Output:
 
-- ranked topic candidates
+- `selectedCandidates`
+- `backlogCandidates`
+- novelty and risk hints
 
-### `POST /research/build`
+### `Vibe Printing - Research Pack`
+
+This should be a real retrieval workflow, not a code-only placeholder.
+
+Preferred implementation:
+
+1. `HTTP Request` to a search or research provider
+2. optional second retrieval source for corroboration
+3. `OpenAI` structured summarization step
+4. `Code` node only for light normalization or score merging
+5. persist compact source-backed research pack
+
+Minimum output:
+
+- summary
+- key claims
+- source URLs
+- confidence notes
+- unresolved questions
+
+### `Vibe Printing - Script Pack`
+
+Use the `OpenAI` node for structured output.
 
 Input:
 
-- selected topic
-
-Output:
-
 - research pack
-
-### `POST /scripts/generate`
-
-Input:
-
-- research pack
+- lane voice
 - duration target
-- channel voice
 
 Output:
 
-- structured short script
+- hook
+- beats
+- payoff
 - title options
 - description draft
+- disclosure flag
 
-### `POST /gensec/text-check`
+Keep this step model-driven. This is one of the places where `n8n` native OpenAI support is actually valuable.
 
-Input:
+### `Vibe Printing - Voiceover`
 
-- research pack
-- script
-- metadata draft
-
-Output:
-
-- risk level
-- blocked reasons
-- disclosure required
-- auto-publish eligibility
-
-### `POST /assembly/manifest`
-
-Input:
-
-- script
-- narration timing
-- scene plan
-- rendered asset URLs
+Use the `OpenAI` audio operation for narration generation.
 
 Output:
 
-- final render manifest
+- audio file
+- segment timing if available
+- fallback transcript
 
-### `POST /gensec/final-check`
+Store binaries in external storage, not in workflow-local assumptions.
+
+### `Vibe Printing - Visual Plan`
 
 Input:
 
-- manifest
-- final metadata
-- provider outputs
+- approved script
+- brand style guide
+- target scene count
 
 Output:
 
-- final publish decision
+- `4-6` scene prompts
+- caption text
+- target seconds per scene
 
-## Hosted n8n constraints
+This can be an `OpenAI` structured output step.
 
-### Avoid local assumptions
+### `Vibe Printing - Video Render`
 
-Do not assume:
+Use the `OpenAI` video operation or another video provider through `HTTP Request`.
 
-- local disk paths are shared with `n8n`
-- `ffmpeg` is installed on the hosted instance
-- custom binaries can be dropped into the hosted runtime
+Recommended posture:
 
-### Prefer URL-based assets
+- short per-scene clips
+- portrait-first prompts
+- keep retries bounded
+- persist provider IDs and URLs
 
-Pass assets around as:
+### `Vibe Printing - Assembly`
 
-- signed URLs
-- object storage keys
-- provider file IDs
+This is where `n8n` should stop being clever.
 
-## Recommended storage pattern
+Input:
 
-- object storage bucket for intermediate assets
-- lightweight database table for runs, scores, and approvals
-- webhook callback or polling for long video renders
+- narration asset URL
+- scene clip URLs
+- caption plan
+- music choice
 
-## Approval model
+Implementation:
 
-For MVP, do not auto-publish everything.
+- `HTTP Request` to a repo-side worker or automation that runs the real media assembly
 
-Use one review queue with these outcomes:
+Output:
 
-- approve and publish now
-- schedule
-- reject
-- rerender visuals only
-- rewrite script only
+- final `.mp4`
+- final thumbnail or poster if needed
+- caption file
 
-## Failure model
+### `Vibe Printing - Publish`
 
-For each generated Short, persist:
+Use the `YouTube` node for upload and metadata updates once credentials exist.
 
-- run id
-- topic id
-- provider ids
-- cost estimate
-- failure stage
-- retry count
+Persist:
 
-This keeps failures recoverable instead of forcing the whole batch to restart.
+- upload ID
+- title
+- description
+- disclosure choice
+- publish time
+- analytics lookup keys
 
-## Sequence recommendation
+## Storage Recommendation
 
-Build in this order:
+Split storage by artifact type:
 
-1. worker endpoints for topic, script, and GenSec
-2. one hosted `n8n` workflow that generates and holds a Short
-3. YouTube upload path
-4. analytics feedback workflow
+- metadata and run state: `n8n` `Data Store`, `Airtable`, `Notion`, `Google Sheets`, or a small database
+- binaries: `Google Drive`, `S3`, `R2`, `Azure Blob`, or similar object storage
 
-## What MCP changes
+Do not use workflow memory alone as the source of truth for recoverable runs.
 
-If you expose `n8n` through MCP, I can create and revise the workflow directly instead of only describing it here.
+Persist at least:
+
+- topic ID
+- run ID
+- research pack ID
+- script version
+- provider asset IDs
+- approval status
+- publish status
+- error stage
+
+## Credential Checklist
+
+These are the first credentials worth adding in `n8n`:
+
+1. `OpenAI`
+2. `YouTube` or Google OAuth for YouTube upload
+3. storage provider credential for binary assets
+4. optional research provider credential if we use a dedicated search API
+5. optional Slack, Discord, or email credential for review notifications
+
+If you only add one credential first, add `OpenAI`. That unlocks the most real progress immediately.
+
+## Build Order
+
+This is the recommended next sequence:
+
+1. wire a real `OpenAI` credential in `n8n`
+2. replace the placeholder `Short Script Generator` with a native `OpenAI` workflow
+3. add a native `Voiceover` workflow using `OpenAI` audio
+4. add a `Visual Plan` plus `Video Render` workflow
+5. choose binary storage
+6. add one external assembly worker
+7. add `YouTube` publish
+8. keep review mandatory until the first clean shadow period
+
+## Current Repo Posture
+
+The workflows created so far prove:
+
+- MCP can create and update workflows
+- hosted `n8n` webhooks are reachable
+- we can dry-run the pipeline shape end to end
+
+They are not yet the final architecture.
+
+The next iteration should move from placeholder code-node logic toward:
+
+- native `OpenAI` nodes
+- real retrieval
+- real storage
+- one real assembly handoff
+
+That is the point where the pipeline becomes worth operationalizing instead of only testing.

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — SignalDrop</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --teal: #00c9a7; --navy: #0a0e1a; --text: #e8eaf0; --muted: #7a8299; }
+    body { font-family: 'Space Grotesk', system-ui, sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; line-height: 1.7; }
+    header { padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--teal); text-decoration: none; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-left: 1.5rem; }
+    nav a:hover { color: var(--text); }
+    main { max-width: 720px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    .updated { color: var(--muted); font-size: 0.9rem; margin-bottom: 3rem; }
+    h2 { font-size: 1.1rem; font-weight: 600; color: var(--teal); margin: 2.5rem 0 0.75rem; }
+    p { color: var(--muted); margin-bottom: 1rem; font-size: 0.97rem; }
+    ul { color: var(--muted); margin: 0.5rem 0 1rem 1.5rem; font-size: 0.97rem; }
+    li { margin-bottom: 0.4rem; }
+    footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 1.5rem 2rem; }
+    footer span { color: var(--muted); font-size: 0.85rem; }
+    footer a { color: var(--muted); text-decoration: none; font-size: 0.85rem; margin-left: 1.2rem; }
+    footer a:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">SignalDrop</a>
+    <nav>
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: April 4, 2026</p>
+
+    <h2>1. Introduction</h2>
+    <p>This Privacy Policy describes how SignalDrop handles information in connection with your use of the application and its integration with TikTok.</p>
+
+    <h2>2. Information We Access</h2>
+    <p>When you authorise SignalDrop via TikTok's OAuth flow, we access the following information:</p>
+    <ul>
+      <li><strong>user.info.basic</strong> — Your TikTok open ID and display name, used solely to confirm account identity during the authorisation process.</li>
+      <li><strong>video.publish</strong> — Permission to upload and publish videos directly to your TikTok profile on your behalf.</li>
+    </ul>
+
+    <h2>3. Information We Do Not Collect</h2>
+    <p>SignalDrop does not:</p>
+    <ul>
+      <li>Collect, store, or share your TikTok password or login credentials</li>
+      <li>Access your TikTok followers, messages, or private data</li>
+      <li>Collect any personal information beyond what is listed above</li>
+      <li>Share any data with third parties for advertising or analytics</li>
+    </ul>
+
+    <h2>4. How We Use Your Information</h2>
+    <p>The TikTok account information we access is used exclusively to:</p>
+    <ul>
+      <li>Authenticate your TikTok account for content publishing</li>
+      <li>Upload AI-generated videos to your TikTok profile</li>
+      <li>Maintain a valid OAuth session for automated publishing</li>
+    </ul>
+
+    <h2>5. Token Storage</h2>
+    <p>OAuth access and refresh tokens are stored locally in your application's environment configuration file (.env). These tokens are never transmitted to any third-party server and are stored only on the device running the SignalDrop pipeline.</p>
+
+    <h2>6. Data Retention</h2>
+    <p>We do not maintain a remote database. All authorisation tokens are stored locally on your device. You can revoke SignalDrop's access to your TikTok account at any time via TikTok's app permissions settings.</p>
+
+    <h2>7. Third-Party Services</h2>
+    <p>SignalDrop uses the following third-party services during content generation:</p>
+    <ul>
+      <li>Anthropic Claude / Google Gemini — for AI script generation</li>
+      <li>Microsoft Edge TTS — for text-to-speech voiceover synthesis</li>
+      <li>Pexels — for licensed stock footage</li>
+      <li>TikTok Content Posting API — for video publishing</li>
+    </ul>
+    <p>Each of these services operates under their own privacy policies.</p>
+
+    <h2>8. Your Rights</h2>
+    <p>You may revoke SignalDrop's access to your TikTok account at any time by visiting TikTok Settings → Security → Manage app permissions and removing SignalDrop. This will immediately prevent any further publishing.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. The "last updated" date at the top will reflect any changes.</p>
+
+    <h2>10. Contact</h2>
+    <p>For privacy-related questions, contact: <a href="mailto:connorc@agilebridge.co.za" style="color: var(--teal);">connorc@agilebridge.co.za</a></p>
+  </main>
+
+  <footer>
+    <span>© 2026 SignalDrop. All rights reserved.</span>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/privacy.html">Privacy Policy</a>
+  </footer>
+</body>
+</html>

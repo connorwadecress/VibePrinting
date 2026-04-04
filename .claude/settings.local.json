@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(du -sh /c/Users/ConnorCress/source/PersonalDev/VibePrinting/*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm view:*)",
+      "Bash(npm search:*)",
+      "Bash(npx -y json -a name version description)",
+      "Bash(npx ffprobe:*)",
+      "Bash(node -e \"const path = require\\('@ffmpeg-installer/ffmpeg'\\).path; const { execSync } = require\\('child_process'\\); const out = execSync\\(path + ' -i output/run-20260403-224125/final.mp4 2>&1', {encoding:'utf8'}\\).toString\\(\\); console.log\\(out\\)\")",
+      "Bash(ls -la /c/Users/ConnorCress/source/PersonalDev/VibePrinting/*.ps1)",
+      "Bash(git -C \".claude/worktrees/busy-gauss\" status)",
+      "Bash(git -C \".claude/worktrees/busy-gauss\" diff --cached -- src/config.ts)",
+      "Bash(git -C \".claude/worktrees/busy-gauss\" diff --cached -- src/domain/models.ts)",
+      "Bash(git -C \".claude/worktrees/busy-gauss\" diff --cached -- src/index.ts)",
+      "Bash(git -C \".claude/worktrees/busy-gauss\" diff --cached -- .env.example)",
+      "Bash(git -C .claude/worktrees/busy-gauss show HEAD:src/publish/tiktok.ts)",
+      "Bash(git -C .claude/worktrees/busy-gauss diff --cached --name-only)",
+      "Bash(git add:*)"
+    ]
+  }
+}

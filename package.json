@@ -9,10 +9,24 @@
     "plan": "tsx src/index.ts",
     "n8n": "tsx src/n8n-cli.ts",
     "export:workflows": "tsx src/n8n-export.ts",
-    "check": "npm run build"
+    "check": "npm run build",
+    "generate": "tsx src/generate.ts"
   },
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.28",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@andresaya/edge-tts": "^1.8.0",
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.4.0",
+    "edge-tts": "^1.0.1",
+    "fluent-ffmpeg": "^2.1.3",
+    "googleapis": "^171.4.0",
+    "pexels": "^1.4.0"
   }
 }

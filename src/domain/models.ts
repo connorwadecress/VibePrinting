@@ -93,3 +93,65 @@ export interface PipelineStageBlueprint {
   purpose: string;
 }
 
+// --- MVP additions ---
+
+export interface StockClip {
+  id: number;
+  url: string;
+  width: number;
+  height: number;
+  duration: number;
+  localPath?: string;
+  searchQuery: string;
+}
+
+export interface SubtitleEntry {
+  start: number;
+  end: number;
+  text: string;
+}
+
+export interface VoiceoverResult {
+  audioPath: string;
+  durationSeconds: number;
+  subtitles: SubtitleEntry[];
+}
+
+export interface AssemblyManifest {
+  voiceover: VoiceoverResult;
+  clips: StockClip[];
+  scenes: ScenePlanWithKeywords[];
+  script: ShortScript;
+  outputPath: string;
+}
+
+export interface ScenePlanWithKeywords extends ScenePlan {
+  searchKeywords: string[];
+}
+
+export interface PipelineContext {
+  runId: string;
+  workDir: string;
+  config: import("../config.js").AppConfig;
+}
+
+export interface TikTokUploadResult {
+  publishId: string;
+  videoUrl: string;
+  title: string;
+}
+
+export interface PipelineResult {
+  topic: TopicCandidate;
+  research: ResearchPack;
+  script: ShortScript;
+  scenes: ScenePlanWithKeywords[];
+  voiceover: VoiceoverResult;
+  clips: StockClip[];
+  outputVideoPath: string;
+  youTubeVideoId?: string;
+  youTubeVideoUrl?: string;
+  tikTokPublishId?: string;
+  tikTokVideoUrl?: string;
+}
+

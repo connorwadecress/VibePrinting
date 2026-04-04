@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalDrop — Tuning in to everything.</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #00c9a7;
+      --navy: #0a0e1a;
+      --dark: #0f1420;
+      --mid: #1a2030;
+      --text: #e8eaf0;
+      --muted: #7a8299;
+    }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--teal);
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1.5rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    .hero {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0,201,167,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,201,167,0.3);
+      border-radius: 100px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 span { color: var(--teal); }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .tagline {
+      font-size: 0.95rem;
+      color: rgba(0,201,167,0.7);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      width: 48px;
+      height: 2px;
+      background: var(--teal);
+      margin: 3rem auto;
+      opacity: 0.4;
+    }
+
+    .about {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer span { color: var(--muted); font-size: 0.85rem; }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-left: 1.2rem;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">SignalDrop</div>
+    <nav>
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="badge">Content Automation</div>
+      <h1>Short-form video,<br /><span>on autopilot.</span></h1>
+      <p class="subtitle">SignalDrop is an AI-powered pipeline for generating and publishing short-form educational video content. No host. No fluff. Just the signal.</p>
+      <p class="tagline">Tuning in to everything.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="about">
+      <p>SignalDrop generates 30–45 second short-form videos covering history, human performance, and everyday science — assembled from AI-generated scripts, neural text-to-speech, and licensed stock footage. All content is disclosed as AI-generated where required by platform policy.</p>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 SignalDrop. All rights reserved.</span>
+    <div>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/privacy.html">Privacy Policy</a>
+    </div>
+  </footer>
+</body>
+</html>
