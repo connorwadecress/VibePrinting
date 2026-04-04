@@ -10,7 +10,13 @@ export interface AppConfig {
   openAiTextModel: string;
   openAiTtsModel: string;
   openAiVideoModel: string;
+  tikTokClientKey?: string;
+  tikTokClientSecret?: string;
+  tikTokRefreshToken?: string;
   youTubeChannelId?: string;
+  youTubeClientId?: string;
+  youTubeClientSecret?: string;
+  youTubeRefreshToken?: string;
 }
 
 function readEnv(name: string): string | undefined {
@@ -41,6 +47,12 @@ export function loadConfig(): AppConfig {
     openAiTextModel: readEnv("OPENAI_TEXT_MODEL") ?? "gpt-5.1",
     openAiTtsModel: readEnv("OPENAI_TTS_MODEL") ?? "tts-1",
     openAiVideoModel: readEnv("OPENAI_VIDEO_MODEL") ?? "sora-2",
-    youTubeChannelId: readEnv("YOUTUBE_CHANNEL_ID")
+    tikTokClientKey: readEnv("TIKTOK_CLIENT_KEY"),
+    tikTokClientSecret: readEnv("TIKTOK_CLIENT_SECRET"),
+    tikTokRefreshToken: readEnv("TIKTOK_REFRESH_TOKEN"),
+    youTubeChannelId: readEnv("YOUTUBE_CHANNEL_ID"),
+    youTubeClientId: readEnv("YOUTUBE_CLIENT_ID"),
+    youTubeClientSecret: readEnv("YOUTUBE_CLIENT_SECRET"),
+    youTubeRefreshToken: readEnv("YOUTUBE_REFRESH_TOKEN")
   };
 }

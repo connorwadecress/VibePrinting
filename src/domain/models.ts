@@ -79,9 +79,12 @@ export interface GenSecAssessment {
   safeToAutoPublish: boolean;
 }
 
+export type PublishPlatform = "youtube" | "tiktok";
+
 export interface PublishPackage {
   description: string;
   disclosureRequired: boolean;
+  platforms: PublishPlatform[];
   scheduledSlot: string;
   tags: string[];
   title: string;
