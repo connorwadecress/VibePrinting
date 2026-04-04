@@ -9,6 +9,7 @@ function main(): void {
     config.pexelsApiKey ? "Pexels" : undefined,
     config.n8nApiKey && config.n8nBaseUrl ? "n8n" : undefined,
     config.youTubeChannelId ? "YouTube" : undefined,
+    config.tikTokClientKey && config.tikTokRefreshToken ? "TikTok" : undefined
   ].filter(Boolean);
 
   console.log("Vibe Printing bootstrap");
