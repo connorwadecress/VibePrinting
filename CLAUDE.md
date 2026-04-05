@@ -6,7 +6,7 @@ This file is the authoritative context document for any AI assistant working in 
 
 ## What this project is
 
-**Vibe Printing** is a white-label automation pipeline that generates, assembles, and publishes AI-native short-form videos (YouTube Shorts, TikTok). It is not tied to any specific channel — channel identity, content lanes, and branding are fully user-configurable via `channel.json`. Anyone can clone this repo, plug in their credentials and brand config, and start publishing under their own identity.
+**Vibe Printing** is a white-label automation pipeline that generates, assembles, and publishes AI-native short-form videos (YouTube Shorts, TikTok). It supports multiple brands running on the same engine — each brand gets its own folder under `brands/` with channel config, credentials, and branding assets. Anyone can set up their own brand folder and start publishing under their own identity.
 
 The pipeline takes a content lane, uses an LLM to generate a topic + research + script, synthesizes voiceover audio, fetches stock footage, assembles a final video with burned-in captions, and optionally uploads to YouTube and TikTok.
 
@@ -145,16 +145,18 @@ src/                                 — engine code (brand-agnostic)
     fs-helpers.ts                    — ensureDir, createRunDir, downloadFile
     logger.ts                        — log, logError, logTiming
 
-  publish/                           — standalone helpers (not used by pipeline)
-    tiktok.ts                        — TikTok publish logic (pre-refactor, kept for reference)
+  publish/                           — standalone helpers (legacy, not used by pipeline)
+    tiktok.ts                        — TikTok publish logic (pre-refactor reference)
     tiktok-auth.ts                   — one-time OAuth token helper
 
   n8n/                               — n8n workflow management (legacy, not used by pipeline)
     api.ts                           — N8nClient HTTP wrapper
     scope.ts                         — workflow scope management
     workflows.ts                     — workflow definitions
+  n8n-cli.ts                         — CLI for n8n operations (legacy)
+  n8n-export.ts                      — export workflows to JSON (legacy)
 
-docs/                                — architecture.md, editorial-plan.md, roadmap.md
+docs/                                — architecture.md, editorial-plan.md, roadmap.md, n8n-workflow-spec.md
 ```
 
 ---
@@ -314,7 +316,8 @@ All stages read/write a shared `PipelineState` accumulator and get providers fro
 | `ContentLane` | id, description, exampleHooks, targetDurationSeconds |
 | `TopicCandidate` | laneId, seedQuestion, titleAngle, noveltyScore, riskLevel |
 | `ResearchPack` | topic, summary, claims[] (each with confidence + sourceLabels) |
-| `ShortScript` | hook, beats[] (narration + visualIntent), payoff, callToAction, totalDurationSeconds |
+| `ShortScript` | hook, beats[] (narration + visualIntent), payoff, callToAction, totalDurationSeconds, publishMeta? |
+| `PublishMeta` | youtubeTitle, youtubeDescription, topicTags, topicHashtags |
 | `ScenePlanWithKeywords` | sceneIndex, prompt, captions, seconds, searchKeywords |
 | `VoiceoverResult` | audioPath, durationSeconds, subtitles[] |
 | `StockClip` | id, url, width, height, duration, localPath, searchQuery |
