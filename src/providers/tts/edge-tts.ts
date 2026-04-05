@@ -13,11 +13,16 @@ interface WordBoundary {
 function buildSubtitles(boundaries: WordBoundary[], totalDuration: number): SubtitleEntry[] {
   if (boundaries.length === 0) return [];
 
-  const entries: SubtitleEntry[] = [];
-  const chunkSize = 7;
+  // Keep only real word events — drop Punctuation type and anything with no alphanumeric chars
+  const words = boundaries.filter(
+    (b) => b.type !== "Punctuation" && /[a-zA-Z0-9]/.test(b.text),
+  );
 
-  for (let i = 0; i < boundaries.length; i += chunkSize) {
-    const chunk = boundaries.slice(i, i + chunkSize);
+  const entries: SubtitleEntry[] = [];
+  const chunkSize = 5;
+
+  for (let i = 0; i < words.length; i += chunkSize) {
+    const chunk = words.slice(i, i + chunkSize);
     const first = chunk[0];
     const last = chunk[chunk.length - 1];
 

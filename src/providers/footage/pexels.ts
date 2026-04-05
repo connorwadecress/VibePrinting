@@ -9,6 +9,16 @@ function isError(res: Videos | ErrorResponse): res is ErrorResponse {
   return "error" in res;
 }
 
+const BLOCKED_KEYWORDS = [
+  "subscribe", "like button", "notification", "notification bell",
+  "youtube", "social media button", "follow", "bell icon",
+];
+
+function isBlockedKeyword(keyword: string): boolean {
+  const lower = keyword.toLowerCase();
+  return BLOCKED_KEYWORDS.some((blocked) => lower.includes(blocked));
+}
+
 export class PexelsProvider implements FootageProvider {
   private readonly usedIds = new Set<number>();
 
@@ -22,7 +32,10 @@ export class PexelsProvider implements FootageProvider {
   ): Promise<StockClip> {
     const client = createClient(this.apiKey);
 
-    for (const keyword of keywords) {
+    const safeKeywords = keywords.filter((k) => !isBlockedKeyword(k));
+    const queryList = safeKeywords.length > 0 ? safeKeywords : keywords;
+
+    for (const keyword of queryList) {
       log("pexels", `Searching: "${keyword}"`);
       const res = await client.videos.search({
         query: keyword,

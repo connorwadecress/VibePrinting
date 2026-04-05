@@ -16,8 +16,13 @@ export interface AppConfig {
   pexelsApiKey?: string;
 
   // TTS
+  ttsProvider: string;
   ttsVoice: string;
   ttsRate: string;
+  elevenLabsApiKey?: string;
+  elevenLabsVoiceId?: string;
+  elevenLabsModelId?: string;
+  elevenLabsSpeed: number;
 
   // YouTube (optional, for upload)
   youTubeChannelId?: string;
@@ -72,8 +77,13 @@ export function loadConfig(): AppConfig {
 
     pexelsApiKey: readEnv("PEXELS_API_KEY"),
 
+    ttsProvider: readEnv("TTS_PROVIDER") ?? "edge",
     ttsVoice: readEnv("TTS_VOICE") ?? "en-US-GuyNeural",
     ttsRate: readEnv("TTS_RATE") ?? "+10%",
+    elevenLabsApiKey: readEnv("ELEVENLABS_API_KEY"),
+    elevenLabsVoiceId: readEnv("ELEVENLABS_VOICE_ID"),
+    elevenLabsModelId: readEnv("ELEVENLABS_MODEL_ID"),
+    elevenLabsSpeed: Number(readEnv("ELEVENLABS_SPEED") ?? "1.15"),
 
     youTubeChannelId: readEnv("YOUTUBE_CHANNEL_ID"),
     youTubeClientId: readEnv("YOUTUBE_CLIENT_ID"),

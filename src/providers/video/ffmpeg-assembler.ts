@@ -4,9 +4,61 @@ import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import path from "node:path";
 import fs from "node:fs";
 import type { VideoAssembler } from "../../domain/interfaces/video-assembler.js";
-import type { VideoSpec } from "../../domain/video-specs.js";
+import type { VideoSpec, CaptionStyle } from "../../domain/video-specs.js";
 import type { SubtitleEntry } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+
+/**
+ * Builds one drawtext filter per wrapped line for a subtitle entry.
+ * Using multiple filters avoids FFmpeg's unreliable \n handling in text=.
+ */
+function buildSubtitleFilters(
+  sub: SubtitleEntry,
+  fontFile: string,
+  captionStyle: CaptionStyle,
+  maxCharsPerLine = 28,
+): string[] {
+  const escape = (s: string) =>
+    s
+      .replace(/\\/g, "\\\\\\\\")
+      .replace(/'/g, "\u2019")
+      .replace(/:/g, "\\\\:")
+      .replace(/%/g, "\\\\%");
+
+  // Word-wrap into lines
+  const words = sub.text.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxCharsPerLine && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+
+  const lineHeight = captionStyle.fontSize + 8;
+  const baseY = captionStyle.yPosition;
+
+  return lines.map((line, i) => {
+    // Center all lines around baseY
+    const offsetPx = Math.round((i - (lines.length - 1) / 2) * lineHeight);
+    const yExpr =
+      offsetPx === 0 ? baseY : offsetPx > 0 ? `(${baseY})+${offsetPx}` : `(${baseY})${offsetPx}`;
+
+    return (
+      `drawtext=fontfile='${fontFile}':` +
+      `text='${escape(line)}':` +
+      `fontsize=${captionStyle.fontSize}:fontcolor=${captionStyle.fontColor}:` +
+      `borderw=${captionStyle.borderWidth}:bordercolor=${captionStyle.borderColor}:` +
+      `x=(w-text_w)/2:y=${yExpr}:` +
+      `enable='between(t,${sub.start.toFixed(2)},${sub.end.toFixed(2)})'`
+    );
+  });
+}
 
 export class FfmpegAssembler implements VideoAssembler {
   constructor(private readonly spec: VideoSpec) {
@@ -76,21 +128,9 @@ export class FfmpegAssembler implements VideoAssembler {
       ? "C\\\\:/Windows/Fonts/arial.ttf"
       : "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf";
 
-    const drawtextFilters = subtitles.map((sub) => {
-      const escaped = sub.text
-        .replace(/\\/g, "\\\\\\\\")
-        .replace(/'/g, "\u2019")
-        .replace(/:/g, "\\\\:")
-        .replace(/%/g, "\\\\%");
-      return (
-        `drawtext=fontfile='${fontFile}':` +
-        `text='${escaped}':` +
-        `fontsize=${captionStyle.fontSize}:fontcolor=${captionStyle.fontColor}:` +
-        `borderw=${captionStyle.borderWidth}:bordercolor=${captionStyle.borderColor}:` +
-        `x=(w-text_w)/2:y=${captionStyle.yPosition}:` +
-        `enable='between(t,${sub.start.toFixed(2)},${sub.end.toFixed(2)})'`
-      );
-    });
+    const drawtextFilters = subtitles.flatMap((sub) =>
+      buildSubtitleFilters(sub, fontFile, captionStyle),
+    );
 
     const vf = drawtextFilters.length > 0 ? drawtextFilters.join(",") : "null";
 

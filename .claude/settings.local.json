@@ -29,7 +29,8 @@
       "Bash(schtasks /Delete /TN \"VibePrinting-AutoGenerate\" /F)",
       "Bash(schtasks //Delete //TN \"VibePrinting-AutoGenerate\" //F)",
       "Bash(schtasks //Create //TN \"VibePrinting-AutoGenerate\" //TR \"powershell.exe -ExecutionPolicy Bypass -File C:\\\\Users\\\\ConnorCress\\\\source\\\\PersonalDev\\\\VibePrinting\\\\generate.ps1 -Upload\" //SC MINUTE //MO 30 //ST 00:00)",
-      "Bash(schtasks //Query //TN \"VibePrinting-AutoGenerate\" //V //FO LIST)"
+      "Bash(schtasks //Query //TN \"VibePrinting-AutoGenerate\" //V //FO LIST)",
+      "Bash(git checkout:*)"
     ]
   }
 }
