@@ -25,7 +25,11 @@
       "Bash(curl -s \"https://api.vercel.com/v9/projects/prj_2S8HXm1UoGlmouAfa0A8R0ZcPPDF/domains?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\")",
       "Bash(nslookup signaldrop.space)",
       "Bash(curl -s -X POST \"https://api.vercel.com/v3/domains/signaldrop.space/records?teamId=team_KGwiMAUJZkCGdOz39CxXZgvD\" -H \"Authorization: Bearer vcp_79yKM6zYoEK22EtSDdd2WECEOqiSvEZ7rZciAfHA847gBXN0Gf2viF8d\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"\"\",\"\"type\"\":\"\"TXT\"\",\"\"value\"\":\"\"tiktok-developers-site-verification=EGgoecFa1gLyqxxUFkiGDyK4p4xmU9Ww\"\"}')",
-      "Bash(nslookup -type=TXT signaldrop.space)"
+      "Bash(nslookup -type=TXT signaldrop.space)",
+      "Bash(schtasks /Delete /TN \"VibePrinting-AutoGenerate\" /F)",
+      "Bash(schtasks //Delete //TN \"VibePrinting-AutoGenerate\" //F)",
+      "Bash(schtasks //Create //TN \"VibePrinting-AutoGenerate\" //TR \"powershell.exe -ExecutionPolicy Bypass -File C:\\\\Users\\\\ConnorCress\\\\source\\\\PersonalDev\\\\VibePrinting\\\\generate.ps1 -Upload\" //SC MINUTE //MO 30 //ST 00:00)",
+      "Bash(schtasks //Query //TN \"VibePrinting-AutoGenerate\" //V //FO LIST)"
     ]
   }
 }

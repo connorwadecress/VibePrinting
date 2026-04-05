@@ -4,7 +4,7 @@ import type { Uploader, UploadMetadata, UploadResult } from "../../domain/interf
 import { log, logError } from "../../utils/logger.js";
 
 const TIKTOK_API_BASE = "https://open.tiktokapis.com/v2";
-const MAX_CHUNK_SIZE = 10 * 1024 * 1024;
+const MAX_CHUNK_SIZE = 64 * 1024 * 1024;
 const STATUS_POLL_INTERVAL_MS = 5_000;
 const STATUS_POLL_MAX_ATTEMPTS = 36; // 3 minutes total
 
@@ -13,7 +13,7 @@ const STATUS_POLL_MAX_ATTEMPTS = 36; // 3 minutes total
  *   "draft"  — video lands in creator's TikTok inbox as a draft
  *   "direct" — video posts immediately to creator's profile
  */
-const UPLOAD_MODE: "draft" | "direct" = "direct";
+const UPLOAD_MODE: "draft" | "direct" = "draft";
 
 export class TikTokUploader implements Uploader {
   readonly platform = "tiktok";
@@ -246,7 +246,7 @@ export class TikTokUploader implements Uploader {
   private async pollPublishStatus(
     accessToken: string,
     publishId: string,
-  ): Promise<"PUBLISH_COMPLETE" | "FAILED"> {
+  ): Promise<"PUBLISH_COMPLETE" | "SEND_TO_USER_INBOX" | "FAILED"> {
     for (let attempt = 0; attempt < STATUS_POLL_MAX_ATTEMPTS; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, STATUS_POLL_INTERVAL_MS));
 
@@ -273,6 +273,7 @@ export class TikTokUploader implements Uploader {
       log("tiktok", `Upload status: ${status ?? "unknown"}`);
 
       if (status === "PUBLISH_COMPLETE") return "PUBLISH_COMPLETE";
+      if (status === "SEND_TO_USER_INBOX") return "SEND_TO_USER_INBOX";
 
       if (status === "FAILED") {
         logError("tiktok", `Upload failed: ${data.error?.message ?? "unknown error"}`);

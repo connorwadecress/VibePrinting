@@ -4,7 +4,7 @@ import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts.
 
-Rules:
+Script rules:
 - Hook must grab attention in the first 2 seconds. Start with a surprising claim or question.
 - 4-6 beats, each with narration text and a visual intent description.
 - Payoff delivers the "aha" moment.
@@ -12,6 +12,12 @@ Rules:
 - Total narration should be speakable in 30-45 seconds (~80-120 words).
 - Write conversationally — as if explaining to a friend. No formal language.
 - Every beat narration should be 1-2 sentences max.
+
+Publishing metadata rules:
+- youtubeTitle: SEO-optimized, curiosity-driven, max 70 chars. NOT the hook — write a proper title.
+- youtubeDescription: 3-5 sentences summarizing the video, then a line break, then "Key takeaways:" with 2-3 bullet points, then a subscribe CTA line.
+- topicTags: 8-12 specific, searchable tags for this topic (e.g. "medieval history", "plague", "etymology"). Mix broad and niche.
+- topicHashtags: 4-6 hashtags relevant to this specific topic (e.g. "#History", "#Etymology"). Always include "#Shorts".
 
 Respond with JSON:
 {
@@ -25,7 +31,13 @@ Respond with JSON:
   ],
   "payoff": string,
   "callToAction": string,
-  "totalDurationSeconds": number
+  "totalDurationSeconds": number,
+  "publishMeta": {
+    "youtubeTitle": string,
+    "youtubeDescription": string,
+    "topicTags": string[],
+    "topicHashtags": string[]
+  }
 }`;
 
 export class ScriptGenerationStage implements PipelineStage {

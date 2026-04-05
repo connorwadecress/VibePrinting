@@ -33,7 +33,7 @@ Write-Host ""
 # --- PKCE helpers -------------------------------------------------------------
 
 function New-CodeVerifier {
-    $bytes = New-Object Byte[] 32
+    $bytes = New-Object Byte[] 64
     [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
@@ -41,7 +41,7 @@ function New-CodeVerifier {
 function Get-CodeChallenge([string]$verifier) {
     $sha256    = [System.Security.Cryptography.SHA256]::Create()
     $hashBytes = $sha256.ComputeHash([System.Text.Encoding]::ASCII.GetBytes($verifier))
-    return [Convert]::ToBase64String($hashBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+    return [BitConverter]::ToString($hashBytes).Replace('-', '').ToLower()
 }
 
 function New-State {
@@ -82,7 +82,7 @@ Write-Host ""
 $codeVerifier  = New-CodeVerifier
 $codeChallenge = Get-CodeChallenge $codeVerifier
 $state         = New-State
-$scope         = "user.info.basic,video.publish"
+$scope         = "user.info.basic,video.publish,video.upload"
 
 $authUrl = "https://www.tiktok.com/v2/auth/authorize/" +
            "?client_key=$([Uri]::EscapeDataString($ClientKey))" +
@@ -143,12 +143,14 @@ Write-Host "Auth code received." -ForegroundColor Green
 
 Write-Host "Exchanging for access + refresh tokens..." -ForegroundColor Yellow
 
-$body = "client_key=$([Uri]::EscapeDataString($ClientKey))" +
-        "&client_secret=$([Uri]::EscapeDataString($ClientSecret))" +
-        "&code=$([Uri]::EscapeDataString($authCode))" +
-        "&grant_type=authorization_code" +
-        "&redirect_uri=$([Uri]::EscapeDataString($redirectUri))" +
-        "&code_verifier=$([Uri]::EscapeDataString($codeVerifier))"
+$body = @{
+    client_key    = $ClientKey
+    client_secret = $ClientSecret
+    code          = $authCode
+    grant_type    = "authorization_code"
+    redirect_uri  = $redirectUri
+    code_verifier = $codeVerifier
+}
 
 try {
     $response = Invoke-RestMethod `

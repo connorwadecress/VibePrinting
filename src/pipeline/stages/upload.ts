@@ -40,28 +40,48 @@ export class UploadStage implements PipelineStage {
 
   private buildMetadata(script: ShortScript, context: StageContext): UploadMetadata {
     const { branding, genSecDefaults } = context.profile;
+    const pub = script.publishMeta;
 
-    const rawTitle = script.hook.replace(/[<>]/g, "").trim();
+    // Title: prefer LLM-generated YouTube title, fall back to hook
+    const rawTitle = (pub?.youtubeTitle || script.hook).replace(/[<>]/g, "").trim();
     const title = rawTitle.length > 100 ? rawTitle.substring(0, 97) + "..." : rawTitle;
 
-    const description = [
-      script.hook,
-      "",
-      script.beats.map((b) => b.narration).join(" "),
-      "",
-      script.payoff,
-      "",
-      "---",
-      script.callToAction,
-      "",
-      branding.hashtags.join(" "),
-    ].join("\n");
+    // Description: prefer LLM-generated description, fall back to narration dump
+    const description = pub?.youtubeDescription
+      ? [
+          pub.youtubeDescription,
+          "",
+          "---",
+          branding.hashtags.join(" "),
+          ...(pub.topicHashtags ?? []).filter((h) => !branding.hashtags.includes(h)),
+        ].join("\n")
+      : [
+          script.hook,
+          "",
+          script.beats.map((b) => b.narration).join(" "),
+          "",
+          script.payoff,
+          "",
+          "---",
+          script.callToAction,
+          "",
+          branding.hashtags.join(" "),
+        ].join("\n");
+
+    // Tags: merge branding tags with LLM topic-specific tags
+    const tags = [...branding.tags, ...(pub?.topicTags ?? [])];
+
+    // Hashtags: merge branding hashtags with LLM topic-specific hashtags (deduplicated)
+    const allHashtags = [...branding.hashtags];
+    for (const h of pub?.topicHashtags ?? []) {
+      if (!allHashtags.includes(h)) allHashtags.push(h);
+    }
 
     return {
       title,
       description,
-      tags: branding.tags,
-      hashtags: branding.hashtags,
+      tags,
+      hashtags: allHashtags,
       categoryId: branding.youTubeCategory,
       disclosureRequired: genSecDefaults.disclosureRequired,
     };
