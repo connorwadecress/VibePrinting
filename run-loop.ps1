@@ -1,4 +1,5 @@
 param(
+    [string]$Brand,
     [int]$IntervalMinutes = 20,
     [int]$RunsMax = 0  # 0 = unlimited until you Ctrl+C
 )
@@ -20,7 +21,9 @@ while ($true) {
     Write-Host "[$timestamp] Starting run #$runCount..." -ForegroundColor Green
 
     try {
-        npx tsx src/generate.ts --upload
+        $loopArgs = @("--upload")
+        if ($Brand) { $loopArgs += "--brand=$Brand" }
+        npx tsx src/generate.ts @loopArgs
         Write-Host "[$timestamp] Run #$runCount complete." -ForegroundColor Green
     } catch {
         Write-Host "[$timestamp] Run #$runCount FAILED: $_" -ForegroundColor Red

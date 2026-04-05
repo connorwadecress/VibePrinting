@@ -27,7 +27,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
-Write-Host "=== SignalDrop - TikTok OAuth Setup ===" -ForegroundColor Cyan
+Write-Host "=== Vibe Printing - TikTok OAuth Setup ===" -ForegroundColor Cyan
 Write-Host ""
 
 # --- PKCE helpers -------------------------------------------------------------
@@ -94,7 +94,7 @@ $authUrl = "https://www.tiktok.com/v2/auth/authorize/" +
            "&code_challenge_method=S256"
 
 Write-Host "Opening TikTok authorisation page..." -ForegroundColor Yellow
-Write-Host "Log in as the SignalDrop TikTok account and tap Authorise." -ForegroundColor Green
+Write-Host "Log in as your TikTok account and tap Authorise." -ForegroundColor Green
 Write-Host ""
 Start-Process $authUrl
 
@@ -111,7 +111,7 @@ $retState = $request.QueryString["state"]
 # Respond to the browser tab
 if ($authCode) {
     $html = "<html><body style='font-family:sans-serif;padding:40px;background:#010101;color:#fff'>" +
-            "<h2 style='color:#69c9d0'>SignalDrop TikTok connected!</h2>" +
+            "<h2 style='color:#69c9d0'>TikTok connected!</h2>" +
             "<p>You can close this tab and return to PowerShell.</p></body></html>"
 } else {
     $html = "<html><body style='font-family:sans-serif;padding:40px'>" +
@@ -188,7 +188,7 @@ try {
     Write-Host "The pipeline will auto-refresh using TIKTOK_REFRESH_TOKEN." -ForegroundColor Yellow
     Write-Host "Re-run this script if the refresh token ever expires or is revoked." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Then post to SignalDrop with: .\generate.ps1 -Upload" -ForegroundColor Green
+    Write-Host "Then upload with: .\generate.ps1 -Brand <your-brand> -Upload" -ForegroundColor Green
     Write-Host ""
 
 } catch {

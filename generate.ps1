@@ -1,5 +1,6 @@
 param(
-    [ValidateSet("history-flash", "human-limits", "everyday-systems")]
+    [string]$Brand,
+
     [string]$Lane,
 
     [switch]$DryRun,
@@ -15,6 +16,7 @@ Write-Host ""
 
 # Build args — NOTE: $args is reserved in PowerShell, use $tsArgs instead
 $tsArgs = @()
+if ($Brand)  { $tsArgs += "--brand=$Brand" }
 if ($Lane)   { $tsArgs += "--lane=$Lane" }
 if ($DryRun) { $tsArgs += "--dry-run" }
 if ($Upload) { $tsArgs += "--upload" }

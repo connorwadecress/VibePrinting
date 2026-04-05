@@ -20,6 +20,7 @@ import type { UploadMetadata } from "./domain/interfaces/uploader.js";
 import type { ShortScript } from "./domain/models.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
+import { resolveBrand, loadBrandEnv } from "./utils/brand-resolver.js";
 import { log, logError } from "./utils/logger.js";
 
 // ---------------------------------------------------------------------------
@@ -28,13 +29,15 @@ import { log, logError } from "./utils/logger.js";
 
 function parseArgs() {
   const args = process.argv.slice(2);
+  let brand: string | undefined;
   let platform: string | undefined;
   let runId: string | undefined;
   let dir: string | undefined;
   let all = false;
 
   for (const arg of args) {
-    if (arg.startsWith("--platform=")) platform = arg.split("=")[1];
+    if (arg.startsWith("--brand=")) brand = arg.split("=")[1];
+    else if (arg.startsWith("--platform=")) platform = arg.split("=")[1];
     else if (arg.startsWith("--run=")) runId = arg.split("=")[1];
     else if (arg.startsWith("--dir=")) dir = arg.split("=")[1];
     else if (arg === "--all") all = true;
@@ -42,11 +45,11 @@ function parseArgs() {
   }
 
   if (!platform) {
-    console.error("Usage: tsx src/retry-upload.ts --platform=<tiktok|youtube> [--run=<run-id>] [--dir=<path>] [--all]");
+    console.error("Usage: tsx src/retry-upload.ts --brand=<id> --platform=<tiktok|youtube> [--run=<run-id>] [--dir=<path>] [--all]");
     process.exit(1);
   }
 
-  return { platform: platform.toLowerCase(), runId, dir, all };
+  return { brand, platform: platform.toLowerCase(), runId, dir, all };
 }
 
 // ---------------------------------------------------------------------------
@@ -160,9 +163,13 @@ async function uploadRun(
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const { platform, runId, dir, all } = parseArgs();
+  const { brand: brandArg, platform, runId, dir, all } = parseArgs();
+
+  const brand = resolveBrand(brandArg);
+  if (brand) loadBrandEnv(brand);
+
   const config = loadConfig();
-  const profile = loadProfile();
+  const profile = loadProfile(brand?.profilePath);
   const outputDir = dir ? path.resolve(dir) : config.outputDir;
 
   // Pick the right uploader

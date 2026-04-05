@@ -15,11 +15,13 @@ The pipeline takes a content lane, uses an LLM to generate a topic + research + 
 ## Quick start
 
 1. `npm install`
-2. Copy `.env.example` → `.env` and fill in API keys
-3. Copy `channel.example.json` → `channel.json` and customize your channel identity
-4. `.\generate.ps1 -DryRun` — generates a script (no video, just LLM calls)
-5. `.\generate.ps1` — full pipeline, outputs `final.mp4`
-6. `.\generate.ps1 -Upload` — full pipeline + upload to configured platforms
+2. Copy `.env.example` → `.env` and fill in engine API keys (LLM, Pexels)
+3. Set up a brand: `cp -r brands/_template brands/my-brand`, edit `channel.json` and `.env`
+4. `.\generate.ps1 -Brand my-brand -DryRun` — generates a script (no video, just LLM calls)
+5. `.\generate.ps1 -Brand my-brand` — full pipeline, outputs `final.mp4`
+6. `.\generate.ps1 -Brand my-brand -Upload` — full pipeline + upload to configured platforms
+
+Legacy mode (no `--brand` flag) still works — falls back to root `channel.json` if present.
 
 ---
 
@@ -44,8 +46,10 @@ Clean architecture with SOLID principles. No channel identity or provider implem
 - **Interfaces** (`src/domain/interfaces/`) — contracts for all providers (`LlmClient`, `TtsProvider`, `FootageProvider`, `VideoAssembler`, `Uploader`) and the `PipelineStage` + `StageContext` types
 - **Providers** (`src/providers/`) — concrete implementations behind interfaces, swappable without touching stages
 - **Stages** (`src/pipeline/stages/`) — each implements `PipelineStage` with `execute(state, context)`, composable and reorderable
-- **Channel profile** (`channel.json`) — all channel identity externalized: name, thesis, content lanes, branding, TTS voice (never in source)
+- **Brand folders** (`brands/<id>/`) — each brand has its own channel profile, credentials, and branding assets, fully isolated from other brands
+- **Channel profile** (`brands/<id>/channel.json`) — all channel identity externalized: name, thesis, content lanes, branding, TTS voice (never in source)
 - **Video specs** (`src/domain/video-specs.ts`) — resolution, codec, caption styling as data (not hardcoded in FFmpeg calls)
+- **Brand resolver** (`src/utils/brand-resolver.ts`) — resolves `--brand=<id>` to file paths, loads brand-specific `.env` overlay
 - **Composition root** (`src/generate.ts`) — wires providers → stages → runner; the only file that knows about concrete classes
 
 ### How to extend
@@ -57,7 +61,7 @@ Clean architecture with SOLID principles. No channel identity or provider implem
 | New footage source | Implement `FootageProvider` in `src/providers/footage/`, wire in `generate.ts` |
 | New upload platform | Implement `Uploader` in `src/providers/upload/`, add to uploaders array in `generate.ts` |
 | New video format | Add `VideoSpec` preset in `src/domain/video-specs.ts`, pass to assembler in `generate.ts` |
-| New channel/theme | Edit `channel.json` — add lanes, change branding, swap TTS voice |
+| New brand/channel | Copy `brands/_template/` to `brands/<id>/`, edit `channel.json` and `.env` |
 | New pipeline stage | Implement `PipelineStage`, add to preset in `src/pipeline/presets/` |
 
 ---
@@ -65,19 +69,34 @@ Clean architecture with SOLID principles. No channel identity or provider implem
 ## Repo layout
 
 ```
-channel.json                         — your channel identity (gitignored, user-created)
-channel.example.json                 — template for channel.json
-.env                                 — API keys and secrets (gitignored)
-.env.example                         — template for .env
-generate.ps1                         — PowerShell wrapper: -Lane, -DryRun, -Upload
-run-loop.ps1                         — auto-generate on interval: -IntervalMinutes, -RunsMax
+.env                                 — engine API keys (gitignored)
+.env.example                         — template for root .env
+channel.example.json                 — quick-start channel template
+generate.ps1                         — PowerShell wrapper: -Brand, -Lane, -DryRun, -Upload
+run-loop.ps1                         — auto-generate on interval: -Brand, -IntervalMinutes, -RunsMax
+retry-upload.ps1                     — re-upload a previous run: -Brand, -Platform, -Run, -All
 Get-YouTubeToken.ps1                 — one-time OAuth2 flow for YouTube refresh token
 Get-TikTokToken.ps1                  — one-time OAuth2 flow for TikTok tokens
 
-src/
+brands/                              — per-brand configuration and assets
+  README.md                          — brand system overview
+  _template/                         — scaffolding for new brands
+    channel.example.json             — channel profile template
+    .env.example                     — brand credential template
+    README.md                        — step-by-step setup guide
+  signal-drop/                       — Signal Drop brand (the original)
+    channel.json                     — channel profile (gitignored)
+    .env                             — YouTube/TikTok credentials (gitignored)
+    branding/                        — brand-guide.md, logo.png, banner.png
+    site/                            — signaldrop.space Vercel website
+    CLAUDE.md                        — AI agent context for this brand
+    README.md                        — brand documentation
+
+src/                                 — engine code (brand-agnostic)
   config.ts                          — env loading → AppConfig
   generate.ts                        — composition root (wires providers → stages → runner)
   index.ts                           — bootstrap info (npm run plan)
+  retry-upload.ts                    — re-upload previous runs to a platform
 
   domain/
     models.ts                        — all shared TypeScript types
@@ -121,23 +140,21 @@ src/
       assembly.ts                    — assembles final video via VideoAssembler
       upload.ts                      — uploads to all configured Uploaders in parallel
 
-  n8n/                               — n8n workflow management (legacy, not used by pipeline)
-    api.ts                           — N8nClient HTTP wrapper
-    scope.ts                         — workflow scope management
-    workflows.ts                     — workflow definitions
-  n8n-cli.ts                         — CLI for n8n operations (npm run n8n)
-  n8n-export.ts                      — export workflows to JSON (npm run export:workflows)
+  utils/
+    brand-resolver.ts                — resolveBrand(), loadBrandEnv(), listBrands()
+    fs-helpers.ts                    — ensureDir, createRunDir, downloadFile
+    logger.ts                        — log, logError, logTiming
 
   publish/                           — standalone helpers (not used by pipeline)
     tiktok.ts                        — TikTok publish logic (pre-refactor, kept for reference)
     tiktok-auth.ts                   — one-time OAuth token helper
 
-  utils/
-    fs-helpers.ts                    — ensureDir, createRunDir, downloadFile
-    logger.ts                        — log, logError, logTiming
+  n8n/                               — n8n workflow management (legacy, not used by pipeline)
+    api.ts                           — N8nClient HTTP wrapper
+    scope.ts                         — workflow scope management
+    workflows.ts                     — workflow definitions
 
-docs/                                — architecture.md, editorial-plan.md, roadmap.md, n8n-workflow-spec.md
-branding/                            — brand-guide.md, logo.png, banner.png
+docs/                                — architecture.md, editorial-plan.md, roadmap.md
 ```
 
 ---
@@ -158,6 +175,7 @@ branding/                            — brand-guide.md, logo.png, banner.png
 
 | Flag | Effect |
 |---|---|
+| `--brand=<id>` | Select a brand folder from `brands/<id>/` |
 | `--lane=<id>` | Run a specific content lane (must match an id in channel.json) |
 | `--dry-run` | Stop after script generation — no TTS, footage, video, or upload |
 | `--upload` | Upload final video to all configured platforms |
@@ -165,24 +183,65 @@ branding/                            — brand-guide.md, logo.png, banner.png
 ### PowerShell wrappers
 
 ```powershell
-.\generate.ps1                               # Full pipeline, random lane
-.\generate.ps1 -Lane history-flash -DryRun   # Script only
-.\generate.ps1 -Upload                       # Full pipeline + upload
-.\run-loop.ps1                               # Auto-generate + upload every 20 min
-.\run-loop.ps1 -IntervalMinutes 30 -RunsMax 5
+.\generate.ps1 -Brand signal-drop -DryRun              # Script only
+.\generate.ps1 -Brand signal-drop                       # Full pipeline
+.\generate.ps1 -Brand signal-drop -Lane history-flash   # Specific lane
+.\generate.ps1 -Brand signal-drop -Upload               # Full pipeline + upload
+.\run-loop.ps1 -Brand signal-drop                       # Auto-generate + upload every 20 min
+.\run-loop.ps1 -Brand signal-drop -IntervalMinutes 30 -RunsMax 5
+.\retry-upload.ps1 -Brand signal-drop -Platform tiktok   # Re-upload latest run
 ```
 
 Each run creates `output/run-YYYYMMDD-HHmmss/` containing `script.json`, clips, and `final.mp4`.
 
 ---
 
+## Multi-brand system
+
+The engine supports multiple brands running on the same codebase. Each brand has its own folder under `brands/` containing channel config, credentials, and branding assets.
+
+### Brand folder structure
+
+```
+brands/<brand-id>/
+  channel.json          — channel profile (gitignored)
+  .env                  — platform credentials (gitignored)
+  branding/             — visual assets and brand guide (committed)
+  site/                 — optional website files (committed)
+  CLAUDE.md             — AI agent context for this brand
+  README.md             — brand documentation
+```
+
+### Brand selection priority
+
+1. `--brand=<id>` CLI flag (highest priority)
+2. `BRAND=<id>` env var (for automation/scheduled tasks)
+3. `CHANNEL_PROFILE_PATH=<path>` env var (legacy explicit path)
+4. Root `channel.json` (backward compatible fallback)
+
+### Credential layering
+
+- **Root `.env`** — engine-level keys (LLM, stock footage) shared by all brands
+- **`brands/<id>/.env`** — brand-specific keys (YouTube, TikTok) loaded second, overrides root
+
+### Creating a new brand
+
+See `brands/_template/README.md` for step-by-step instructions. In brief:
+```bash
+cp -r brands/_template brands/my-brand
+# Edit channel.json, .env, add branding assets
+.\generate.ps1 -Brand my-brand -DryRun
+```
+
+---
+
 ## Channel configuration (channel.json)
 
-All channel identity lives in `channel.json` (gitignored). Copy `channel.example.json` to get started.
+All channel identity lives in `brands/<id>/channel.json` (gitignored). Copy from `brands/_template/channel.example.json`.
 
 | Field | Purpose |
 |---|---|
-| `id` | Internal identifier |
+| `id` | Internal identifier (must match brand folder name) |
 | `displayName` | Channel name (shown in logs) |
 | `thesis` | What your channel is about — guides LLM topic generation |
 | `contentLanes[]` | Content categories with descriptions, duration targets, and example hooks |
@@ -194,11 +253,11 @@ All channel identity lives in `channel.json` (gitignored). Copy `channel.example
 | `ttsRate` | Speech rate modifier (e.g. `+10%`) |
 | `genSecDefaults` | Default GenSec posture (disclosure, risk level, auto-publish) |
 
-Override the file path via `CHANNEL_PROFILE_PATH` env var.
-
 ---
 
-## Environment variables (.env)
+## Environment variables
+
+### Root `.env` (engine-level, shared by all brands)
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
@@ -210,17 +269,22 @@ Override the file path via `CHANNEL_PROFILE_PATH` env var.
 | `PEXELS_API_KEY` | For video | — | Stock footage |
 | `TTS_VOICE` | No | `en-US-GuyNeural` | Edge TTS voice (also in channel.json) |
 | `TTS_RATE` | No | `+10%` | Speech rate (also in channel.json) |
-| `YOUTUBE_CLIENT_ID` | For upload | — | YouTube OAuth |
-| `YOUTUBE_CLIENT_SECRET` | For upload | — | YouTube OAuth |
-| `YOUTUBE_REFRESH_TOKEN` | For upload | — | YouTube OAuth (via Get-YouTubeToken.ps1) |
-| `YOUTUBE_CHANNEL_ID` | No | — | Informational |
-| `TIKTOK_CLIENT_KEY` | For upload | — | TikTok API |
-| `TIKTOK_CLIENT_SECRET` | For upload | — | TikTok API |
-| `TIKTOK_ACCESS_TOKEN` | For upload | — | TikTok (or use refresh) |
-| `TIKTOK_REFRESH_TOKEN` | For upload | — | TikTok (via Get-TikTokToken.ps1) |
 | `OUTPUT_DIR` | No | `./output` | Where runs are saved |
 | `DEFAULT_DAILY_TARGET` | No | `3` | Informational daily target |
-| `CHANNEL_PROFILE_PATH` | No | `./channel.json` | Override channel profile location |
+| `BRAND` | No | — | Default brand (alternative to `--brand` CLI flag) |
+
+### Brand `.env` (`brands/<id>/.env`, per-brand credentials)
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `YOUTUBE_CLIENT_ID` | For upload | YouTube OAuth |
+| `YOUTUBE_CLIENT_SECRET` | For upload | YouTube OAuth |
+| `YOUTUBE_REFRESH_TOKEN` | For upload | YouTube OAuth (via Get-YouTubeToken.ps1) |
+| `YOUTUBE_CHANNEL_ID` | No | Informational |
+| `TIKTOK_CLIENT_KEY` | For upload | TikTok API |
+| `TIKTOK_CLIENT_SECRET` | For upload | TikTok API |
+| `TIKTOK_ACCESS_TOKEN` | For upload | TikTok (or use refresh) |
+| `TIKTOK_REFRESH_TOKEN` | For upload | TikTok (via Get-TikTokToken.ps1) |
 
 ---
 
@@ -282,7 +346,8 @@ GenSec review is not yet implemented as a pipeline stage — manual review is re
 - No `any` — extend domain types in `src/domain/models.ts`
 - Pipeline stages get providers from `StageContext` — never import concrete providers in stage files
 - All pipeline data shapes live in `src/domain/models.ts` — extend it first, then update stages
-- Channel identity lives in `channel.json` — never hardcode channel names, branding, or content lanes in source
+- Channel identity lives in `brands/<id>/channel.json` — never hardcode channel names, branding, or content lanes in source
+- Brand-specific files (credentials, config, assets) go in `brands/<id>/` — never in the root or engine code
 - Video format (resolution, codec, caption style) lives in `VideoSpec` — never hardcode in assembler
 - New provider implementations go behind their interface — add to `src/providers/<category>/`
 - Logging: `log(stage, msg)`, `logError(stage, msg)`, `logTiming(stage, startMs)` from `src/utils/logger.ts`
@@ -296,6 +361,7 @@ GenSec review is not yet implemented as a pipeline stage — manual review is re
 - Phase 0 (foundation) ✅ — channel thesis, lane definitions, GenSec policy, provider shortlist
 - Phase 1 (local engine) ✅ — full local pipeline producing `final.mp4` per run
 - Phase 1.5 (SOLID refactor) ✅ — clean architecture, provider interfaces, composable pipeline, white-label channel config
+- Phase 1.6 (multi-brand) ✅ — brand folder system, `--brand` CLI flag, credential layering, brand-agnostic engine
 - Phase 2 (n8n workflow) 🔄 — n8n workflow JSON exports exist; hosted integration in progress
 - Phase 3 (assisted publishing) ⏳ — daily batch generation with operator approval
 - Phase 4 (guarded autopublish) ⏳ — low-risk lanes only, auto-publish with spend budgets

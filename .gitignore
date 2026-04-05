@@ -6,5 +6,8 @@ artifacts/
 output/
 *.log
 
+# Brand-specific secrets (each brand has its own channel.json and .env)
+brands/**/channel.json
+brands/**/.env
 
 .vercel

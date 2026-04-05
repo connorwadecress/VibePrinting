@@ -13,31 +13,42 @@ import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { buildShortsPipeline } from "./pipeline/presets/shorts-pipeline.js";
 import { runPipeline } from "./pipeline/runner.js";
 import { createRunDir } from "./utils/fs-helpers.js";
+import { resolveBrand, loadBrandEnv } from "./utils/brand-resolver.js";
 import { log, logError } from "./utils/logger.js";
 import fs from "node:fs";
 import path from "node:path";
 
-function parseArgs(): { lane?: string; dryRun: boolean; upload: boolean } {
+function parseArgs(): { brand?: string; lane?: string; dryRun: boolean; upload: boolean } {
   const args = process.argv.slice(2);
+  let brand: string | undefined;
   let lane: string | undefined;
   let dryRun = false;
   let upload = false;
 
   for (const arg of args) {
-    if (arg.startsWith("--lane=")) lane = arg.split("=")[1];
+    if (arg.startsWith("--brand=")) brand = arg.split("=")[1];
+    else if (arg.startsWith("--lane=")) lane = arg.split("=")[1];
     else if (arg === "--dry-run") dryRun = true;
     else if (arg === "--upload") upload = true;
   }
 
-  return { lane, dryRun, upload };
+  return { brand, lane, dryRun, upload };
 }
 
 async function main(): Promise<void> {
-  const config = loadConfig();
-  const { lane: laneArg, dryRun, upload } = parseArgs();
+  const { brand: brandArg, lane: laneArg, dryRun, upload } = parseArgs();
 
-  // --- Load channel profile from channel.json ---
-  const profile = loadProfile();
+  // --- Resolve brand and overlay brand-specific .env ---
+  const brand = resolveBrand(brandArg);
+  if (brand) {
+    loadBrandEnv(brand);
+    log("pipeline", `Brand: ${brand.brandId}`);
+  }
+
+  const config = loadConfig();
+
+  // --- Load channel profile from brand folder or root channel.json ---
+  const profile = loadProfile(brand?.profilePath);
   const videoSpec = SHORTS_PORTRAIT;
 
   console.log("=== Vibe Printing - Free-Tier Pipeline ===");

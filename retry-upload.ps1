@@ -11,6 +11,8 @@
 # =============================================================================
 
 param(
+    [string]$Brand,
+
     [ValidateSet("tiktok", "youtube")]
     [string]$Platform = "tiktok",
 
@@ -26,6 +28,7 @@ Write-Host "=== Retry Upload ===" -ForegroundColor Cyan
 Write-Host "  Platform: $Platform" -ForegroundColor White
 
 $args_ = @("--platform=$Platform")
+if ($Brand) { $args_ += "--brand=$Brand" }
 
 if ($Dir) {
     $args_ += "--dir=$Dir"

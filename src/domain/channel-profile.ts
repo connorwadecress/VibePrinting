@@ -38,7 +38,7 @@ export function loadProfile(filePath?: string): ChannelProfile {
   if (!fs.existsSync(resolvedPath)) {
     throw new Error(
       `Channel profile not found: ${resolvedPath}\n` +
-      `Copy channel.example.json to channel.json and customize it for your channel.`,
+      `Use --brand=<id> to select a brand folder, or copy channel.example.json to channel.json.`,
     );
   }
 

@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = "Stop"
 $scope = "https://www.googleapis.com/auth/youtube.upload"
 
-Write-Host "`n=== SignalDrop - YouTube OAuth Setup ===" -ForegroundColor Cyan
+Write-Host "`n=== Vibe Printing - YouTube OAuth Setup ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Find a free port dynamically — no more port conflicts
@@ -37,7 +37,7 @@ while ($port -le 65535) {
 $redirect = "http://localhost:$port"
 Write-Host "Listening on $redirect" -ForegroundColor DarkGray
 
-# Build auth URL — prompt=select_account lets you pick SignalDrop account
+# Build auth URL — prompt=select_account lets you pick the correct account
 $authUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
            "?client_id=$([Uri]::EscapeDataString($ClientId))" +
            "&redirect_uri=$([Uri]::EscapeDataString($redirect))" +
@@ -48,7 +48,7 @@ $authUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
 
 # Open browser
 Write-Host "Opening Google account picker..." -ForegroundColor Yellow
-Write-Host "Select the SignalDrop account (signaldropyt@gmail.com)`n" -ForegroundColor Green
+Write-Host "Select your channel's Google account`n" -ForegroundColor Green
 Start-Process $authUrl
 
 # Wait for Google to redirect back
@@ -60,7 +60,7 @@ $authErr  = $request.QueryString["error"]
 
 # Respond to the browser
 $html = if ($authCode) {
-    "<html><body style='font-family:sans-serif;padding:40px;background:#0f0f0f;color:#fff'><h2 style='color:#00c9a7'>SignalDrop connected!</h2><p>You can close this tab and go back to PowerShell.</p></body></html>"
+    "<html><body style='font-family:sans-serif;padding:40px;background:#0f0f0f;color:#fff'><h2 style='color:#00c9a7'>YouTube connected!</h2><p>You can close this tab and go back to PowerShell.</p></body></html>"
 } else {
     "<html><body style='font-family:sans-serif;padding:40px'><h2>Something went wrong</h2><p>Error: $authErr</p></body></html>"
 }
@@ -110,7 +110,7 @@ try {
     Write-Host "YOUTUBE_CLIENT_SECRET=$ClientSecret" -ForegroundColor White
     Write-Host "YOUTUBE_REFRESH_TOKEN=$refreshToken" -ForegroundColor White
     Write-Host ""
-    Write-Host "Then post to SignalDrop with: .\generate.ps1 -Upload" -ForegroundColor Green
+    Write-Host "Then upload with: .\generate.ps1 -Brand <your-brand> -Upload" -ForegroundColor Green
     Write-Host ""
 
 } catch {

@@ -4,7 +4,7 @@
  * Usage:
  *   1. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET in your .env
  *   2. Run:  npx tsx src/publish/tiktok-auth.ts
- *   3. Open the printed URL in a browser, authorise as @SignalDrop
+ *   3. Open the printed URL in a browser and authorise your TikTok account
  *   4. Copy the `code` query param from the redirect URL and paste it back
  *   5. The script prints TIKTOK_REFRESH_TOKEN — save it in .env
  *
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   });
 
   const authUrl = `${AUTH_BASE}?${params.toString()}`;
-  console.log("\n1. Open this URL in a browser and authorise as @SignalDrop:");
+  console.log("\n1. Open this URL in a browser and authorise your TikTok account:");
   console.log(`\n   ${authUrl}\n`);
 
   const code = await prompt(
