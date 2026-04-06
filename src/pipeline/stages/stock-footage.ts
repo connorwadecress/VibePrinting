@@ -13,14 +13,28 @@ export class StockFootageStage implements PipelineStage {
     log(this.name, `Fetching clips for ${scenes.length} scenes...`);
     const clipsDir = path.join(context.workDir, "clips");
     const clips: StockClip[] = [];
+    const enableReranking = context.config.llmReranking ?? false;
+
+    if (enableReranking) {
+      log(this.name, "LLM re-ranking enabled");
+    }
 
     for (const scene of scenes) {
-      const clip = await context.footage.findAndDownloadClip(
-        scene.searchKeywords,
-        scene.seconds,
-        clipsDir,
-        scene.sceneIndex,
-      );
+      // Find the narration for this scene from the script beats
+      const narration =
+        state.script?.beats.find((b) => b.beatIndex === scene.sceneIndex)?.narration
+        ?? state.script?.hook
+        ?? "";
+
+      const clip = await context.footage.findAndDownloadClip({
+        keywords: scene.searchKeywords,
+        targetDuration: scene.seconds,
+        outputDir: clipsDir,
+        sceneIndex: scene.sceneIndex,
+        visualDescription: scene.visualDescription,
+        narration,
+        llmClient: enableReranking ? context.llm : undefined,
+      });
       clips.push(clip);
     }
 

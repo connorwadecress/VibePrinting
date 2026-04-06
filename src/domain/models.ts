@@ -110,6 +110,18 @@ export interface VoiceoverResult {
 
 export interface ScenePlanWithKeywords extends ScenePlan {
   searchKeywords: string[];
+  /** Plain-English description of the ideal stock clip for this scene */
+  visualDescription: string;
+}
+
+export interface ClipCandidate {
+  video: { id: number; width: number; height: number; duration: number; tags: unknown[] };
+  file: { link: string; width: number | null; height: number | null; quality: string };
+  matchedKeyword: string;
+}
+
+export interface ScoredCandidate extends ClipCandidate {
+  score: number;
 }
 
 /**
