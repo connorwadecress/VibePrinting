@@ -10,7 +10,8 @@ For each scene, provide:
 - Duration in seconds
 - 2-3 stock footage search keywords for Pexels (specific, visual, searchable terms)
 
-The first scene should be the hook. The last scene should be the payoff + CTA.
+The first scene should be the hook. The last scene should be the payoff.
+Never generate scenes with subscribe buttons, like buttons, notification bells, social media UI, or YouTube branding. Use real-world visuals only.
 
 Respond with JSON array:
 [
@@ -42,10 +43,9 @@ export class ScenePlanStage implements PipelineStage {
 Hook: "${script.hook}"
 ${beatsText}
 Payoff: "${script.payoff}"
-CTA: "${script.callToAction}"
 Total duration: ~${script.totalDurationSeconds} seconds
 
-Plan scenes for this script. Ensure total scene durations roughly match ${script.totalDurationSeconds} seconds. Include a scene for the hook and a scene for the payoff.`;
+Plan scenes for this script. Ensure total scene durations roughly match ${script.totalDurationSeconds} seconds. Include a scene for the hook and a scene for the payoff. Use real-world stock footage keywords only.`;
 
     const MAX_RETRIES = 3;
     let lastError: Error | undefined;

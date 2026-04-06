@@ -13,7 +13,6 @@ export class VoiceoverStage implements PipelineStage {
       script.hook,
       ...script.beats.map((b) => b.narration),
       script.payoff,
-      script.callToAction,
     ];
     const narrationText = parts.join(" ");
 

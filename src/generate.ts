@@ -6,6 +6,7 @@ import type { StageContext } from "./domain/interfaces/pipeline-stage.js";
 import type { ContentLane, PipelineState, ShortScript } from "./domain/models.js";
 import { createLlmClient } from "./providers/llm/index.js";
 import { EdgeTtsProvider } from "./providers/tts/edge-tts.js";
+import { ElevenLabsProvider } from "./providers/tts/elevenlabs.js";
 import { PexelsProvider } from "./providers/footage/pexels.js";
 import { FfmpegAssembler } from "./providers/video/ffmpeg-assembler.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
@@ -76,7 +77,14 @@ async function main(): Promise<void> {
   // --- Wire providers (composition root) ---
   const context: StageContext = {
     llm: createLlmClient(config),
-    tts: new EdgeTtsProvider(profile.ttsVoice, profile.ttsRate),
+    tts: config.ttsProvider === "elevenlabs"
+      ? new ElevenLabsProvider(
+          config.elevenLabsApiKey ?? (() => { throw new Error("ELEVENLABS_API_KEY is required"); })(),
+          config.elevenLabsVoiceId,
+          config.elevenLabsModelId,
+          config.elevenLabsSpeed,
+        )
+      : new EdgeTtsProvider(profile.ttsVoice, profile.ttsRate),
     footage: new PexelsProvider(config.pexelsApiKey ?? ""),
     assembler: new FfmpegAssembler(videoSpec),
     uploaders: [new YouTubeUploader(config), new TikTokUploader(config)],
