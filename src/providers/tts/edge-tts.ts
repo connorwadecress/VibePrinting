@@ -11,13 +11,24 @@ interface WordBoundary {
 }
 
 function extractWordTimings(boundaries: WordBoundary[]): WordTiming[] {
-  return boundaries
-    .filter((b) => b.type !== "Punctuation" && /[a-zA-Z0-9]/.test(b.text))
-    .map((b) => ({
+  const result: WordTiming[] = [];
+
+  for (const b of boundaries) {
+    if (b.type === "Punctuation" || !/[a-zA-Z0-9]/.test(b.text)) {
+      // Attach punctuation to the preceding word for natural page breaks
+      if (result.length > 0 && /^[.,!?;:\u2014\u2013\u2026]$/.test(b.text)) {
+        result[result.length - 1].text += b.text;
+      }
+      continue;
+    }
+    result.push({
       text: b.text,
       startMs: b.offset / 10_000,
       endMs: (b.offset + b.duration) / 10_000,
-    }));
+    });
+  }
+
+  return result;
 }
 
 function buildSubtitles(boundaries: WordBoundary[], totalDuration: number): SubtitleEntry[] {
