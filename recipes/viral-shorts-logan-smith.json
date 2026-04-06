@@ -1,0 +1,199 @@
+{
+  "recipeMeta": {
+    "sourceVideo": {
+      "title": "How to make shorts that go viral every time",
+      "channel": "LOGAN E. SMITH",
+      "channelUrl": "https://www.youtube.com/@LoganEdwardSmith",
+      "videoId": "gEQ0BLyVJhY",
+      "uploadDate": "2024-06-18",
+      "durationSeconds": 581,
+      "viewCount": 2278797,
+      "likeCount": 110127,
+      "category": "Education",
+      "tags": [
+        "Shorts",
+        "how to grow youtube shorts",
+        "youtube shorts monetization",
+        "viral youtube shorts",
+        "viral shorts channel",
+        "shorts channel",
+        "isaac shorts",
+        "jack craig",
+        "isaacverse",
+        "learnbyleo"
+      ]
+    },
+    "extractedAt": "2026-04-06",
+    "purpose": "Reference recipe for structuring viral YouTube Shorts — principles, framework, and posting strategy"
+  },
+
+  "description": "YouTube Shorts is a game of skill; learn how the algorithm works + how to retain viewers, and you'll be able to go viral consistently. There's a science behind ALL of it, and every top creator understands this science.",
+
+  "chapters": [
+    {
+      "title": "Intro",
+      "startSeconds": 0,
+      "endSeconds": 30,
+      "summary": "Creator establishes credibility with viral view counts (3M, 5M, 9M) and promises to share the exact formula top creators use. Positions video as advanced, not basic hashtag advice."
+    },
+    {
+      "title": "The YouTube Algorithm",
+      "startSeconds": 30,
+      "endSeconds": 101,
+      "summary": "Algorithm is not random or luck-based — it surfaces the most engaging content with high retention. Creator proves this with personal growth trajectory: first channel took 4 months to 10K subs, second channel took 3 weeks using the same knowledge."
+    },
+    {
+      "title": "Topics",
+      "startSeconds": 101,
+      "endSeconds": 258,
+      "summary": "An interesting topic is the foundation of every viral short. Key principles: know your audience, research what performs in your niche, study successful channels. Critical mistake to avoid: paying off the topic too quickly (revealing the answer in the first 5 seconds kills retention). The delivery and execution of the topic are equally as important as the idea itself."
+    },
+    {
+      "title": "Editing/Structure",
+      "startSeconds": 258,
+      "endSeconds": 436,
+      "summary": "Introduces the HPC framework (Hook, Progression, Climax). Editing = external presentation (cutting, pacing, captions). Structure = internal composition (storytelling, payoffs). Analyzes a 70M-view short as a case study for the HPC system."
+    },
+    {
+      "title": "Posting",
+      "startSeconds": 436,
+      "endSeconds": 581,
+      "summary": "Day of week doesn't matter. Time of day matters — post when your audience is most active (check YouTube Studio analytics). Frequency sweet spot is once per day. 4x/day drops quality; 2x/week is fine but slow. Consistency is key — don't go long without uploading."
+    }
+  ],
+
+  "coreFramework": {
+    "name": "HPC (Hook → Progression → Climax)",
+    "stages": [
+      {
+        "stage": "Hook",
+        "durationSeconds": 5,
+        "description": "First 5 seconds — the most important part. Introduce the topic while leaving the viewer with many unanswered questions.",
+        "requirements": [
+          "Fast-paced, attention-grabbing",
+          "No pauses",
+          "Quick music with captions on screen",
+          "Introduce the topic/premise",
+          "Leave viewer with multiple unanswered questions",
+          "Do NOT pay off the topic early — withhold the answer"
+        ],
+        "antiPatterns": [
+          "Revealing the answer/secret in the first 5 seconds",
+          "Slow intros with long pauses",
+          "No captions or visual stimulation"
+        ]
+      },
+      {
+        "stage": "Progression",
+        "durationSeconds": null,
+        "description": "The middle — fulfill the promise made in the hook by showing the journey/process. Meet the expectations set in the intro.",
+        "requirements": [
+          "Deliver on the promise from the hook",
+          "Show the journey, not just the result",
+          "Maintain pacing and visual engagement",
+          "The content must match what the intro promised",
+          "Build anticipation toward the climax"
+        ],
+        "antiPatterns": [
+          "Skipping the journey (e.g., cutting straight to the result)",
+          "Content that doesn't match the hook's promise",
+          "Losing pacing or energy"
+        ]
+      },
+      {
+        "stage": "Climax",
+        "durationSeconds": null,
+        "description": "The payoff — the moment the topic is fulfilled and the audience gets what they came for. Wrap everything up nicely.",
+        "requirements": [
+          "Deliver the payoff the viewer has been waiting for",
+          "Satisfying conclusion that rewards the viewer for watching",
+          "Wrap up cleanly"
+        ],
+        "antiPatterns": [
+          "Anticlimactic or missing payoff",
+          "Dragging on after the climax",
+          "Payoff doesn't match the setup"
+        ]
+      }
+    ]
+  },
+
+  "keyPrinciples": {
+    "topicSelection": [
+      "Think of your intended audience — what do they want to see?",
+      "Research what types of videos already perform well in your niche",
+      "Study the big channels in your niche to see what worked for them",
+      "Always consider who your audience is and what they want to watch",
+      "The topic idea AND its delivery/execution are equally important"
+    ],
+    "retentionTactics": [
+      "Never pay off the topic too quickly — withhold the answer until the end",
+      "Leave viewers with unanswered questions in the hook",
+      "The secret/reveal should come at the end, forcing viewers to keep watching",
+      "Build and maintain anticipation throughout"
+    ],
+    "editingAndPacing": [
+      "Fast-paced, no dead air or long pauses",
+      "Captions on screen at all times",
+      "Music that fits the video style",
+      "Good cutting and pacing complement the storytelling",
+      "Combine good structure (storytelling) with good editing (presentation)"
+    ],
+    "postingStrategy": {
+      "frequency": "Once per day is the sweet spot (quality + consistency)",
+      "timing": "Post when your audience is most active (check YouTube Studio analytics)",
+      "dayOfWeek": "Doesn't matter — shorts succeed/fail on any day",
+      "consistency": "Most important factor — don't go long without uploading",
+      "tooMuch": "4x/day is too much — only half get picked up, quality drops",
+      "tooLittle": "2x/week works but is slow and unproductive"
+    }
+  },
+
+  "pipelineMapping": {
+    "description": "How this recipe maps to VibePrinting pipeline stages",
+    "topicDiscovery": {
+      "guidance": "Generate topics that create curiosity gaps — questions the audience desperately wants answered. The topic should be interesting enough to hook, but the answer should be withholdable until the climax.",
+      "avoidPatterns": [
+        "Topics where the answer is obvious from the title",
+        "Topics that don't target the channel's core audience",
+        "Topics without a natural curiosity gap"
+      ]
+    },
+    "scriptGeneration": {
+      "structure": "HPC",
+      "hookRules": [
+        "Max 5 seconds",
+        "Introduce premise, withhold payoff",
+        "Create multiple unanswered questions",
+        "Fast-paced, attention-grabbing language"
+      ],
+      "beatProgression": [
+        "Each beat should advance toward the climax",
+        "Show the journey, not just the result",
+        "Maintain energy and pacing throughout",
+        "Content must deliver on the hook's promise"
+      ],
+      "payoffRules": [
+        "Place the reveal/answer at the end",
+        "Make it satisfying — reward the viewer for staying",
+        "Wrap up cleanly without dragging"
+      ]
+    },
+    "scenePlan": {
+      "guidance": "Visuals should be fast-paced with no dead air. Every scene should have captions. Music should fit the energy. Quick cuts keep attention."
+    },
+    "assembly": {
+      "guidance": "Captions always on screen. Fast pacing with minimal pauses. Background music throughout. Quick transitions between scenes."
+    }
+  },
+
+  "transcript": [
+    { "start": 0.0, "text": "3 million views 5 million views 9 million views about 1 year into starting shorts I had finally figured out the blueprint to consistently going viral and today I'm going to be passing that knowledge onto you this video won't be a basic tutorial where I tell you to use a certain Niche or hashtags all of that stuff is useless you'll be learning the exact formula that top creators use to blow up all of their shorts so Focus up take notes if you'd like and let's get started" },
+    { "start": 30.0, "text": "before we can talk about breaking the algorithm we need to understand how it works and also how it can be exploited and first things first it's not random and it has nothing to do with luck the algorithm simply shows the best most engaging content on the platform so as long as you can make engaging shorts with high retention then blowing up is pretty much guaranteed and to prove that statement let's go back to when I was just starting out on shorts I had basically no idea what I was doing and my shorts wouldn't even break a 100 views but I kept improving my content until I finally started having success on the channel I believe it took about 4 months for me to hit 10K subscribers but here's where it gets crazy on my next Channel after that I hit 10K Subs in 3 weeks simply because I was more experienced and knew how to make better content so believe me when I say the algorithm always recognizes good shorts and pushes them forward and you'll start seeing this happen with your shorts if you do everything I tell you to" },
+    { "start": 101.0, "text": "everything else is completely useless if you neglect this step an interesting topic is the basis of every viral short out there and without it you can never hope to get many views so start with this think of your intended audience the people in your Niche what do they want to see what type of videos are already performing well in your space take some time to consider these questions I also suggest that you go research the big channels in your Niche to see what video types worked well for them now just by following that advice your video ideas will be 10 times better than they were before but there's still more to it the delivery and execution of the topic are equally as important as the actual idea the terrible mistake this Creator made was paying off the topic too quickly ideally the secret should have been revealed at the end that way the audience had to keep watching in order to find it out" },
+    { "start": 258.0, "text": "this is a huge aspect to master if you want to effortlessly make viral content editing is how you present your video the external things like cutting pacing and captions structure is how you compose your video with things like storytelling and payoffs learn how to combine good structure and good editing and you'll be going viral with every single post and to help you guys with that there's a system that I use called HPC which I'll break down for you guys starting with H the hook the first 5 Seconds of your shorts also the most important part of your content your hook should introduce the topic of the video while still leaving the viewer with a lot of questions look at how this Creator executed his hook on a short with over 70 million views I want to be the first person to have a snowball fight in the desert all right let's break that down so it was fast-paced and attention grabbing no pauses quick music with captions on the screen but it also gave us a lot of questions" },
+    { "start": 338.0, "text": "the second letter of HPC progression so we're progressing along in the short and notice how the Creator is meeting the expectations he set in the intro he said he was going to have a snowball fight in the desert so now he's fulfilling that promise and literally showing the adventure to get snow this is something you have to do in your shorts make sure that the idea given in the intro matches the actual content" },
+    { "start": 392.0, "text": "now the final letter of HPC stands for climax the climax is the moment that the topic is fulfilled and the audience finally gets what they came for that wraps up everything nicely that was overall a very good short the use of editing complimented the video Style the music was fitting he threw some jokes in there as well and the storytelling was very effective even if your Niche is completely different from this guy if you apply his same tactics to your own content you'll start seeing your shorts get hundreds of thousands of views and also never be afraid to imitate other creators learning from successful channels is a very important part of improving your shorts" },
+    { "start": 436.0, "text": "so at this point you should have the knowledge to make a good short but we're not done yet most people are limiting their views without even realizing it because they overlook some crucial details about the actual posting of their content I noticed that my shorts posted in the morning would get noticeably higher views than any other time of day but that doesn't mean you should post in the morning go to the analytics tab in studio press audience and scroll down a bit you can see the times when your audience is most active and align your posting times to when your audience is most active I also found that once per day was a sweet spot because I had enough time to make high-quality posts while still posting enough to get consistent exposure really the most important thing is that you stay consistent and don't go too long without uploading or else you'll end up losing a lot of momentum" }
+  ]
+}
