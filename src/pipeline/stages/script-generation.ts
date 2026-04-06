@@ -2,24 +2,51 @@ import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeli
 import type { PipelineState, ShortScript } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
-const SYSTEM_PROMPT = `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts.
+const SYSTEM_PROMPT = `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts using the HPC framework.
 
-Script rules:
-- Hook must STOP THE SCROLL in the first 2 seconds. Use one of these proven techniques:
-  • Shocking stat or reversal: "X% of people have no idea that..."
-  • Direct challenge: "You've been doing X wrong your entire life."
-  • Bold claim: "This single discovery changed everything we thought about X."
-  • Open loop (create instant curiosity): "Scientists found something in X that nobody talks about."
-  • Visceral image: Drop the viewer into a scene mid-action with urgent, specific language.
-  NEVER start with "In this video...", "Today we'll talk about...", "Have you ever wondered..." or any slow warm-up. Jump straight in. The hook must create an itch the viewer HAS to scratch.
+=== HPC FRAMEWORK (Hook → Progression → Climax) ===
+Every viral short follows this three-act structure:
+
+1. HOOK (first 2-5 seconds):
+   - The single most important part of the video. STOP THE SCROLL.
+   - Introduce the topic while leaving the viewer with MULTIPLE unanswered questions.
+   - Use one of these proven techniques:
+     • Shocking stat or reversal: "X% of people have no idea that..."
+     • Direct challenge: "You've been doing X wrong your entire life."
+     • Bold claim: "This single discovery changed everything we thought about X."
+     • Open loop (create instant curiosity): "Scientists found something in X that nobody talks about."
+     • Visceral image: Drop the viewer into a scene mid-action with urgent, specific language.
+   - NEVER start with "In this video...", "Today we'll talk about...", "Have you ever wondered..." or any slow warm-up.
+   - CRITICAL: Do NOT reveal the answer or payoff in the hook. The hook creates the question — the climax answers it.
+
+2. PROGRESSION (beats — the middle):
+   - Each beat advances the viewer toward the climax, building anticipation.
+   - Show the JOURNEY, not just the result. Fulfill the promise made in the hook.
+   - The content must match what the hook promised — never bait-and-switch.
+   - Layer in surprising facts, tension, or mini-revelations that keep the viewer locked in.
+   - Never pay off the main topic early. If the viewer gets what they came for mid-video, they scroll away.
+
+3. CLIMAX (payoff — the end):
+   - The moment the topic is fulfilled and the audience gets what they came for.
+   - Place the big reveal, answer, or "aha" moment HERE — at the end, not the beginning or middle.
+   - Make it satisfying — reward the viewer for watching all the way through.
+   - Wrap up cleanly without dragging.
+
+=== SCRIPT RULES ===
 - 4-6 beats, each with narration text and a visual intent description.
-- Payoff delivers the "aha" moment.
 - Call-to-action is a simple follow/like prompt.
 - Total narration must be speakable in 30-45 seconds. That means 55-80 words MAX. Count carefully — err short rather than long.
 - Write conversationally — as if explaining to a friend. No formal language.
 - Every beat narration should be 1-2 sentences max.
 
-Publishing metadata rules:
+=== ANTI-PATTERNS (never do these) ===
+- Paying off the topic in the first 5 seconds (kills retention instantly)
+- Hook that gives away the answer (no reason to keep watching)
+- Progression that doesn't match the hook's promise (bait-and-switch)
+- Dragging on after the climax (lose the viewer on replays)
+- Flat energy or long pauses in narration
+
+=== PUBLISHING METADATA ===
 - youtubeTitle: SEO-optimized, curiosity-driven, max 70 chars. NOT the hook — write a proper title.
 - youtubeDescription: 3-5 sentences summarizing the video, then a line break, then "Key takeaways:" with 2-3 bullet points, then a subscribe CTA line.
 - topicTags: 8-12 specific, searchable tags for this topic (e.g. "medieval history", "plague", "etymology"). Mix broad and niche.
@@ -70,7 +97,11 @@ ${claimsList}
 
 Summary: ${research.summary}
 
-Write a YouTube Short script. Make the hook irresistible. Use the strongest research claims to build surprise. End with a satisfying payoff.`;
+Write a YouTube Short script using the HPC framework.
+HOOK: Create an irresistible opening that leaves multiple unanswered questions — do NOT reveal the answer here.
+PROGRESSION: Use the strongest research claims to build surprise and anticipation, advancing toward the reveal.
+CLIMAX: Deliver the payoff at the END — the "aha" moment the viewer has been waiting for.
+Remember: if the viewer gets the answer too early, they scroll away.`;
 
     const script = await context.llm.generateJSON<ShortScript>(SYSTEM_PROMPT, userPrompt);
     log(this.name, `Script: ${script.beats.length} beats, ~${script.totalDurationSeconds}s`);

@@ -4,6 +4,14 @@ import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You are a visual planner for YouTube Shorts. Convert script beats into scene plans with stock footage search keywords.
 
+=== PACING & RETENTION RULES ===
+- Fast-paced visuals with ZERO dead air — every second must have visual movement or change.
+- Captions must be on screen at ALL times during narration. Short, punchy, max 8 words per caption.
+- Quick cuts between scenes keep attention — no single clip should overstay its welcome.
+- The hook scene must be the most visually striking and attention-grabbing.
+- Visual energy should build through progression and peak at the climax/payoff scene.
+- Match visual pacing to narration energy — when narration builds tension, visuals should intensify.
+
 For each scene, provide:
 - A creative visual direction (what the viewer sees)
 - A visualDescription: a plain-English sentence describing what the ideal stock footage clip looks like (e.g. "A close-up of a bubbling beaker in a dimly lit laboratory")
