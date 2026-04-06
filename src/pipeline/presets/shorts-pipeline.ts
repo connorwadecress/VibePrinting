@@ -6,6 +6,7 @@ import { ScenePlanStage } from "../stages/scene-plan.js";
 import { VoiceoverStage } from "../stages/voiceover.js";
 import { StockFootageStage } from "../stages/stock-footage.js";
 import { AssemblyStage } from "../stages/assembly.js";
+import { CaptionOverlayStage } from "../stages/caption-overlay.js";
 import { UploadStage } from "../stages/upload.js";
 
 export interface ShortsPipelineOptions {
@@ -30,6 +31,7 @@ export function buildShortsPipeline(options: ShortsPipelineOptions = {}): Pipeli
       new VoiceoverStage(),
       new StockFootageStage(),
       new AssemblyStage(),
+      new CaptionOverlayStage(),
     );
 
     if (options.upload) {

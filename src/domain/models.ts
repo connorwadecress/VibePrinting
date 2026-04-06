@@ -95,10 +95,17 @@ export interface SubtitleEntry {
   text: string;
 }
 
+export interface WordTiming {
+  text: string;
+  startMs: number;
+  endMs: number;
+}
+
 export interface VoiceoverResult {
   audioPath: string;
   durationSeconds: number;
   subtitles: SubtitleEntry[];
+  wordTimings: WordTiming[];
 }
 
 export interface ScenePlanWithKeywords extends ScenePlan {
@@ -117,6 +124,7 @@ export interface PipelineState {
   scenes?: ScenePlanWithKeywords[];
   voiceover?: VoiceoverResult;
   clips?: StockClip[];
+  rawVideoPath?: string;
   outputVideoPath?: string;
   uploadResults?: import("./interfaces/uploader.js").UploadResult[];
 }

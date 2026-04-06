@@ -1,6 +1,6 @@
 import { EdgeTTS } from "@andresaya/edge-tts";
 import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
-import type { VoiceoverResult, SubtitleEntry } from "../../domain/models.js";
+import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 interface WordBoundary {
@@ -8,6 +8,16 @@ interface WordBoundary {
   offset: number;
   duration: number;
   text: string;
+}
+
+function extractWordTimings(boundaries: WordBoundary[]): WordTiming[] {
+  return boundaries
+    .filter((b) => b.type !== "Punctuation" && /[a-zA-Z0-9]/.test(b.text))
+    .map((b) => ({
+      text: b.text,
+      startMs: b.offset / 10_000,
+      endMs: (b.offset + b.duration) / 10_000,
+    }));
 }
 
 function buildSubtitles(boundaries: WordBoundary[], totalDuration: number): SubtitleEntry[] {
@@ -57,7 +67,8 @@ export class EdgeTtsProvider implements TtsProvider {
 
     const wordBoundaries = tts.getWordBoundaries();
     const subtitles = buildSubtitles(wordBoundaries, durationSeconds);
+    const wordTimings = extractWordTimings(wordBoundaries);
 
-    return { audioPath: savedPath, durationSeconds, subtitles };
+    return { audioPath: savedPath, durationSeconds, subtitles, wordTimings };
   }
 }
