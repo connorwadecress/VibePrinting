@@ -1,0 +1,534 @@
+[
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Hidden Security System Watching You At Every Checkout",
+    "seedQuestion": "Why do supermarket checkout lanes have mirrors above them?",
+    "runId": "20260404-232505",
+    "date": "2026-04-04"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Real Reason Elevators Have Weight Limits (It's Not What You Think)",
+    "seedQuestion": "Why do elevators have a maximum weight limit if they're designed to hold way more?",
+    "runId": "20260405-000220",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Freedivers' brains do something wild during extended breath holds",
+    "seedQuestion": "What happens to your brain when you hold your breath for 3 minutes straight?",
+    "runId": "20260405-001203",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "This Annoying Package Design Is Making You Feel Rich",
+    "seedQuestion": "Why do luxury brands deliberately make their packaging hard to open?",
+    "runId": "20260405-002018",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "If we squeezed all Earth's air into one layer, it would only be this thick",
+    "seedQuestion": "How much does the atmosphere actually weigh if we compressed it into a single layer?",
+    "runId": "20260405-003336",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "The Parking Garage Spiral That Makes You Spend More Money",
+    "seedQuestion": "Why do parking garage ramps curve instead of zigzag back and forth?",
+    "runId": "20260405-003602",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Everyone thinks Vikings raided monasteries for gold. The real reason is way smarter.",
+    "seedQuestion": "Why did Vikings actually avoid raiding monasteries in their prime — and it wasn't because of religion?",
+    "runId": "20260405-003915",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "The horrifying reason we say 'bless you' after sneezes — and why it stuck for 2,000 years",
+    "seedQuestion": "Why do we say 'bless you' when someone sneezes?",
+    "runId": "20260405-004301",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The '5 Second Rule' Isn't Real (Here's Where It Came From)",
+    "seedQuestion": "Why does the '5 second rule' for dropped food sound scientific when it's completely made up?",
+    "runId": "20260405-012404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "Why 20 Countries Can't Print Their Own Money (And What It Costs Them)",
+    "seedQuestion": "Why do some countries print their own money while others legally can't—and what actually happens to a nation's economy when they lose that power?",
+    "runId": "20260405-022404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The '40-hour work week' myth: What that number actually hides",
+    "seedQuestion": "Why does the '40-hour work week' actually represent way more than 40 hours of work?",
+    "runId": "20260405-032404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why The Escalator 'Stand Right' Rule Actually Backfired (And Some Countries Switched)",
+    "seedQuestion": "Why do we stand on the right side of escalators in some countries and the left in others?",
+    "runId": "20260405-042404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Weird Psychology Behind Loss Leaders (And Why Stores Do It)",
+    "seedQuestion": "Why do stores deliberately lose money on certain items every single day?",
+    "runId": "20260405-052404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Nature's shock absorption: Why woodpeckers are better engineers than NASA",
+    "seedQuestion": "How do woodpeckers avoid brain damage when hitting trees at 20 times the force of a car crash?",
+    "runId": "20260405-062404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The hidden pipe problem draining your hot water",
+    "seedQuestion": "Why does your shower water take a few seconds to get hot, even though the heater turned on instantly?",
+    "runId": "20260405-072404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why your brain literally erases what you're looking at — the Troxler effect explained with your own eyes",
+    "seedQuestion": "What happens to your vision when you stare at one point for 60 seconds without blinking?",
+    "runId": "20260405-082404",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "That tiny hole in your airplane window isn't a mistake — it's controlling your ears",
+    "seedQuestion": "Why do airplane windows have tiny holes in them?",
+    "runId": "20260405-093006",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt doesn't freeze things — but it tricks ice into doing something wild",
+    "seedQuestion": "Why does salt make ice cream freeze faster when salt itself doesn't freeze anything?",
+    "runId": "20260405-100005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "Why Perfect Ratings Are Secretly a Red Flag",
+    "seedQuestion": "Why does a 5-star rating with 1,000 reviews often mean less than a 4.8-star rating with 50 reviews?",
+    "runId": "20260405-103004",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The 5-Second Rule Myth Nobody Talks About (It's Worse Than You Think)",
+    "seedQuestion": "Why does the '5-second rule' for dropped food persist when the science doesn't actually support it the way people think?",
+    "runId": "20260405-110005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why Your Brain Erases Whatever You're Looking At (The Troxler Effect Explained)",
+    "seedQuestion": "What happens to your vision when you stare at one point for 30 seconds straight?",
+    "runId": "20260405-113005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "The Dark Truth: Medieval Knights Fought to Get Caught",
+    "seedQuestion": "Why did medieval knights actually WANT to be captured in battle?",
+    "runId": "20260405-120006",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why Astronauts Say Weightlessness Feels Nothing Like You'd Expect",
+    "seedQuestion": "What does it actually feel like in your body when you experience true zero gravity for more than a few seconds?",
+    "runId": "20260405-123005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "That 4.8-star rating is lying to you — here's why",
+    "seedQuestion": "Why does a 5-star rating system actually tell you almost nothing about product quality?",
+    "runId": "20260405-130005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "Your Body Contains This Much Water (It's Not What You Think)",
+    "seedQuestion": "How many full Olympic swimming pools would it take to equal the water in a single adult's body?",
+    "runId": "20260405-133005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt doesn't add saltiness — it does something sneakier",
+    "seedQuestion": "Why does salt make things taste sweeter, not just salty?",
+    "runId": "20260405-140005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Hidden Psychology Behind Grocery Store Dividers (It's Not What You Think)",
+    "seedQuestion": "Why do supermarket checkout lanes have those dividers between customers' items?",
+    "runId": "20260405-143005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why Your Eyes Literally Disappear When You Don't Blink — The Troxler Effect Explained",
+    "seedQuestion": "What happens to your vision when you stare at something for 45 seconds straight without blinking?",
+    "runId": "20260405-150005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "The Black Death accidentally made people live longer",
+    "seedQuestion": "Why did the deadliest pandemic in human history actually improve life expectancy?",
+    "runId": "20260405-153005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why We Say 'Bless You' After Sneezes — The Dark History Nobody Knows",
+    "seedQuestion": "Why do we say 'bless you' when someone sneezes?",
+    "runId": "20260405-160005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Everyone assumes heavy armor slowed knights down — but the opposite was true",
+    "seedQuestion": "Why did medieval knights actually want their armor to be HEAVIER, not lighter?",
+    "runId": "20260405-163005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Why Woodpeckers Are Nature's Impact-Absorption Engineers (Your Phone Needs This)",
+    "seedQuestion": "How do woodpeckers absorb impact without getting brain damage when they hammer wood at 20x the force that would knock a human unconscious?",
+    "runId": "20260405-170006",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "Every car ever made would stretch to the Moon and back this many times",
+    "seedQuestion": "If you lined up every car produced in human history bumper-to-bumper, how many times would it wrap around Earth?",
+    "runId": "20260405-173005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Your brain keeps cringe memories on purpose — here's why",
+    "seedQuestion": "Why do you remember embarrassing moments from years ago but forget what you had for lunch yesterday?",
+    "runId": "20260405-180005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Weird Reason Stores WANT to Lose Money on Milk and Eggs",
+    "seedQuestion": "Why do stores deliberately set some products to lose them money every week?",
+    "runId": "20260405-183004",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Medieval warfare wasn't about killing—it was about kidnapping for profit",
+    "seedQuestion": "Why did medieval knights actually *want* to be captured in battle?",
+    "runId": "20260405-190003",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "This airplane door design trick protects you without you knowing",
+    "seedQuestion": "Why do airplane cabin doors open inward instead of outward?",
+    "runId": "20260405-193003",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "tech-under-the-hood",
+    "titleAngle": "Why Full Phone Storage Actually Slows Down Your CPU (It's Not What You Think)",
+    "seedQuestion": "Why does your phone get slower the more storage you fill up, even though the files aren't touching the processor?",
+    "runId": "20260405-200004",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Why watching someone get hurt hurts YOUR brain more than you'd expect",
+    "seedQuestion": "Why do you feel more pain when you see an injury happen to someone else than when you imagine it happening to yourself?",
+    "runId": "20260405-203005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Your brain prioritizes your worst moments (and here's why)",
+    "seedQuestion": "Why do you remember embarrassing things you did years ago but forget what you ate yesterday?",
+    "runId": "20260405-210005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Psychological Trick Hiding in Your Grocery Store Layout",
+    "seedQuestion": "Why do grocery stores always put milk at the back?",
+    "runId": "20260405-213005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "tech-under-the-hood",
+    "titleAngle": "Your Phone Throttles Itself Before You Know It's Dying",
+    "seedQuestion": "Why does your phone get slower when the battery is low, and what's actually deciding that?",
+    "runId": "20260405-220005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why Ballerinas Don't Get Dizzy (But You Do)",
+    "seedQuestion": "What happens to your vision when you spin in a circle for 30 seconds straight?",
+    "runId": "20260405-223005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "The salt paradox: How the thing that melts ice actually makes ice cream colder",
+    "seedQuestion": "Why does salt make ice cream freeze faster when salt itself melts ice?",
+    "runId": "20260405-230005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why Your Eyes Can't Keep Up (But Combat Pilots' Can)",
+    "seedQuestion": "What happens to your vision when you spin in circles for 30 seconds straight — and why fighter pilots train to overcome it?",
+    "runId": "20260405-233005",
+    "date": "2026-04-05"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Your eyes hit a hard limit in the dark (and here's why)",
+    "seedQuestion": "What happens to your eyesight in total darkness after 30 minutes — and why your eyes physically can't see better",
+    "runId": "20260406-000005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why We Say 'Bless You' After Sneezes — The Dark Origin Nobody Talks About",
+    "seedQuestion": "Why do we say 'bless you' when someone sneezes?",
+    "runId": "20260406-003006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Evolution's Shock Absorber: Why Woodpecker Brains Never Get Concussions",
+    "seedQuestion": "How do woodpeckers survive brain damage that would kill any other animal?",
+    "runId": "20260406-010005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Why Watching Someone Shiver Actually Makes YOU Colder",
+    "seedQuestion": "Why do you feel colder when you see someone else shivering, even though the temperature hasn't changed?",
+    "runId": "20260406-013006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "The Salt Ice Cream Paradox: Why the 'Wrong' Temperature Actually Works",
+    "seedQuestion": "Why does salt make ice cream freeze faster when salt lowers the freezing point of water?",
+    "runId": "20260406-020006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "All the gold in human history fits in ONE Olympic swimming pool",
+    "seedQuestion": "How much does all the gold ever mined in human history weigh, and what physical space would it actually occupy?",
+    "runId": "20260406-023005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Why Luxury Brands Are SHRINKING Their Logos (And It's Not an Accident)",
+    "seedQuestion": "Why do luxury brands make their logos smaller on newer products?",
+    "runId": "20260406-030005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "The Body's Sleep Limit: Why 11 Days Is Where Humans Break",
+    "seedQuestion": "Why can't humans survive more than 11 days without sleep — and what actually breaks first?",
+    "runId": "20260406-033005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "The paradox of how giving up helps your brain find forgotten memories",
+    "seedQuestion": "Why do you suddenly remember something you forgot the moment you stop trying to remember it?",
+    "runId": "20260406-040005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Sneaky Psychology Behind Where Stores Hide Your Milk",
+    "seedQuestion": "Why do grocery stores always put the milk at the back?",
+    "runId": "20260406-043005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Woodpeckers Have Built-In Shock Absorbers (And It's Genius)",
+    "seedQuestion": "How do woodpeckers avoid brain damage when they peck at 20x the force of a car crash, repeatedly?",
+    "runId": "20260406-050005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why the world agreed to shake with the RIGHT hand (and it's darker than you think)",
+    "seedQuestion": "Why do we shake hands with our RIGHT hand specifically?",
+    "runId": "20260406-053005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Medieval Knights Wore Shiny Armor NOT to Hide — Here's Why",
+    "seedQuestion": "Why did medieval knights wear bright, shiny armor if stealth was important in battle?",
+    "runId": "20260406-060005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Hidden System That Makes Some Checkout Lines Move 3x Faster",
+    "seedQuestion": "Why do grocery store checkout lanes have different speeds even though they're right next to each other?",
+    "runId": "20260406-063005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Hidden Pricing Trick Hiding in Your Grocery Store Right Now",
+    "seedQuestion": "Why do stores charge you differently depending on which checkout lane you use?",
+    "runId": "20260406-070005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Weddings BANNED Rice (And What We Throw Now Is Weirder)",
+    "seedQuestion": "Why do we throw rice at weddings instead of flowers, and when did that actually change?",
+    "runId": "20260406-073004",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Ancient Egyptians invented toothpaste for the opposite reason we do",
+    "seedQuestion": "Why did ancient Egyptians invent toothpaste to avoid their teeth, not clean them?",
+    "runId": "20260406-080005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Psychology Behind Why Slow Cashiers Make Stores More Money",
+    "seedQuestion": "Why do stores deliberately hire cashiers who are slow at math?",
+    "runId": "20260406-083006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt Makes Ice Cream COLDER (not melting it like you thought)",
+    "seedQuestion": "Why does salt make ice cream freeze faster when it's already cold?",
+    "runId": "20260406-090005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Why Your Brain Remembers Things *After* You Stop Trying",
+    "seedQuestion": "Why do you suddenly remember something you forgot the moment you stop trying to remember it?",
+    "runId": "20260406-093008",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Sneaky Layout Secret That Makes You Spend More (It's Not What You Think)",
+    "seedQuestion": "Why do stores deliberately put items you want at the back, forcing you to walk past everything else?",
+    "runId": "20260406-100006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "The Smaller the Logo, the More Expensive the Brand — Here's Why",
+    "seedQuestion": "Why do luxury brands deliberately make their logos smaller and harder to see than cheap brands?",
+    "runId": "20260406-102619",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "Why Stores WANT to Lose Money on This One Item",
+    "seedQuestion": "Why do companies deliberately sell products at a loss, and how do they actually make money from it?",
+    "runId": "20260406-103011",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Weddings Stopped Using Rice (And What Replaced It)",
+    "seedQuestion": "Why do we throw rice at weddings instead of flowers, and what changed?",
+    "runId": "20260406-103107",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Woodpeckers Have Better Shock Absorption Than Race Cars",
+    "seedQuestion": "How do woodpeckers avoid brain damage from impacts equivalent to a 10,000G crash?",
+    "runId": "20260406-103632",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt makes things COLDER—here's the mind-bending reason why",
+    "seedQuestion": "Why does salt make ice cream freeze faster when it's already cold?",
+    "runId": "20260406-104531",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The coupon trap: How stores make MORE profit when you 'save' money",
+    "seedQuestion": "Why do stores charge you MORE money if you use a coupon they issued themselves?",
+    "runId": "20260406-105316",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt MELTS ice but FREEZES ice cream — here's the plot twist",
+    "seedQuestion": "Why does salt make ice cream freeze faster when salt itself melts ice?",
+    "runId": "20260406-110006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "This Shrimp Has Better Vision Than Any Camera (And It's Confusing Scientists)",
+    "seedQuestion": "How do mantis shrimp see 16 types of color when humans can only see 3?",
+    "runId": "20260406-112647",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Your brain prioritizes cringe: The evolutionary reason you can't forget that awkward moment",
+    "seedQuestion": "Why do you remember embarrassing things you did years ago better than what you had for lunch yesterday?",
+    "runId": "20260406-113018",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt MELTS ice but somehow FREEZES ice cream — here's the plot twist",
+    "seedQuestion": "Why does salt make ice cream freeze faster when salt itself melts ice?",
+    "runId": "20260406-120004",
+    "date": "2026-04-06"
+  }
+]
