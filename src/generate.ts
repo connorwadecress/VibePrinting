@@ -14,6 +14,7 @@ import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { buildShortsPipeline } from "./pipeline/presets/shorts-pipeline.js";
 import { runPipeline } from "./pipeline/runner.js";
 import { createRunDir } from "./utils/fs-helpers.js";
+import { loadTopicHistory, appendTopicHistory } from "./utils/topic-history.js";
 import { resolveBrand, loadBrandEnv } from "./utils/brand-resolver.js";
 import { log, logError } from "./utils/logger.js";
 import fs from "node:fs";
@@ -74,6 +75,13 @@ async function main(): Promise<void> {
   const { runId, workDir } = createRunDir(config.outputDir);
   log("pipeline", `Run: ${runId} -> ${workDir}`);
 
+  // --- Load topic history ---
+  const historyPath = brand
+    ? path.join(brand.brandDir, "topic-history.json")
+    : path.resolve("topic-history.json");
+  const topicHistory = loadTopicHistory(historyPath, config.outputDir);
+  log("pipeline", `Topic history: ${topicHistory.length} topics loaded`);
+
   // --- Wire providers (composition root) ---
   const context: StageContext = {
     llm: createLlmClient(config),
@@ -93,6 +101,7 @@ async function main(): Promise<void> {
     config,
     workDir,
     runId,
+    topicHistory,
   };
 
   // --- Build and run pipeline ---
@@ -106,6 +115,18 @@ async function main(): Promise<void> {
       path.join(workDir, "script.json"),
       JSON.stringify({ topic: result.topic, research: result.research, script: result.script }, null, 2),
     );
+  }
+
+  // --- Append to topic history ---
+  if (result.topic) {
+    const today = new Date().toISOString().slice(0, 10);
+    appendTopicHistory(historyPath, {
+      laneId: result.topic.laneId,
+      titleAngle: result.topic.titleAngle,
+      seedQuestion: result.topic.seedQuestion,
+      runId,
+      date: today,
+    });
   }
 
   // --- Print results ---
