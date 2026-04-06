@@ -31,6 +31,7 @@ export class CaptionOverlayStage implements PipelineStage {
       durationSeconds,
       videoSpec: context.videoSpec,
       outputPath,
+      captionConfig: context.profile.captionStyle,
     });
 
     state.outputVideoPath = outputPath;

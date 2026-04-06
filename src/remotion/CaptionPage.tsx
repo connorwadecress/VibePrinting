@@ -19,7 +19,7 @@ export const CaptionPage: React.FC<CaptionPageProps> = ({
   currentMs,
   config,
 }) => {
-  const { fps } = useVideoConfig();
+  const { fps, width } = useVideoConfig();
 
   const localFrame = currentFrame - pageStartFrame;
   const entranceProgress = spring({
@@ -39,6 +39,8 @@ export const CaptionPage: React.FC<CaptionPageProps> = ({
         flexWrap: "wrap",
         justifyContent: "center",
         alignItems: "center",
+        gap: "0.1em",
+        maxWidth: width * 0.85,
         transform: `scale(${scale})`,
         opacity,
       }}

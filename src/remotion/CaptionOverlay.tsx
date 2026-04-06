@@ -19,7 +19,7 @@ export interface CaptionOverlayProps {
 export default function CaptionOverlay(props: Record<string, unknown>) {
   const { videoSrc, pages, captionConfig } = props as unknown as CaptionOverlayProps;
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, height } = useVideoConfig();
   const currentMs = (frame / fps) * 1000;
 
   const config: AnimatedCaptionConfig = {
@@ -34,14 +34,17 @@ export default function CaptionOverlay(props: Record<string, unknown>) {
   return (
     <AbsoluteFill>
       <OffthreadVideo src={staticFile(videoSrc)} />
-      <AbsoluteFill
-        style={{
-          justifyContent: "flex-end",
-          alignItems: "center",
-          paddingBottom: `${100 - config.yPositionPercent}%`,
-        }}
-      >
-        {activePage && (
+      {activePage && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: height * ((100 - config.yPositionPercent) / 100),
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <CaptionPage
             tokens={activePage.tokens}
             pageStartFrame={Math.round((activePage.startMs / 1000) * fps)}
@@ -49,8 +52,8 @@ export default function CaptionOverlay(props: Record<string, unknown>) {
             currentMs={currentMs}
             config={config}
           />
-        )}
-      </AbsoluteFill>
+        </div>
+      )}
     </AbsoluteFill>
   );
 }

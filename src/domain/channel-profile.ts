@@ -1,4 +1,5 @@
 import type { ContentLane, GenSecAssessment } from "./models.js";
+import type { AnimatedCaptionConfig } from "../remotion/styles.js";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -23,6 +24,7 @@ export interface ChannelProfile {
   ttsVoice: string;
   ttsRate: string;
   genSecDefaults: GenSecAssessment;
+  captionStyle?: Partial<AnimatedCaptionConfig>;
 }
 
 /**
