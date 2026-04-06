@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition, ensureBrowser } from "@remotion/renderer";
 import { wordTimingsToPages } from "./captions.js";
@@ -33,13 +34,27 @@ export async function renderCaptionOverlay(
 
   const bundleLocation = await bundle({
     entryPoint,
-    webpackOverride: (config) => config,
+    webpackOverride: (config) => ({
+      ...config,
+      resolve: {
+        ...config.resolve,
+        extensionAlias: {
+          ".js": [".js", ".ts", ".tsx"],
+        },
+      },
+    }),
   });
+
+  // Copy assembled video into the bundle's public dir so Remotion can serve it via HTTP
+  const publicDir = path.join(bundleLocation, "public");
+  if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+  const videoFileName = "source-video.mp4";
+  fs.copyFileSync(videoPath, path.join(publicDir, videoFileName));
 
   const pages = wordTimingsToPages(wordTimings);
   log("caption-overlay", `Generated ${pages.length} caption pages from ${wordTimings.length} words`);
 
-  const videoSrc = path.resolve(videoPath).replace(/\\/g, "/");
+  const videoSrc = videoFileName;
 
   const composition = await selectComposition({
     serveUrl: bundleLocation,

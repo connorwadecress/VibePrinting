@@ -1,6 +1,7 @@
 import {
   AbsoluteFill,
   OffthreadVideo,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -32,7 +33,7 @@ export default function CaptionOverlay(props: Record<string, unknown>) {
 
   return (
     <AbsoluteFill>
-      <OffthreadVideo src={videoSrc} />
+      <OffthreadVideo src={staticFile(videoSrc)} />
       <AbsoluteFill
         style={{
           justifyContent: "flex-end",
