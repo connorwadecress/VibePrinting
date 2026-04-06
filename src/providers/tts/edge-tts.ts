@@ -1,6 +1,6 @@
 import { EdgeTTS } from "@andresaya/edge-tts";
 import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
-import type { VoiceoverResult, SubtitleEntry } from "../../domain/models.js";
+import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 interface WordBoundary {
@@ -8,6 +8,27 @@ interface WordBoundary {
   offset: number;
   duration: number;
   text: string;
+}
+
+function extractWordTimings(boundaries: WordBoundary[]): WordTiming[] {
+  const result: WordTiming[] = [];
+
+  for (const b of boundaries) {
+    if (b.type === "Punctuation" || !/[a-zA-Z0-9]/.test(b.text)) {
+      // Attach punctuation to the preceding word for natural page breaks
+      if (result.length > 0 && /^[.,!?;:\u2014\u2013\u2026]$/.test(b.text)) {
+        result[result.length - 1].text += b.text;
+      }
+      continue;
+    }
+    result.push({
+      text: b.text,
+      startMs: b.offset / 10_000,
+      endMs: (b.offset + b.duration) / 10_000,
+    });
+  }
+
+  return result;
 }
 
 function buildSubtitles(boundaries: WordBoundary[], totalDuration: number): SubtitleEntry[] {
@@ -57,7 +78,8 @@ export class EdgeTtsProvider implements TtsProvider {
 
     const wordBoundaries = tts.getWordBoundaries();
     const subtitles = buildSubtitles(wordBoundaries, durationSeconds);
+    const wordTimings = extractWordTimings(wordBoundaries);
 
-    return { audioPath: savedPath, durationSeconds, subtitles };
+    return { audioPath: savedPath, durationSeconds, subtitles, wordTimings };
   }
 }

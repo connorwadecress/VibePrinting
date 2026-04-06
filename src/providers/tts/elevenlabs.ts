@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
-import type { VoiceoverResult, SubtitleEntry } from "../../domain/models.js";
+import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
 interface ElevenLabsAlignment {
@@ -12,6 +12,36 @@ interface ElevenLabsAlignment {
 interface ElevenLabsResponse {
   audio_base64: string;
   alignment: ElevenLabsAlignment;
+}
+
+function extractWordTimings(alignment: ElevenLabsAlignment): WordTiming[] {
+  const words: WordTiming[] = [];
+  let wordText = "";
+  let wordStart: number | null = null;
+  let wordEnd = 0;
+
+  for (let i = 0; i < alignment.characters.length; i++) {
+    const char = alignment.characters[i];
+    const start = alignment.character_start_times_seconds[i];
+    const end = alignment.character_end_times_seconds[i];
+
+    if (char === " " || char === "\n") {
+      if (wordText && wordStart !== null) {
+        words.push({ text: wordText, startMs: wordStart * 1000, endMs: wordEnd * 1000 });
+        wordText = "";
+        wordStart = null;
+      }
+    } else {
+      if (wordStart === null) wordStart = start;
+      wordText += char;
+      wordEnd = end;
+    }
+  }
+  if (wordText && wordStart !== null) {
+    words.push({ text: wordText, startMs: wordStart * 1000, endMs: wordEnd * 1000 });
+  }
+
+  return words.filter((w) => /[a-zA-Z0-9]/.test(w.text));
 }
 
 function buildSubtitles(alignment: ElevenLabsAlignment, chunkSize = 5): SubtitleEntry[] {
@@ -100,7 +130,8 @@ export class ElevenLabsProvider implements TtsProvider {
     log("tts", `Audio duration: ${durationSeconds.toFixed(1)}s`);
 
     const subtitles = buildSubtitles(data.alignment, 5);
+    const wordTimings = extractWordTimings(data.alignment);
 
-    return { audioPath, durationSeconds, subtitles };
+    return { audioPath, durationSeconds, subtitles, wordTimings };
   }
 }

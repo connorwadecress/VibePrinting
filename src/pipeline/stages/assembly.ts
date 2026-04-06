@@ -45,11 +45,11 @@ export class AssemblyStage implements PipelineStage {
     await assembler.concatenate(preparedPaths, concatPath);
     log(this.name, "Clips concatenated");
 
-    // Step 3: Assemble with voiceover + captions
-    const outputPath = path.join(context.workDir, "final.mp4");
-    await assembler.assemble(concatPath, voiceover.audioPath, voiceover.subtitles, outputPath);
+    // Step 3: Assemble with voiceover (captions added by CaptionOverlayStage)
+    const outputPath = path.join(context.workDir, "assembled.mp4");
+    await assembler.assemble(concatPath, voiceover.audioPath, [], outputPath);
 
     logTiming(this.name, start);
-    state.outputVideoPath = outputPath;
+    state.rawVideoPath = outputPath;
   }
 }
