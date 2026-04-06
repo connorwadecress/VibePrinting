@@ -36,6 +36,9 @@ export interface AppConfig {
   tikTokAccessToken?: string;
   tikTokRefreshToken?: string;
 
+  // Footage quality
+  llmReranking: boolean;
+
   // Local paths
   outputDir: string;
   tempDir: string;
@@ -94,6 +97,8 @@ export function loadConfig(): AppConfig {
     tikTokClientSecret: readEnv("TIKTOK_CLIENT_SECRET"),
     tikTokAccessToken: readEnv("TIKTOK_ACCESS_TOKEN"),
     tikTokRefreshToken: readEnv("TIKTOK_REFRESH_TOKEN"),
+
+    llmReranking: readEnv("LLM_RERANKING") === "true",
 
     outputDir: readEnv("OUTPUT_DIR") ?? "./output",
     tempDir: readEnv("TEMP_DIR") ?? "./output/.tmp",

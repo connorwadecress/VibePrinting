@@ -5,10 +5,18 @@ import { log } from "../../utils/logger.js";
 const SYSTEM_PROMPT = `You are a visual planner for YouTube Shorts. Convert script beats into scene plans with stock footage search keywords.
 
 For each scene, provide:
-- A visual description (what the viewer sees)
+- A creative visual direction (what the viewer sees)
+- A visualDescription: a plain-English sentence describing what the ideal stock footage clip looks like (e.g. "A close-up of a bubbling beaker in a dimly lit laboratory")
 - Caption text to display on screen (short, punchy, max 8 words)
 - Duration in seconds
-- 2-3 stock footage search keywords for Pexels (specific, visual, searchable terms)
+- 4-5 stock footage search keywords for Pexels, ranked from most specific to broadest fallback
+
+CRITICAL — Keyword rules:
+- Each scene's keywords must match what the viewer literally SEES during that specific narration moment, NOT the overall topic.
+  Example: If narration says "ancient Romans used lead pipes" → keywords should be "ancient roman aqueduct", "lead water pipes closeup", "roman stone ruins", "old stone tunnel", "underground pipes" — NOT "history" or "Rome skyline".
+- Every keyword must be concrete and visual — something a stock video site would have real footage of.
+- Avoid generic/abstract keywords like "concept", "idea", "history", "science", "technology", "information", "future". These return random, irrelevant footage.
+- Rank keywords from most specific (best match for this exact moment) to broadest (backup if specific ones return no results).
 
 The first scene should be the hook. The last scene should be the payoff.
 Never generate scenes with subscribe buttons, like buttons, notification bells, social media UI, or YouTube branding. Use real-world visuals only.
@@ -17,14 +25,13 @@ Respond with JSON array:
 [
   {
     "sceneIndex": number,
-    "prompt": string (visual description),
+    "prompt": string (creative visual direction),
+    "visualDescription": string (plain-English description of ideal stock clip),
     "captions": [string],
     "seconds": number,
-    "searchKeywords": [string]
+    "searchKeywords": [string] (4-5 keywords, most specific first)
   }
-]
-
-Keep keywords concrete and visual: "ancient roman building" not "historical concept". Pexels has stock footage, so think about what footage exists: cities, nature, people, technology, food, sports, etc.`;
+]`;
 
 export class ScenePlanStage implements PipelineStage {
   readonly name = "scene-plan";
@@ -36,16 +43,21 @@ export class ScenePlanStage implements PipelineStage {
     log(this.name, "Planning scenes...");
 
     const beatsText = script.beats
-      .map((b) => `Beat ${b.beatIndex}: "${b.narration}" (Visual: ${b.visualIntent})`)
-      .join("\n");
+      .map(
+        (b) =>
+          `Beat ${b.beatIndex}:\n  Narration (what the viewer HEARS): "${b.narration}"\n  Visual intent (what the viewer SEES): "${b.visualIntent}"`,
+      )
+      .join("\n\n");
 
     const userPrompt = `Script:
 Hook: "${script.hook}"
+
 ${beatsText}
+
 Payoff: "${script.payoff}"
 Total duration: ~${script.totalDurationSeconds} seconds
 
-Plan scenes for this script. Ensure total scene durations roughly match ${script.totalDurationSeconds} seconds. Include a scene for the hook and a scene for the payoff. Use real-world stock footage keywords only.`;
+Plan scenes for this script. Ensure total scene durations roughly match ${script.totalDurationSeconds} seconds. Include a scene for the hook and a scene for the payoff. For each scene, think about what SPECIFIC real-world footage would visually reinforce what the viewer is hearing at that exact moment.`;
 
     const MAX_RETRIES = 3;
     let lastError: Error | undefined;
