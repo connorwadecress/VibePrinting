@@ -10,4 +10,8 @@ output/
 brands/**/channel.json
 brands/**/.env
 
+# Topic history (generated, brand-specific, should not be committed)
+topic-history.json
+brands/**/topic-history.json
+
 .vercel
