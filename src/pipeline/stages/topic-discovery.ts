@@ -24,15 +24,24 @@ export class TopicDiscoveryStage implements PipelineStage {
 
     log(this.name, `Finding topic for lane: ${lane.id}`);
 
-    const userPrompt = `Content lane: "${lane.id}"
+    let userPrompt = `Content lane: "${lane.id}"
 Description: ${lane.description}
 Target duration: ${lane.targetDurationSeconds} seconds
 Example hooks from this lane: ${lane.exampleHooks.join("; ")}
 
 Generate one fresh, specific topic that fits this lane. The topic should NOT be one of the examples above — find something new and surprising. Prefer topics with a clear reversal, contrast, or "wait really?" moment.`;
 
+    const history = context.topicHistory;
+    if (history && history.length > 0) {
+      const recent = history.slice(-50);
+      const historyBlock = recent
+        .map((h) => `- [${h.laneId}] "${h.titleAngle}" (${h.seedQuestion})`)
+        .join("\n");
+      userPrompt += `\n\nRECENT TOPICS ALREADY COVERED (strongly avoid repeating these concepts or angles — find something genuinely different):\n${historyBlock}`;
+    }
+
     const topic = await context.llm.generateJSON<TopicCandidate>(SYSTEM_PROMPT, userPrompt);
-    log(this.name, `Topic: "${topic.titleAngle}" (novelty: ${topic.noveltyScore})`);
+    log(this.name, `Topic: "${topic.titleAngle}" (novelty: ${topic.noveltyScore}, history: ${history?.length ?? 0} topics)`);
 
     state.topic = topic;
   }

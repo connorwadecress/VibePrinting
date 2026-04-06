@@ -15,6 +15,14 @@ export interface TopicCandidate {
   titleAngle: string;
 }
 
+export interface TopicHistoryEntry {
+  laneId: string;
+  titleAngle: string;
+  seedQuestion: string;
+  runId: string;
+  date: string;
+}
+
 export interface ResearchClaim {
   claim: string;
   confidence: "tentative" | "supported" | "strong";
