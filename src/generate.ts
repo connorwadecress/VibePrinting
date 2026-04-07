@@ -82,20 +82,36 @@ async function main(): Promise<void> {
   const topicHistory = loadTopicHistory(historyPath, config.outputDir);
   log("pipeline", `Topic history: ${topicHistory.length} topics loaded`);
 
+  // --- Resolve effective TTS provider: brand override wins, otherwise global config ---
+  const effectiveTtsProvider = profile.ttsProvider ?? config.ttsProvider;
+  const brandElevenLabs = profile.ttsProviderSettings?.elevenLabs;
+
+  // --- Filter uploaders by VP_PLATFORMS env var if set (set by web job-manager) ---
+  const platformFilter = process.env.VP_PLATFORMS
+    ? new Set(process.env.VP_PLATFORMS.split(",").map((p) => p.trim()).filter(Boolean))
+    : null;
+  const allUploaders = [new YouTubeUploader(config), new TikTokUploader(config)];
+  const filteredUploaders = platformFilter
+    ? allUploaders.filter((u) => platformFilter.has(u.platform))
+    : allUploaders;
+  if (platformFilter) {
+    log("pipeline", `VP_PLATFORMS=${process.env.VP_PLATFORMS} -> ${filteredUploaders.map((u) => u.platform).join(",") || "none"}`);
+  }
+
   // --- Wire providers (composition root) ---
   const context: StageContext = {
     llm: createLlmClient(config),
-    tts: config.ttsProvider === "elevenlabs"
+    tts: effectiveTtsProvider === "elevenlabs"
       ? new ElevenLabsProvider(
           config.elevenLabsApiKey ?? (() => { throw new Error("ELEVENLABS_API_KEY is required"); })(),
-          config.elevenLabsVoiceId,
-          config.elevenLabsModelId,
-          config.elevenLabsSpeed,
+          brandElevenLabs?.voiceId ?? config.elevenLabsVoiceId,
+          brandElevenLabs?.modelId ?? config.elevenLabsModelId,
+          brandElevenLabs?.speed ?? config.elevenLabsSpeed,
         )
       : new EdgeTtsProvider(profile.ttsVoice, profile.ttsRate),
     footage: new PexelsProvider(config.pexelsApiKey ?? ""),
     assembler: new FfmpegAssembler(videoSpec),
-    uploaders: [new YouTubeUploader(config), new TikTokUploader(config)],
+    uploaders: filteredUploaders,
     profile,
     videoSpec,
     config,
