@@ -15,6 +15,19 @@ const nextConfig = {
   experimental: {
     // Reserved for instrumentation hooks in later phases.
   },
+  // The pipeline (../src/**) is authored as ESM TypeScript with explicit
+  // ".js" relative imports (NodeNext convention). Webpack does not honor
+  // tsconfig's bundler-style ".js"->".ts" remap on its own, so we wire
+  // up an extensionAlias to make those imports resolvable when the
+  // admin UI imports pipeline modules at runtime.
+  webpack(config) {
+    config.resolve = config.resolve ?? {};
+    config.resolve.extensionAlias = {
+      ...(config.resolve.extensionAlias ?? {}),
+      ".js": [".ts", ".tsx", ".js", ".jsx"],
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
