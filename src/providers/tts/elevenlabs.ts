@@ -1,7 +1,109 @@
 import fs from "node:fs";
-import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
+import type { TtsProvider, TtsConfigOptions } from "../../domain/interfaces/tts-provider.js";
 import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+
+// --- Voice roster -----------------------------------------------------------
+// Each voice is tagged with content archetypes. Tags are matched against the
+// lane description + topic title/question to pick the best fit.
+
+interface VoiceProfile {
+  id: string;
+  name: string;
+  tags: string[];
+}
+
+const VOICE_ROSTER: VoiceProfile[] = [
+  {
+    id: "pNInz6obpgDQGcFmaJgB",
+    name: "Adam",
+    tags: ["history", "serious", "authoritative", "war", "politics", "facts", "documentary"],
+  },
+  {
+    id: "TxGEqnHWrfWFTfGW9XjX",
+    name: "Josh",
+    tags: ["documentary", "narrative", "mystery", "crime", "investigation", "story"],
+  },
+  {
+    id: "VR6AewLTigWG4xSOukaG",
+    name: "Arnold",
+    tags: ["science", "tech", "space", "engineering", "ai", "data", "research"],
+  },
+  {
+    id: "ErXwobaYiN019PkySvjV",
+    name: "Antoni",
+    tags: ["culture", "philosophy", "psychology", "mindset", "society", "human", "behavior"],
+  },
+  {
+    id: "AZnzlk1XvdvUeBnXmlld",
+    name: "Domi",
+    tags: ["motivation", "energy", "hustle", "success", "productivity", "entrepreneur", "bold"],
+  },
+  {
+    id: "EXAVITQu4vr4xnSDxMaL",
+    name: "Bella",
+    tags: ["lifestyle", "wellness", "health", "beauty", "calm", "soft", "personal"],
+  },
+  {
+    id: "MF3mGyEYCl7XYWbV9V6O",
+    name: "Elli",
+    tags: ["viral", "entertainment", "fun", "pop", "celebrity", "trending", "young"],
+  },
+  {
+    id: "21m00Tcm4TlvDq8ikWAM",
+    name: "Rachel",
+    tags: ["educational", "explainer", "general", "clear", "neutral", "finance", "business"],
+  },
+];
+
+// Natural speaking rate at ElevenLabs speed=1.0 (words per second, empirically tuned)
+const NATURAL_WPS = 2.7;
+// Target video duration window
+const TARGET_MIN_S = 30;
+const TARGET_MAX_S = 45;
+const TARGET_S = (TARGET_MIN_S + TARGET_MAX_S) / 2; // 37.5s midpoint
+// ElevenLabs speed clamp range
+const SPEED_MIN = 0.75;
+const SPEED_MAX = 1.2;
+
+function selectVoice(options: TtsConfigOptions, fallbackVoiceId: string): string {
+  const haystack = [
+    options.lane.id,
+    options.lane.description,
+    options.topic.titleAngle,
+    options.topic.seedQuestion,
+    options.topic.laneId,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  let bestVoice = VOICE_ROSTER.find((v) => v.id === fallbackVoiceId) ?? VOICE_ROSTER[7]; // Rachel fallback
+  let bestScore = 0;
+
+  for (const voice of VOICE_ROSTER) {
+    const score = voice.tags.filter((tag) => haystack.includes(tag)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestVoice = voice;
+    }
+  }
+
+  log("tts", `Voice selected: ${bestVoice.name} (${bestScore} tag match${bestScore !== 1 ? "es" : ""})`);
+  return bestVoice.id;
+}
+
+function calcSpeed(script: TtsConfigOptions["script"]): number {
+  const parts = [script.hook, ...script.beats.map((b) => b.narration), script.payoff];
+  const wordCount = parts.join(" ").split(/\s+/).filter(Boolean).length;
+  const requiredSpeed = wordCount / (TARGET_S * NATURAL_WPS);
+  const clamped = Math.max(SPEED_MIN, Math.min(SPEED_MAX, requiredSpeed));
+  const estDuration = wordCount / (NATURAL_WPS * clamped);
+  log(
+    "tts",
+    `Script: ${wordCount} words → speed ${clamped.toFixed(2)}x → est. ${estDuration.toFixed(1)}s (target ${TARGET_MIN_S}-${TARGET_MAX_S}s)`,
+  );
+  return clamped;
+}
 
 interface ElevenLabsAlignment {
   characters: string[];
@@ -87,19 +189,30 @@ function buildSubtitles(alignment: ElevenLabsAlignment, chunkSize = 5): Subtitle
 }
 
 export class ElevenLabsProvider implements TtsProvider {
+  private activeVoiceId: string;
+  private activeSpeed: number;
+
   constructor(
     private readonly apiKey: string,
-    /** Voice ID — find yours at elevenlabs.io/voice-library or via GET /v1/voices */
-    private readonly voiceId: string = "21m00Tcm4TlvDq8ikWAM", // Rachel: clear, natural
+    /** Voice ID — default used when no topic context is available */
+    private readonly defaultVoiceId: string = "21m00Tcm4TlvDq8ikWAM", // Rachel: clear, natural
     private readonly modelId: string = "eleven_turbo_v2_5",
-    private readonly speed: number = 1.15,
-  ) {}
+    private readonly defaultSpeed: number = 1.0,
+  ) {
+    this.activeVoiceId = defaultVoiceId;
+    this.activeSpeed = defaultSpeed;
+  }
+
+  configure(options: TtsConfigOptions): void {
+    this.activeVoiceId = selectVoice(options, this.defaultVoiceId);
+    this.activeSpeed = calcSpeed(options.script);
+  }
 
   async synthesize(text: string, outputPath: string): Promise<VoiceoverResult> {
-    log("tts", `Generating voiceover with ElevenLabs voice ${this.voiceId}...`);
+    log("tts", `Generating voiceover with ElevenLabs voice ${this.activeVoiceId} at speed ${this.activeSpeed.toFixed(2)}x...`);
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${this.voiceId}/with-timestamps`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${this.activeVoiceId}/with-timestamps`,
       {
         method: "POST",
         headers: {
@@ -109,7 +222,7 @@ export class ElevenLabsProvider implements TtsProvider {
         body: JSON.stringify({
           text,
           model_id: this.modelId,
-          voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: this.speed },
+          voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: this.activeSpeed },
         }),
       },
     );

@@ -81,6 +81,7 @@ export class FfmpegAssembler implements VideoAssembler {
 
     return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
+        .inputOptions(["-stream_loop", "-1"]) // loop clip if shorter than targetDuration
         .duration(targetDuration)
         .videoFilter([
           `scale=${width}:${height}:force_original_aspect_ratio=increase`,
