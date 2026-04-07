@@ -14,14 +14,17 @@ The pipeline takes a content lane, uses an LLM to generate a topic + research + 
 
 ## Quick start
 
-1. `npm install`
+1. `npm install` (runs for both root workspace and `web/` via npm workspaces)
 2. Copy `.env.example` → `.env` and fill in engine API keys (LLM, Pexels)
-3. Set up a brand: `cp -r brands/_template brands/my-brand`, edit `channel.json` and `.env`
+3. Set up a brand: `cp -r brands/_template brands/my-brand`, rename `channel.example.json` → `channel.json`, fill in values, then create `.env`
 4. `.\generate.ps1 -Brand my-brand -DryRun` — generates a script (no video, just LLM calls)
 5. `.\generate.ps1 -Brand my-brand` — full pipeline, outputs `final.mp4`
 6. `.\generate.ps1 -Brand my-brand -Upload` — full pipeline + upload to configured platforms
+7. `npm run web:dev` — start the admin UI on http://localhost:3000 (brand editor, manual triggers, scheduler, upload history)
 
 Legacy mode (no `--brand` flag) still works — falls back to root `channel.json` if present.
+
+`brands/<id>/channel.json` is committed to the repo and edited in-place via the admin UI. It contains no secrets. `brands/<id>/.env` stays gitignored (OAuth tokens live there).
 
 ---
 
@@ -85,12 +88,35 @@ brands/                              — per-brand configuration and assets
     .env.example                     — brand credential template
     README.md                        — step-by-step setup guide
   signal-drop/                       — Signal Drop brand (the original)
-    channel.json                     — channel profile (gitignored)
+    channel.json                     — channel profile (committed; no secrets)
     .env                             — YouTube/TikTok credentials (gitignored)
+    topic-history.json               — runtime dedup log (gitignored)
     branding/                        — brand-guide.md, logo.png, banner.png
     site/                            — signaldrop.space Vercel website
     CLAUDE.md                        — AI agent context for this brand
     README.md                        — brand documentation
+
+web/                                 — admin UI (Next.js 15 App Router, workspace child)
+  app/                               — pages + route handlers
+  lib/                               — brand-io, job-manager, scheduler, deletion-worker
+  components/                        — BrandForm, ContentLanesEditor, etc.
+  boot.ts                            — starts scheduler + deletion worker at init
+  instrumentation.ts                 — Next init hook
+  middleware.ts                      — auth gate
+  package.json                       — workspace child manifest
+  tsconfig.json                      — extends root with Next JSX + @pipeline alias
+
+data/                                — runtime state (gitignored, volume-mounted in Docker)
+  deletion-queue.json                — pending cleanup entries
+  jobs.json                          — job history snapshot
+  schedules.json                     — per-brand cron schedules
+
+logs/                                — runtime logs (gitignored, volume-mounted in Docker)
+  upload-log.jsonl                   — one JSON line per upload attempt
+
+docker/                              — container build
+  Dockerfile                         — multi-stage, node:20 + ffmpeg
+docker-compose.yml                   — snippet to merge into Hostinger n8n compose
 
 src/                                 — engine code (brand-agnostic)
   config.ts                          — env loading → AppConfig

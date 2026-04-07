@@ -35,8 +35,9 @@ Use this folder as a starting point for setting up a new brand on the VibePrinti
 
 | File/Folder | Purpose | Committed to git? |
 |---|---|---|
-| `channel.json` | Channel identity, content lanes, branding config | No (gitignored) |
+| `channel.json` | Channel identity, content lanes, branding config | **Yes** — edited via the admin UI, no secrets |
 | `.env` | Platform credentials (YouTube, TikTok OAuth tokens) | No (gitignored) |
+| `topic-history.json` | Generated at runtime — per-brand topic dedup log | No (gitignored) |
 | `branding/` | Visual assets and brand guide | Yes |
 | `site/` | Optional website/landing page files | Yes |
 | `README.md` | Brand documentation | Yes |

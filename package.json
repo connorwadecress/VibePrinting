@@ -4,13 +4,20 @@
   "private": true,
   "type": "module",
   "description": "Planning and pipeline contracts for automated AI-generated YouTube Shorts.",
+  "workspaces": [
+    ".",
+    "web"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "plan": "tsx src/index.ts",
     "n8n": "tsx src/n8n-cli.ts",
     "export:workflows": "tsx src/n8n-export.ts",
     "check": "npm run build",
-    "generate": "tsx src/generate.ts"
+    "generate": "tsx src/generate.ts",
+    "web:dev": "npm --workspace @vibe-printing/web run dev",
+    "web:build": "npm --workspace @vibe-printing/web run build",
+    "web:start": "npm --workspace @vibe-printing/web run start"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.28",

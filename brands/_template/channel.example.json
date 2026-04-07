@@ -19,12 +19,24 @@
     "hashtags": ["#Shorts", "#FYP"],
     "youTubeCategory": "22"
   },
+  "ttsProvider": "edge",
   "ttsVoice": "en-US-GuyNeural",
   "ttsRate": "+10%",
+  "ttsProviderSettings": {
+    "elevenLabs": {
+      "voiceId": "21m00Tcm4TlvDq8ikWAM",
+      "modelId": "eleven_turbo_v2_5",
+      "speed": 1.15
+    }
+  },
   "genSecDefaults": {
     "blockedReasons": [],
     "disclosureRequired": true,
     "riskLevel": "medium",
     "safeToAutoPublish": false
+  },
+  "cleanup": {
+    "enabled": true,
+    "delayMinutes": 30
   }
 }
