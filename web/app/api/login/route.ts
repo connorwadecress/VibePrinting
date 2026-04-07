@@ -14,10 +14,13 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  // If the operator hasn't configured ADMIN_TOKEN at all, surface a
-  // distinct 503 so they don't waste time guessing tokens against an
-  // unconfigured server.
-  if (!getAdminToken()) {
+  const adminToken = getAdminToken();
+  console.log("[login] POST /api/login called");
+  console.log("[login] ADMIN_TOKEN set:", adminToken !== null, "| length:", adminToken?.length ?? 0);
+  console.log("[login] NODE_ENV:", process.env.NODE_ENV);
+
+  if (!adminToken) {
+    console.error("[login] ADMIN_TOKEN env var is not set — returning 503");
     return new Response(
       JSON.stringify({ error: "ADMIN_TOKEN env var is not set on the server" }),
       { status: 503, headers: { "content-type": "application/json" } },
@@ -27,7 +30,8 @@ export async function POST(request: Request) {
   let body: { token?: unknown };
   try {
     body = (await request.json()) as { token?: unknown };
-  } catch {
+  } catch (err) {
+    console.error("[login] Failed to parse request body:", err);
     return new Response(JSON.stringify({ error: "invalid json" }), {
       status: 400,
       headers: { "content-type": "application/json" },
@@ -35,7 +39,15 @@ export async function POST(request: Request) {
   }
 
   const token = typeof body.token === "string" ? body.token : "";
-  if (!token || !verifyToken(token)) {
+  console.log("[login] Received token length:", token.length);
+  console.log("[login] Expected token length:", adminToken.length);
+  console.log("[login] Lengths match:", token.length === adminToken.length);
+
+  const valid = verifyToken(token);
+  console.log("[login] Token valid:", valid);
+
+  if (!token || !valid) {
+    console.warn("[login] Token verification failed — returning 401");
     return new Response(JSON.stringify({ error: "invalid token" }), {
       status: 401,
       headers: { "content-type": "application/json" },
@@ -43,6 +55,7 @@ export async function POST(request: Request) {
   }
 
   const session = createSession();
+  console.log("[login] Session created:", session.id.slice(0, 8) + "...");
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: {

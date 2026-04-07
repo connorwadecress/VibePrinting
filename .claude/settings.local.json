@@ -35,7 +35,21 @@
       "WebSearch",
       "Bash(curl -s https://www.remotion.dev/docs/license)",
       "Bash(curl -s https://www.remotion.dev/docs/miscellaneous/changing-license)",
-      "Bash(curl -s https://www.remotion.dev/pricing)"
+      "Bash(curl -s https://www.remotion.dev/pricing)",
+      "WebFetch(domain:www.youtube.com)",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "Bash(schtasks /query /fo LIST /v)",
+      "Bash(tasklist /fi \"imagename eq powershell.exe\" /fo list)",
+      "Bash(tasklist /fi \"imagename eq pwsh.exe\" /fo list)",
+      "Bash(tasklist /fi \"imagename eq node.exe\" /fo list)",
+      "Bash(schtasks /query /fo CSV /nh)",
+      "Bash(powershell.exe -Command \"Get-Process | Where-Object { $_.ProcessName -match ''powershell|pwsh|node|tsx|ffmpeg'' } | Select-Object Id, ProcessName, StartTime, CommandLine | Format-Table -AutoSize\")",
+      "Bash(powershell.exe -Command \"Get-ScheduledTask | Where-Object { $_.TaskName -match ''vibe|signal|drop|generate|engine|loop|brand'' -or $_.Description -match ''vibe|signal|drop|generate|engine'' } | Format-List TaskName, TaskPath, State, Description\")",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \"\"Name=''powershell.exe'' OR Name=''pwsh.exe'' OR Name=''node.exe''\"\" | Select-Object ProcessId, Name, CommandLine, CreationDate | Format-List\")",
+      "Bash(powershell.exe -Command \"\\(Get-ScheduledTask -TaskName ''VibePrinting-AutoGenerate''\\).Triggers.Repetition | Format-List Interval, Duration, StopAtDurationEnd\")",
+      "Bash(powershell.exe -Command \"Disable-ScheduledTask -TaskName ''VibePrinting-AutoGenerate''; Disable-ScheduledTask -TaskName ''VibePrinting-LegacyTikTokUpload''\")",
+      "Bash(npm --version)",
+      "Bash(ffmpeg -version)"
     ]
   }
 }

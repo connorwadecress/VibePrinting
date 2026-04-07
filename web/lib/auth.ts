@@ -20,7 +20,12 @@ interface Session {
   expiresAt: number;
 }
 
-const sessions = new Map<string, Session>();
+// Middleware and route handlers are compiled as separate webpack bundles,
+// so module-level state is not shared between them. Hang the session map
+// off globalThis so both bundles read/write the same instance.
+const g = globalThis as typeof globalThis & { __vpSessions?: Map<string, Session> };
+if (!g.__vpSessions) g.__vpSessions = new Map();
+const sessions = g.__vpSessions;
 
 /**
  * Read the admin token from the environment. Returns null if unset

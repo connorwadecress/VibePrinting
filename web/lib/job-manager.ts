@@ -20,6 +20,7 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import path from "node:path";
+import fs from "node:fs";
 import crypto from "node:crypto";
 import {
   insertJob,
@@ -50,8 +51,25 @@ export interface StartRunResult {
 /** PID -> child handle. Used so /api/runs/[jobId]/cancel can SIGTERM it. */
 const children = new Map<string, ChildProcessWithoutNullStreams>();
 
-/** Repo root — derived from cwd at module load. */
-const REPO_ROOT = path.resolve(process.cwd());
+/**
+ * Repo root — the directory that contains `src/generate.ts`.
+ *
+ * In Docker the Next server runs with cwd=`/app` so cwd already is the
+ * repo root. In local dev `npm run web:dev` invokes the workspace
+ * script, which sets cwd to `web/`, so we have to walk up until we find
+ * `src/generate.ts`. Fall back to cwd if nothing matches so the spawn
+ * still produces a recognizable error rather than silently misbehaving.
+ */
+const REPO_ROOT = (() => {
+  let dir = path.resolve(process.cwd());
+  for (let i = 0; i < 5; i++) {
+    if (fs.existsSync(path.join(dir, "src", "generate.ts"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.resolve(process.cwd());
+})();
 
 function newJobId(): string {
   // job_<base36 epoch>_<6 hex>

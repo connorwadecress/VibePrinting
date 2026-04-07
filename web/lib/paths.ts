@@ -2,15 +2,20 @@
  * Absolute path resolution for the web layer.
  *
  * The admin UI container mounts `brands/`, `output/`, `data/`, and
- * `logs/` from the host. We resolve those via process.cwd() (the
- * repo root when running `npm run web:dev`, `/app` inside Docker).
+ * `logs/` from the host. We anchor these to the repo root via this
+ * file's own location (web/lib/paths.ts) rather than process.cwd(),
+ * because Next dev is launched from the `web/` workspace child (cwd
+ * = <root>/web), while in Docker cwd = /app (the repo root). Using
+ * import.meta.url makes the resolution identical in both.
  * Every path is overridable via env var so tests and unusual
  * deployments can redirect them without code changes.
  */
 
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const REPO_ROOT = path.resolve(process.cwd());
+// web/lib/paths.ts -> <repo>/web/lib -> <repo>/web -> <repo>
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export const BRANDS_DIR = process.env.VP_BRANDS_DIR ?? path.join(REPO_ROOT, "brands");
 export const OUTPUT_DIR = process.env.VP_OUTPUT_DIR ?? process.env.OUTPUT_DIR ?? path.join(REPO_ROOT, "output");

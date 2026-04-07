@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 /**
  * Token entry form. POSTs to /api/login which sets the session cookie
@@ -34,33 +34,37 @@ function LoginShell({ children }: { children?: React.ReactNode }) {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setPending(true);
+    console.log("[login] Submitting token, length:", token.length);
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token }),
       });
+      console.log("[login] Response status:", res.status, res.statusText);
+      const data = await res.json().catch(() => ({}));
+      console.log("[login] Response body:", data);
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         setError(data.error ?? `Login failed (${res.status})`);
+        setPending(false);
         return;
       }
       const dest = params.get("redirect") || "/brands";
-      startTransition(() => {
-        router.push(dest);
-        router.refresh();
-      });
+      console.log("[login] Success, redirecting to:", dest);
+      window.location.href = dest;
     } catch (err) {
+      console.error("[login] Fetch error:", err);
       setError((err as Error).message ?? "Network error");
+      setPending(false);
     }
   }
 

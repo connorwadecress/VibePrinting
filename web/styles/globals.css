@@ -3,10 +3,94 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --dracula-bg: #282a36;
+  --dracula-bg-elev: #2f3142;
+  --dracula-line: #44475a;
+  --dracula-fg: #f8f8f2;
+  --dracula-fg-dim: #c8c9d6;
+  --dracula-comment: #6272a4;
+  --dracula-cyan: #8be9fd;
+  --dracula-green: #50fa7b;
+  --dracula-orange: #ffb86c;
+  --dracula-pink: #ff79c6;
+  --dracula-purple: #bd93f9;
+  --dracula-red: #ff5555;
+  --dracula-yellow: #f1fa8c;
 }
 
 html,
 body {
   height: 100%;
+}
+
+body {
+  background-color: var(--dracula-bg);
+  color: var(--dracula-fg);
+}
+
+/*
+ * Global remap of the neutral palette → Dracula. The admin pages were
+ * authored with `bg-white`, `bg-neutral-50`, `text-neutral-*`, etc., so
+ * rather than rewriting every component we override those utilities at
+ * the CSS level. Any class added here applies everywhere it's used.
+ */
+@layer utilities {
+  .bg-white { background-color: var(--dracula-bg-elev) !important; }
+  .bg-neutral-50 { background-color: var(--dracula-bg) !important; }
+  .bg-neutral-100 { background-color: var(--dracula-line) !important; }
+  .bg-neutral-200 { background-color: var(--dracula-line) !important; }
+  .bg-neutral-900 { background-color: #1d1e26 !important; }
+
+  .text-neutral-900 { color: var(--dracula-fg) !important; }
+  .text-neutral-700 { color: var(--dracula-fg-dim) !important; }
+  .text-neutral-600 { color: var(--dracula-fg-dim) !important; }
+  .text-neutral-500 { color: var(--dracula-comment) !important; }
+  .text-neutral-400 { color: var(--dracula-comment) !important; }
+  .text-neutral-300 { color: var(--dracula-comment) !important; }
+
+  .border-neutral-100,
+  .border-neutral-200,
+  .border-neutral-300 { border-color: var(--dracula-line) !important; }
+
+  .divide-neutral-100 > :not([hidden]) ~ :not([hidden]),
+  .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--dracula-line) !important;
+  }
+
+  /* Indigo accents → Dracula purple */
+  .bg-indigo-50 { background-color: rgba(189, 147, 249, 0.15) !important; }
+  .bg-indigo-600 { background-color: var(--dracula-purple) !important; }
+  .bg-indigo-700 { background-color: #a780f0 !important; }
+  .text-indigo-600,
+  .text-indigo-700 { color: var(--dracula-purple) !important; }
+  .hover\:bg-indigo-700:hover { background-color: #a780f0 !important; }
+  .hover\:bg-neutral-100:hover { background-color: var(--dracula-line) !important; }
+  .hover\:bg-neutral-50:hover { background-color: var(--dracula-line) !important; }
+  .hover\:text-neutral-700:hover,
+  .hover\:text-neutral-900:hover { color: var(--dracula-fg) !important; }
+
+  /* Status colors used by run/upload tables */
+  .text-green-600,
+  .text-green-700 { color: var(--dracula-green) !important; }
+  .text-red-600,
+  .text-red-700 { color: var(--dracula-red) !important; }
+  .text-yellow-600,
+  .text-yellow-700 { color: var(--dracula-yellow) !important; }
+  .bg-red-50 { background-color: rgba(255, 85, 85, 0.12) !important; }
+  .bg-green-50 { background-color: rgba(80, 250, 123, 0.12) !important; }
+  .bg-yellow-50 { background-color: rgba(241, 250, 140, 0.12) !important; }
+}
+
+input,
+select,
+textarea {
+  background-color: var(--dracula-bg);
+  color: var(--dracula-fg);
+  border-color: var(--dracula-line);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--dracula-comment);
 }

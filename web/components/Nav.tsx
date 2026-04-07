@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Minimalist sidebar nav. Four items, nothing else. Renders on every
- * page except /login (the login layout doesn't include it).
+ * Top header nav. Four items, brand mark on the left, version on the
+ * right. Renders on every page except /login (the login layout doesn't
+ * include it). Dracula palette.
  */
 
 const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
@@ -18,34 +19,39 @@ const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
 export function Nav() {
   const pathname = usePathname() ?? "/brands";
   return (
-    <aside className="flex h-screen w-56 flex-col border-r border-neutral-200 bg-white">
-      <div className="px-5 pt-6 pb-4">
-        <div className="text-sm font-semibold tracking-tight text-neutral-900">VibePrinting</div>
-        <div className="mt-0.5 text-xs text-neutral-500">Admin</div>
+    <header className="sticky top-0 z-20 border-b border-dracula-line bg-dracula-bg/95 backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-5xl items-center gap-8 px-8">
+        <Link href="/brands" className="flex items-baseline gap-2">
+          <span className="text-sm font-semibold tracking-tight text-dracula-purple">
+            VibePrinting
+          </span>
+          <span className="text-xs text-dracula-comment">Admin</span>
+        </Link>
+        <nav className="flex-1">
+          <ul className="flex items-center gap-1">
+            {ITEMS.map((item) => {
+              const active =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={
+                      "block rounded-md px-3 py-1.5 text-sm transition-colors " +
+                      (active
+                        ? "bg-dracula-line font-medium text-dracula-pink"
+                        : "text-dracula-fg hover:bg-dracula-line hover:text-dracula-cyan")
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="text-xs text-dracula-comment">v0.2</div>
       </div>
-      <nav className="flex-1 px-2">
-        <ul className="space-y-0.5">
-          {ITEMS.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={
-                    "block rounded-md px-3 py-2 text-sm transition-colors " +
-                    (active
-                      ? "bg-indigo-50 font-medium text-indigo-700"
-                      : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900")
-                  }
-                >
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      <div className="px-5 pb-5 pt-2 text-xs text-neutral-400">v0.2</div>
-    </aside>
+    </header>
   );
 }
