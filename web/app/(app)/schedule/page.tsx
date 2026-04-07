@@ -1,33 +1,33 @@
 import { ScheduleEditor, type BrandRowInput } from "@/components/ScheduleEditor";
-import { listBrandIds, readBrandProfile } from "@/lib/brand-io";
+import { readBrandProfile } from "@/lib/brand-io";
 import { readSchedules } from "@/lib/schedule-fs";
+import { resolveActiveBrand } from "@/lib/active-brand";
 
 /**
- * /schedule — per-brand cron rows + global pause toggle. Server
- * component reads the schedules file and the brand list directly.
+ * /schedule — cron editor + global pause toggle for the active brand.
+ * Scoped to the single brand selected in the header dropdown.
  */
 
 export const dynamic = "force-dynamic";
 
-export default function SchedulePage() {
+export default async function SchedulePage() {
   const data = readSchedules();
-  const brandIds = listBrandIds();
+  const { activeBrandId } = await resolveActiveBrand();
 
-  const rows: BrandRowInput[] = brandIds
-    .map((id): BrandRowInput | null => {
-      try {
-        const profile = readBrandProfile(id);
-        return {
-          brandId: id,
-          displayName: profile.displayName,
-          lanes: profile.contentLanes.map((l) => ({ id: l.id })),
-          entry: data.schedules[id] ?? null,
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter((r): r is BrandRowInput => r !== null);
+  const rows: BrandRowInput[] = [];
+  if (activeBrandId) {
+    try {
+      const profile = readBrandProfile(activeBrandId);
+      rows.push({
+        brandId: activeBrandId,
+        displayName: profile.displayName,
+        lanes: profile.contentLanes.map((l) => ({ id: l.id })),
+        entry: data.schedules[activeBrandId] ?? null,
+      });
+    } catch {
+      // Missing channel.json — fall through with empty rows.
+    }
+  }
 
   return (
     <section className="space-y-8">
@@ -38,7 +38,7 @@ export default function SchedulePage() {
             Cron-driven runs per brand. Edits hot-reload without restart.
           </p>
         </div>
-        <span className="pill-muted">{rows.length} brands</span>
+        {activeBrandId && <span className="pill-muted">{activeBrandId}</span>}
       </header>
 
       <ScheduleEditor rows={rows} initialPaused={data.globalPaused} />

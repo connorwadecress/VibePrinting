@@ -1,41 +1,45 @@
 import Link from "next/link";
 import { TriggerRunForm, type TriggerBrandOption } from "@/components/TriggerRunForm";
 import { listJobs, type JobRecord } from "@/lib/job-store";
-import { listBrandIds, readBrandProfile } from "@/lib/brand-io";
+import { readBrandProfile } from "@/lib/brand-io";
+import { resolveActiveBrand } from "@/lib/active-brand";
 
 /**
  * /runs — manual trigger form on top, then a table of recent runs.
  *
- * Server component. Reads brands directly from disk so the form can
- * render lane dropdowns synchronously, and pulls jobs from the
- * in-memory store. The table is just the last N records (newest
- * first); /runs/[jobId] is where the live stream lives.
+ * Scoped to the active brand from the header dropdown. The trigger
+ * form only offers the active brand; the jobs table only shows jobs
+ * for that brand. /runs/[jobId] still works for any historic job.
  */
 
 export const dynamic = "force-dynamic";
 
 const TERMINAL = new Set(["success", "failed", "cancelled"]);
 
-export default function RunsPage() {
-  const brands: TriggerBrandOption[] = listBrandIds()
-    .map((id) => {
-      try {
-        const profile = readBrandProfile(id);
-        return {
-          id: profile.id,
-          displayName: profile.displayName,
-          lanes: profile.contentLanes.map((l) => ({
-            id: l.id,
-            description: l.description,
-          })),
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter((b): b is TriggerBrandOption => b !== null);
+export default async function RunsPage() {
+  const { activeBrandId } = await resolveActiveBrand();
 
-  const jobs = listJobs();
+  const brands: TriggerBrandOption[] = [];
+  if (activeBrandId) {
+    try {
+      const profile = readBrandProfile(activeBrandId);
+      brands.push({
+        id: profile.id,
+        displayName: profile.displayName,
+        lanes: profile.contentLanes.map((l) => ({
+          id: l.id,
+          description: l.description,
+        })),
+      });
+    } catch {
+      // Active brand has no valid channel.json — fall through with empty list.
+    }
+  }
+
+  const allJobs = listJobs();
+  const jobs = activeBrandId
+    ? allJobs.filter((j) => j.brandId === activeBrandId)
+    : [];
   const active = jobs.filter((j) => !TERMINAL.has(j.status));
   const recent = jobs.filter((j) => TERMINAL.has(j.status)).slice(0, 25);
 

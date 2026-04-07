@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BrandSwitcher } from "@/components/BrandSwitcher";
 
 /**
- * Top header nav. Brand mark, four sections, version tag. On small
- * screens the section list collapses behind a hamburger toggle.
+ * Top header nav. Brand mark, four sections, active-brand switcher,
+ * version tag. On small screens the section list collapses behind a
+ * hamburger toggle.
+ *
+ * The brand switcher scopes the entire UI to one brand at a time —
+ * every page in the (app) group reads the vp_active_brand cookie
+ * during SSR and filters its data accordingly.
  */
 
 const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
@@ -16,7 +22,12 @@ const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/uploads", label: "Uploads" },
 ];
 
-export function Nav() {
+interface NavProps {
+  brandIds: string[];
+  activeBrandId: string | null;
+}
+
+export function Nav({ brandIds, activeBrandId }: NavProps) {
   const pathname = usePathname() ?? "/brands";
   const [open, setOpen] = useState(false);
 
@@ -63,7 +74,8 @@ export function Nav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="hidden text-[10px] font-medium uppercase tracking-widest text-fg-subtle sm:inline">
+          <BrandSwitcher brandIds={brandIds} activeBrandId={activeBrandId} />
+          <span className="hidden text-[10px] font-medium uppercase tracking-widest text-fg-subtle lg:inline">
             v0.2
           </span>
           <button

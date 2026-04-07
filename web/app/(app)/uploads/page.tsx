@@ -1,31 +1,33 @@
 import { Suspense } from "react";
 import { UploadHistoryTable } from "@/components/UploadHistoryTable";
-import { readUploadLog, listLoggedBrands } from "@/lib/upload-log-reader";
+import { readUploadLog } from "@/lib/upload-log-reader";
+import { resolveActiveBrand } from "@/lib/active-brand";
 
 /**
- * /uploads — read-only upload history table.
+ * /uploads — read-only upload history table, scoped to the active
+ * brand from the header dropdown.
  *
  * Server-rendered list of the last N upload attempts (newest first).
- * Brand filter is a search-param so the URL is shareable. There is
- * no auto-refresh in v1; the operator reloads after a run.
+ * There is no auto-refresh; the operator reloads after a run.
  */
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ brand?: string; limit?: string }>;
+  searchParams: Promise<{ limit?: string }>;
 }
 
 export default async function UploadsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const brand = sp.brand?.trim() || null;
   const limit = sp.limit ? parseInt(sp.limit, 10) : 100;
+  const { activeBrandId } = await resolveActiveBrand();
 
-  const entries = readUploadLog({
-    brand: brand ?? undefined,
-    limit: Number.isFinite(limit) ? limit : 100,
-  });
-  const brands = listLoggedBrands();
+  const entries = activeBrandId
+    ? readUploadLog({
+        brand: activeBrandId,
+        limit: Number.isFinite(limit) ? limit : 100,
+      })
+    : [];
 
   return (
     <section className="space-y-8">
@@ -39,7 +41,7 @@ export default async function UploadsPage({ searchParams }: PageProps) {
       </header>
 
       <Suspense fallback={null}>
-        <UploadHistoryTable entries={entries} brands={brands} selectedBrand={brand} />
+        <UploadHistoryTable entries={entries} activeBrandId={activeBrandId} />
       </Suspense>
     </section>
   );

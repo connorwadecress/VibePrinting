@@ -1,47 +1,23 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import type { UploadLogEntry } from "@pipeline/domain/upload-log";
 
 /**
- * Read-only upload history table. Renders newest-first; the brand
- * filter is a query param so the URL is shareable. No auto-refresh
- * — operators reload manually after a run.
+ * Read-only upload history table. Renders newest-first; always
+ * scoped to the active brand selected in the header dropdown.
+ * No auto-refresh — operators reload manually after a run.
  */
 
 interface Props {
   entries: UploadLogEntry[];
-  brands: string[];
-  selectedBrand: string | null;
+  activeBrandId: string | null;
 }
 
-export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
-  const router = useRouter();
-  const params = useSearchParams();
-
-  function setBrand(value: string) {
-    const next = new URLSearchParams(params?.toString() ?? "");
-    if (value) next.set("brand", value);
-    else next.delete("brand");
-    router.push(`/uploads${next.toString() ? `?${next}` : ""}`);
-  }
-
+export function UploadHistoryTable({ entries, activeBrandId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="label">Brand</label>
-        <select
-          value={selectedBrand ?? ""}
-          onChange={(e) => setBrand(e.target.value)}
-          className="input input-sm w-auto min-w-[10rem]"
-        >
-          <option value="">All brands</option>
-          {brands.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
+        {activeBrandId && <span className="pill-muted">{activeBrandId}</span>}
         <span className="pill-muted">{entries.length} entries</span>
       </div>
 
