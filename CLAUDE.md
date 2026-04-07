@@ -300,6 +300,11 @@ All channel identity lives in `brands/<id>/channel.json` (gitignored). Copy from
 | `OUTPUT_DIR` | No | `./output` | Where runs are saved |
 | `DEFAULT_DAILY_TARGET` | No | `3` | Informational daily target |
 | `BRAND` | No | — | Default brand (alternative to `--brand` CLI flag) |
+| `ADMIN_TOKEN` | For web UI | — | Operator login token (no token = UI is unreachable) |
+| `TZ` | No | `America/Los_Angeles` | Timezone for scheduler cron |
+| `VP_DATA_DIR` | No | `./data` | Persistent state dir (jobs/schedules/deletion queue) |
+| `VP_LOGS_DIR` | No | `./logs` | Logs dir (upload-log.jsonl) |
+| `VP_BRANDS_DIR` | No | `./brands` | Brands dir (override for tests/containers) |
 
 ### Brand `.env` (`brands/<id>/.env`, per-brand credentials)
 
@@ -382,6 +387,290 @@ GenSec review is not yet implemented as a pipeline stage — manual review is re
 - Logging: `log(stage, msg)`, `logError(stage, msg)`, `logTiming(stage, startMs)` from `src/utils/logger.ts`
 - `tsx` for execution; `tsc` for type-checking only (output goes to `dist/` but is not used at runtime)
 - Do not auto-publish without a passing `GenSecAssessment`
+
+---
+
+## Web admin UI (`web/`)
+
+Next.js 15 App Router app that runs alongside the engine. It does **not** import the pipeline — it spawns `npx tsx src/generate.ts` as a child process and tails stdout/stderr. This keeps engine and UI decoupled and means the UI can crash/restart without taking down active runs (well, almost — see "Recovery" below).
+
+### Boot sequence
+
+1. Next calls `web/instrumentation.ts` → `register()` once per Node process (skipped on edge runtime).
+2. `instrumentation.ts` dynamically imports `web/boot.ts`.
+3. `boot.ts` starts (in order, idempotent, double-init guarded): **deletion worker** → **scheduler**.
+4. Errors during boot are caught and logged; the UI still serves requests.
+
+### Authentication (`web/middleware.ts`)
+
+- Single-operator model. One token in `ADMIN_TOKEN` env var, no DB.
+- Sessions: in-memory `Map<sessionId, Session>`, 7-day TTL, lazy expiry cleanup.
+- Cookie: `vp_admin`, HttpOnly, `Secure` in production.
+- Token check: `crypto.timingSafeEqual()` (constant-time).
+- Public routes: `/login`, `/api/login`, `/api/health`. Everything else is gated:
+  - `/api/*` returns `401 JSON` when unauthenticated.
+  - Browser routes redirect to `/login?redirect=<original>`.
+- **Sessions reset on container restart** — operators must re-login after a redeploy.
+
+### Job manager (`web/lib/job-manager.ts` + `web/lib/job-store.ts`)
+
+- **Concurrency:** max 1 active job per brand. `startRun()` rejects if the brand has a running job.
+- **Spawn:** `npx tsx src/generate.ts --brand=<id> [--lane=<id>] [--dry-run] [--upload]`, cwd = repo root.
+- **Job ID format:** `job_<base36-epoch>_<6-hex>`.
+- **Env vars passed to child:** `VP_TRIGGER` (manual|scheduled|cli), `VP_PLATFORMS` (comma-separated), `VP_SCHEDULER_ID` (audit linking).
+- **Log capture:** stdout/stderr split by line, appended to a 500-line ring buffer (`logTail`) on the JobRecord, broadcast over a per-job `EventEmitter` for SSE consumers.
+- **Run dir extraction:** regex `/^\[pipeline\]\s+Run:\s+(\S+)\s+->\s+(.+)$/` against log lines populates `runDir`.
+- **Cancellation:** `cancelJob()` sets `status='cancelled'` *before* `SIGTERM` so the close handler distinguishes intentional cancel from crash.
+- **Persistence:** top 200 newest jobs snapshot-written to `data/jobs.json` after every mutation (except log line appends, to avoid disk thrash).
+- **Recovery on boot:** any job loaded from disk with status `running`/`queued` is flipped to `failed` with error `"container restarted"`. **Active runs do NOT survive restarts.**
+
+### Scheduler (`web/lib/scheduler.ts`)
+
+- Uses **`node-cron` v3** with timezone support (honors container `TZ`, default `America/Los_Angeles`).
+- Watches `data/schedules.json` via `fs.watch`, debounced 200ms — edits to the file (or via API) hot-reload without restart.
+- **No catch-up:** missed cron slots after downtime are skipped. Cron is "next matching minute," not absolute schedule.
+- Per-fire logic: re-reads fresh file, respects just-toggled `globalPaused`, optionally skips if `skipIfRunning` and brand has an active job, then calls `startRun(trigger='scheduled', schedulerId='<brandId>@<cron>')`.
+- **Global pause:** `POST /api/schedule/pause` halts all schedules without deleting entries.
+
+### Deletion worker (`web/lib/deletion-worker.ts`)
+
+- Tick: 60s. Idempotent start guard.
+- Sweep: deletes `runDir` recursively (`fs.rm({recursive, force})`) for any pending entry where `deleteAfter < now`. Flips status to `completed`. Prunes terminal entries older than 7 days.
+- Default delay: **30 minutes after upload** before run dir is deleted (configurable per call).
+- Standalone CLI: `npx tsx web/lib/deletion-worker.ts` runs the worker without booting Next.
+
+### SSE log streaming
+
+- Endpoint: `GET /api/runs/stream?jobId=<id>`. Content-Type `text/event-stream`.
+- Events: `status` (full JobRecord), `log` (`{line}`), `end` (`{status}`). Heartbeat: `: ping` comment every 15s.
+- On connect, server replays the entire `logTail` + current status, then attaches to the per-job EventEmitter.
+- Stream closes when the job reaches a terminal status. Browsers' native `EventSource` auto-reconnects on transient drops.
+
+### API surface
+
+| Method + path | Purpose |
+|---|---|
+| `POST /api/login` | Verify token, mint session, set cookie |
+| `GET /api/health` | `{status:"ok", ts}` — used by Docker healthcheck, no auth |
+| `GET /api/brands` | List BrandSummary |
+| `GET\|PUT /api/brands/[id]` | Read/update `brands/<id>/channel.json` (Zod-validated) |
+| `GET /api/brands/[id]/topic-history` | Read `topic-history.json` |
+| `GET /api/runs` | List jobs (newest first, capped at snapshot size) |
+| `POST /api/runs` | `{brandId, lane?, dryRun?, platforms?}` → spawn |
+| `GET /api/runs/[jobId]` | Job detail |
+| `POST /api/runs/[jobId]/cancel` | SIGTERM + mark cancelled |
+| `GET /api/runs/stream?jobId=` | SSE log/status stream |
+| `GET /api/schedule` | `{...SchedulesFile, brandIds}` |
+| `PUT /api/schedule/[brandId]` | Upsert ScheduleEntry |
+| `POST /api/schedule/pause` | `{paused: bool}` |
+| `GET /api/upload-log` | Upload history (reverse-read of `logs/upload-log.jsonl`) |
+
+### Path overrides
+
+`web/lib/paths.ts` resolves all on-disk locations from env vars (CWD-relative defaults):
+
+| Var | Default | Purpose |
+|---|---|---|
+| `VP_BRANDS_DIR` | `<cwd>/brands` | Brand folders |
+| `VP_OUTPUT_DIR` / `OUTPUT_DIR` | `<cwd>/output` | Run dirs |
+| `VP_DATA_DIR` | `<cwd>/data` | Persistent state |
+| `VP_LOGS_DIR` | `<cwd>/logs` | Logs |
+| `UPLOAD_LOG_PATH` | `<LOGS_DIR>/upload-log.jsonl` | Upload audit log |
+| `DELETION_QUEUE_PATH` | `<DATA_DIR>/deletion-queue.json` | Deletion queue |
+| `VP_SCHEDULES_PATH` | `<DATA_DIR>/schedules.json` | Schedule entries |
+| `VP_JOBS_PATH` | `<DATA_DIR>/jobs.json` | Job snapshot |
+| `VP_TRIGGER` | `cli` (or set by job-manager) | Tags upload-log entries |
+| `VP_PLATFORMS` | — | Comma-separated upload platform whitelist |
+| `VP_SCHEDULER_ID` | — | Audit linking job → schedule entry |
+| `ADMIN_TOKEN` | — | **Required** for the web UI; operator login token |
+
+---
+
+## Runtime data files (on-disk shapes)
+
+All JSON files are version-stamped and use atomic temp+rename writes where practical. They are **gitignored** and volume-mounted in Docker.
+
+### `data/jobs.json`
+```jsonc
+{
+  "version": 1,
+  "jobs": [
+    {
+      "jobId": "job_<base36-epoch>_<6-hex>",
+      "brandId": "signal-drop",
+      "lane": "everyday-systems",     // or null
+      "args": ["src/generate.ts", "--brand=signal-drop", "..."],
+      "status": "queued|running|success|failed|cancelled",
+      "startedAt": "ISO",
+      "endedAt": "ISO",                // optional
+      "pid": 12345,
+      "exitCode": 0,
+      "runDir": "/app/output/run-YYYYMMDD-HHmmss",
+      "uploadResults": [{"platform":"youtube","id":"...","url":"...","title":"..."}],
+      "logTail": ["...500 lines max..."],
+      "trigger": "manual|scheduled|cli",
+      "schedulerId": "signal-drop@0 11 * * *",  // or null
+      "error": "..."                   // optional
+    }
+  ]
+}
+```
+Top 200 jobs newest-first. Running/queued entries are flipped to `failed` on boot.
+
+### `data/schedules.json`
+```jsonc
+{
+  "version": 1,
+  "globalPaused": false,
+  "schedules": {
+    "signal-drop": {
+      "enabled": true,
+      "cron": "0 11,15,19 * * *",     // node-cron expression
+      "lane": "everyday-systems",      // or null = pick any
+      "platforms": ["youtube","tiktok"],  // empty = no upload
+      "dryRun": false,
+      "skipIfRunning": true,
+      "lastRunAt": "ISO",              // or null
+      "lastJobId": "job_..."           // or null
+    }
+  }
+}
+```
+Hot-reloaded via `fs.watch` (200ms debounce).
+
+### `data/deletion-queue.json`
+```jsonc
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "del_<iso>_<runId>",
+      "runDir": "/app/output/run-...",
+      "brandId": "signal-drop",
+      "scheduledAt": "ISO",
+      "deleteAfter": "ISO",            // = scheduledAt + 30min by default
+      "uploadResults": [...],          // audit copy
+      "status": "pending|completed|failed",
+      "completedAt": "ISO",            // or null
+      "error": "..."                   // or null
+    }
+  ]
+}
+```
+
+### `logs/upload-log.jsonl`
+Append-only, one JSON object per line. Read in reverse via 16KB tail chunks (`web/lib/upload-log-reader.ts`).
+```jsonc
+{"ts":"ISO","runId":"YYYYMMDD-HHmmss","brandId":"signal-drop","lane":"...","platform":"youtube|tiktok","status":"success|failure","videoId":"...","url":"...","title":"...","durationMs":45000,"fileSizeBytes":17961899,"error":null,"trigger":"manual|scheduled|cli","schedulerId":"..."}
+```
+
+### `brands/<id>/topic-history.json`
+Flat array used by topic-discovery for dedup:
+```jsonc
+[{"laneId":"everyday-systems","titleAngle":"...","seedQuestion":"...","runId":"YYYYMMDD-HHmmss","date":"YYYY-MM-DD"}]
+```
+
+### `output/run-YYYYMMDD-HHmmss/`
+- `script.json` — full `ShortScript` + `TopicCandidate` + `ResearchPack` (written after script-generation)
+- `voiceover.mp3` — TTS output
+- `clips/` — downloaded stock footage (one .mp4 per scene)
+- `concat.mp4` — pre-caption assembled video
+- `final.mp4` — final deliverable with burned-in captions
+
+---
+
+## Docker / deployment
+
+### `docker/Dockerfile`
+
+Multi-stage build, `node:20-bookworm-slim` base.
+
+- **Stage 1 (builder):** `npm ci --workspaces` (root + `web/`), copy `src/` + `web/`, run `npx next build` in `web/`.
+- **Stage 2 (runtime):** install `ffmpeg`, `tini`, `wget`, `ca-certificates`. Copy build artifacts. `EXPOSE 3000`. `ENTRYPOINT ["tini","--"]` for proper signal forwarding. `CMD npx --prefix web next start -p 3000 -H 0.0.0.0`.
+- **Hardcoded env:** `NODE_ENV=production`, `TZ=America/Los_Angeles`, `VP_*_DIR=/app/...`, `OUTPUT_DIR=/app/output`, `VP_TRIGGER=cli`.
+
+### `docker-compose.yml` (Hostinger n8n merge snippet)
+
+- Service: `vibeprinting`. `restart: unless-stopped`.
+- **Required env from host:** `ADMIN_TOKEN`, `ANTHROPIC_API_KEY`, `PEXELS_API_KEY` (plus `LLM_PROVIDER`, `CLAUDE_MODEL`/`GEMINI_*`, optional `ELEVENLABS_API_KEY`, `VP_MAX_CONCURRENT*`).
+- **Volumes:**
+  - `./brands:/app/brands` — configs + per-brand `.env` (YouTube/TikTok creds)
+  - `./output:/app/output` — run dirs (auto-cleaned by deletion worker)
+  - `./data:/app/data` — `jobs.json`, `schedules.json`, `deletion-queue.json`
+  - `./logs:/app/logs` — `upload-log.jsonl`
+- **Port:** `127.0.0.1:3000:3000` — loopback only, sit behind a reverse proxy (matches the n8n pattern on the box).
+- **Networks:** external `n8n-net` so it joins the existing n8n compose.
+- **Healthcheck:** `wget --spider http://localhost:3000/api/health` every 30s.
+
+---
+
+## Debugging guide
+
+When a run breaks, this is the order to look:
+
+### 1. Find the job
+
+- UI: `/runs` → click the failed job → live logs + error message + run dir.
+- API: `GET /api/runs/[jobId]` returns the full JobRecord including `logTail` (500 lines) and `error`.
+- Disk: `data/jobs.json` has the most recent 200 jobs.
+
+### 2. Identify the failing stage
+
+Every log line is prefixed `[HH:MM:SS] [<stage>] msg`. Stage names you'll see: `topic-discovery`, `research-pack`, `script-generation`, `scene-plan`, `voiceover`, `stock-footage`, `assembly`, `caption-overlay`, `upload`. Plus workers: `scheduler`, `deletion-worker`, `job`, `retry`.
+
+### 3. Inspect the run dir
+
+`runDir` is captured from the line `[pipeline] Run: <id> -> <abs-path>`. If the upload succeeded and >30 min passed, the deletion worker may have already removed it — check `data/deletion-queue.json` for proof.
+
+| File | Tells you |
+|---|---|
+| `script.json` | Did topic + research + script + scenes succeed? |
+| `voiceover.mp3` | Did TTS succeed? |
+| `clips/*.mp4` | Did Pexels return + did downloads complete? |
+| `concat.mp4` | Did FFmpeg concat succeed? |
+| `final.mp4` | Did caption burn-in succeed? |
+
+### 4. Common failure modes
+
+| Symptom | Likely cause | Where to look | Fix |
+|---|---|---|---|
+| Fails immediately on `topic-discovery` | LLM key missing/invalid | Job error, root `.env` | Set `ANTHROPIC_API_KEY` (or `GEMINI_API_KEY` if `LLM_PROVIDER=gemini`) |
+| Fails on `scene-plan` after retries | LLM returning malformed JSON | logTail — look for "Scene planning failed after 3 attempts" | Check Claude/Gemini model id; reduce lane complexity; only stage with auto-retry (max 3) |
+| Fails on `stock-footage` with "No Pexels videos found" | Lane keywords too niche, or Pexels rate-limited | logTail | Broaden `searchKeywords`; wait out rate limit (no built-in backoff) |
+| Fails on `assembly` | FFmpeg not on PATH (local), or codec error | logTail | Container has ffmpeg pre-installed; locally needs `ffmpeg` on PATH |
+| Fails on `upload` with 401 | YouTube/TikTok refresh token expired | Job error | Re-run `Get-YouTubeToken.ps1` / `Get-TikTokToken.ps1`; update `brands/<id>/.env`; re-upload via `retry-upload.ps1` |
+| Schedule fired but no job | `globalPaused=true`, or `skipIfRunning` blocked it | `data/schedules.json`, `lastRunAt`, scheduler logs | Toggle pause via `POST /api/schedule/pause` |
+| Live UI logs stop streaming | SSE drop / proxy timeout | Browser devtools network tab | EventSource auto-reconnects; refresh page replays `logTail` |
+| All running jobs marked failed at boot | Container restarted mid-run | `error: "container restarted"` | Expected — start a fresh run; **active runs do not survive restart** |
+| Login loops to `/login` | `ADMIN_TOKEN` not set or session map cleared | Container env, restart timing | Set `ADMIN_TOKEN` in compose; re-login after every restart |
+| Run dir unexpectedly missing | Deletion worker swept it | `data/deletion-queue.json` (look for `status: completed`) | Default delete delay is 30 min after upload; bump if needed |
+| Upload row missing from history | Pipeline never reached `upload` stage, or `--upload` not passed | `logs/upload-log.jsonl`, job args | Confirm `--upload` flag / `platforms[]` in schedule entry |
+
+### 5. Re-running an upload
+
+`retry-upload.ts` re-uploads an already-assembled run without regenerating:
+```powershell
+.\retry-upload.ps1 -Brand signal-drop -Platform tiktok          # Latest run
+.\retry-upload.ps1 -Brand signal-drop -Platform youtube -Run run-20260407-140005
+.\retry-upload.ps1 -Brand signal-drop -Platform tiktok -All     # All runs not yet uploaded to that platform
+```
+Reads `script.json` + `final.mp4` from the run dir, calls the relevant Uploader, appends to `upload-log.jsonl`. Will fail with "<platform> is not configured" if the brand `.env` lacks credentials.
+
+### 6. Useful one-shots
+
+```powershell
+# Type-check only
+npm run check
+
+# Print resolved channel profile + configured services for a brand
+$env:BRAND="signal-drop"; npm run plan
+
+# Run deletion worker standalone (no Next)
+npx tsx web/lib/deletion-worker.ts
+
+# Tail upload log
+Get-Content logs/upload-log.jsonl -Wait -Tail 20
+```
 
 ---
 
