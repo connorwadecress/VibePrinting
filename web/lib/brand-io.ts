@@ -13,10 +13,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ChannelProfileSchema, type ChannelProfileInput } from "@/lib/zod-schemas";
-import { brandProfilePath, BRANDS_DIR } from "@/lib/paths";
+import { brandProfilePath, brandTopicHistoryPath, BRANDS_DIR } from "@/lib/paths";
 import { listBrands } from "@pipeline/utils/brand-resolver";
 import { loadProfile } from "@pipeline/domain/channel-profile";
 import type { ChannelProfile } from "@pipeline/domain/channel-profile";
+import type { TopicHistoryEntry } from "@pipeline/domain/models";
 
 export interface BrandSummary {
   id: string;
@@ -92,6 +93,23 @@ export function listBrandSummaries(): BrandSummary[] {
  * the details and return a 400. Writes via temp + rename so partial
  * writes never land on disk.
  */
+/**
+ * Read a brand's topic history file. Returns [] if missing or
+ * unparseable. Unlike the pipeline loader, this never backfills
+ * from output/ — that's a runtime concern, not a UI one.
+ */
+export function readBrandTopicHistory(brandId: string): TopicHistoryEntry[] {
+  const filePath = brandTopicHistoryPath(brandId);
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? (data as TopicHistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function writeBrandProfile(brandId: string, profile: unknown): ChannelProfileInput {
   const validated = ChannelProfileSchema.parse(profile);
   if (validated.id !== brandId) {
