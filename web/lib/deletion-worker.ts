@@ -26,15 +26,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type {
-  DeletionQueue,
-  DeletionQueueEntry,
-} from "../../src/domain/deletion-queue.js";
+import type { DeletionQueueEntry } from "@pipeline/domain/deletion-queue";
 import {
   getQueuePath,
   readQueue,
   writeQueue,
-} from "../../src/utils/deletion-queue.js";
+} from "@pipeline/utils/deletion-queue";
 
 /** How often the sweep runs when embedded. */
 const TICK_MS = 60_000;
