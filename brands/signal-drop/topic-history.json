@@ -754,5 +754,19 @@
     "seedQuestion": "Why does a 'statistically significant' study result often fail to replicate in the real world — and what's the hidden math that makes p-values completely backwards?",
     "runId": "20260407-212217",
     "date": "2026-04-07"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Why Stores Hide the Cheap Stuff Below Your Knees (The Shelf Height Hack That Costs You Thousands)",
+    "seedQuestion": "Why do grocery stores deliberately put the most expensive items at eye level on shelves — when the cheapest alternatives are right below your feet?",
+    "runId": "20260407-215346",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Penguins Engineered Their Feathers Like Insulated Wetsuits (The Air Trap Nobody Noticed)",
+    "seedQuestion": "How do penguins stay warm in water colder than freezing when they have no blubber layer — just feathers?",
+    "runId": "20260407-215723",
+    "date": "2026-04-07"
   }
 ]

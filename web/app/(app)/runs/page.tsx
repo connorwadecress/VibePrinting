@@ -1,4 +1,6 @@
 import Link from "next/link";
+import fs from "node:fs";
+import path from "node:path";
 import { TriggerRunForm, type TriggerBrandOption } from "@/components/TriggerRunForm";
 import { listJobs, type JobRecord } from "@/lib/job-store";
 import { listBrandIds, readBrandProfile } from "@/lib/brand-io";
@@ -89,6 +91,7 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
             <th>Lane</th>
             <th>Trigger</th>
             <th>Status</th>
+            <th>Files</th>
             <th></th>
           </tr>
         </thead>
@@ -104,6 +107,9 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td>
                 <StatusPill status={j.status} />
               </td>
+              <td>
+                <FilesIndicator job={j} />
+              </td>
               <td className="text-right">
                 <Link
                   href={`/runs/${j.jobId}`}
@@ -117,6 +123,21 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function FilesIndicator({ job }: { job: JobRecord }) {
+  if (!TERMINAL.has(job.status) || !job.runDir) {
+    return <span className="text-fg-subtle">—</span>;
+  }
+  let exists = false;
+  try {
+    exists = fs.existsSync(path.join(job.runDir, "final.mp4"));
+  } catch {}
+  return exists ? (
+    <span className="pill-info">on disk</span>
+  ) : (
+    <span className="pill-muted">expired</span>
   );
 }
 

@@ -52,7 +52,9 @@
       "Bash(ffmpeg -version)",
       "Bash(npm run:*)",
       "Bash(echo \"exit=$?\")",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(echo \"tsc exit=$?\")",
+      "Bash(echo \"tsc=$?\")"
     ]
   }
 }
