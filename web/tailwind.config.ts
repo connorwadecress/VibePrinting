@@ -1,11 +1,11 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Minimalist admin UI palette:
- * - neutral backgrounds
- * - single indigo accent for primary actions
- * - red for destructive
- * System font stack, no custom fonts.
+ * Vibe Printing admin — Tailwind config.
+ *
+ * Colors are CSS-variable backed (see styles/globals.css). Variables
+ * store space-separated R G B triples so utilities like
+ * `bg-accent/20` resolve via the <alpha-value> placeholder.
  */
 const config: Config = {
   content: [
@@ -15,22 +15,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        dracula: {
-          bg: "#282a36",
-          line: "#44475a",
-          fg: "#f8f8f2",
-          comment: "#6272a4",
-          cyan: "#8be9fd",
-          green: "#50fa7b",
-          orange: "#ffb86c",
-          pink: "#ff79c6",
-          purple: "#bd93f9",
-          red: "#ff5555",
-          yellow: "#f1fa8c",
+        bg: "rgb(var(--bg-rgb) / <alpha-value>)",
+        surface: "rgb(var(--surface-rgb) / <alpha-value>)",
+        "surface-2": "rgb(var(--surface-2-rgb) / <alpha-value>)",
+        "surface-3": "rgb(var(--surface-3-rgb) / <alpha-value>)",
+        border: "rgb(var(--border-rgb) / <alpha-value>)",
+        "border-strong": "rgb(var(--border-strong-rgb) / <alpha-value>)",
+        fg: "rgb(var(--fg-rgb) / <alpha-value>)",
+        "fg-muted": "rgb(var(--fg-muted-rgb) / <alpha-value>)",
+        "fg-subtle": "rgb(var(--fg-subtle-rgb) / <alpha-value>)",
+        accent: {
+          DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
+          hover: "rgb(var(--accent-hover-rgb) / <alpha-value>)",
         },
+        success: "rgb(var(--success-rgb) / <alpha-value>)",
+        danger: "rgb(var(--danger-rgb) / <alpha-value>)",
+        warning: "rgb(var(--warning-rgb) / <alpha-value>)",
+        info: "rgb(var(--info-rgb) / <alpha-value>)",
+      },
+      borderRadius: {
+        xl: "0.875rem",
       },
       fontFamily: {
         sans: [
+          "ui-sans-serif",
+          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
           '"Segoe UI"',
@@ -40,13 +49,16 @@ const config: Config = {
           "sans-serif",
         ],
         mono: [
-          'ui-monospace',
-          'SFMono-Regular',
+          "ui-monospace",
+          "SFMono-Regular",
           '"SF Mono"',
-          'Menlo',
-          'Consolas',
-          'monospace',
+          "Menlo",
+          "Consolas",
+          "monospace",
         ],
+      },
+      boxShadow: {
+        glow: "0 0 0 1px rgba(139, 92, 246, 0.35), 0 4px 24px -8px rgba(139, 92, 246, 0.45)",
       },
     },
   },

@@ -45,13 +45,9 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
 
   if (!overrideExists && !open) {
     return (
-      <div className="flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs">
-        <span className="text-neutral-600">Caption style: using defaults</span>
-        <button
-          type="button"
-          onClick={startOverride}
-          className="rounded border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 hover:border-indigo-300 hover:text-indigo-700"
-        >
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-2/60 px-4 py-3 text-xs">
+        <span className="text-fg-muted">Caption style: using defaults</span>
+        <button type="button" onClick={startOverride} className="btn-secondary btn-sm">
           Override defaults
         </button>
       </div>
@@ -59,33 +55,33 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
   }
 
   return (
-    <div className="rounded-md border border-neutral-200 bg-white p-3 text-xs">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-medium text-neutral-700">
+    <div className="rounded-lg border border-border bg-surface-2/60 p-4 text-xs">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="font-medium text-fg">
           Caption style {overrideExists ? "(custom)" : "(using defaults)"}
         </span>
         <button
           type="button"
           onClick={clearOverride}
-          className="text-xs text-neutral-500 hover:text-red-600"
+          className="text-xs text-fg-subtle hover:text-danger"
         >
           Reset to defaults
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Font family">
           <input
             value={merged.fontFamily}
             onChange={(e) => update("fontFamily", e.target.value)}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Font weight">
           <select
             value={merged.fontWeight}
             onChange={(e) => update("fontWeight", Number(e.target.value))}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           >
             {[400, 500, 600, 700, 800, 900].map((w) => (
               <option key={w} value={w}>
@@ -101,7 +97,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             max={200}
             value={merged.fontSize}
             onChange={(e) => update("fontSize", Number(e.target.value))}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Words / page">
@@ -111,7 +107,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             max={12}
             value={merged.wordsPerPage}
             onChange={(e) => update("wordsPerPage", Number(e.target.value))}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Base color">
@@ -119,7 +115,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             type="color"
             value={merged.baseColor}
             onChange={(e) => update("baseColor", e.target.value)}
-            className={inputCls + " p-0 h-7"}
+            className="mt-1.5 h-9 w-full cursor-pointer rounded-lg border border-border bg-surface p-0.5"
           />
         </Field>
         <Field label="Highlight color">
@@ -127,7 +123,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             type="color"
             value={merged.highlightColor}
             onChange={(e) => update("highlightColor", e.target.value)}
-            className={inputCls + " p-0 h-7"}
+            className="mt-1.5 h-9 w-full cursor-pointer rounded-lg border border-border bg-surface p-0.5"
           />
         </Field>
         <Field label="Stroke width">
@@ -137,7 +133,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             max={20}
             value={merged.strokeWidth}
             onChange={(e) => update("strokeWidth", Number(e.target.value))}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Stroke color">
@@ -145,18 +141,23 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             type="color"
             value={merged.strokeColor}
             onChange={(e) => update("strokeColor", e.target.value)}
-            className={inputCls + " p-0 h-7"}
+            className="mt-1.5 h-9 w-full cursor-pointer rounded-lg border border-border bg-surface p-0.5"
           />
         </Field>
         <Field label="Y position (%)">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={merged.yPositionPercent}
-            onChange={(e) => update("yPositionPercent", Number(e.target.value))}
-          />
-          <span className="ml-2 font-mono text-neutral-500">{merged.yPositionPercent}%</span>
+          <div className="mt-1.5 flex items-center gap-3">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={merged.yPositionPercent}
+              onChange={(e) => update("yPositionPercent", Number(e.target.value))}
+              className="flex-1"
+            />
+            <span className="w-10 text-right font-mono text-xs text-fg-muted">
+              {merged.yPositionPercent}%
+            </span>
+          </div>
         </Field>
         <Field label="Animation frames">
           <input
@@ -165,24 +166,25 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
             max={60}
             value={merged.animationDurationFrames}
             onChange={(e) => update("animationDurationFrames", Number(e.target.value))}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Drop shadow">
           <input
             value={merged.dropShadow}
             onChange={(e) => update("dropShadow", e.target.value)}
-            className={inputCls}
+            className="input input-sm mt-1.5"
           />
         </Field>
         <Field label="Highlight box">
-          <label className="inline-flex items-center gap-2">
+          <label className="mt-2 inline-flex items-center gap-2">
             <input
               type="checkbox"
               checked={merged.highlightBox}
               onChange={(e) => update("highlightBox", e.target.checked)}
+              className="h-4 w-4 rounded border-border bg-surface"
             />
-            <span className="text-neutral-700">Enabled</span>
+            <span className="text-fg-muted">Enabled</span>
           </label>
         </Field>
         {merged.highlightBox && (
@@ -191,7 +193,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
               <input
                 value={merged.highlightBoxColor}
                 onChange={(e) => update("highlightBoxColor", e.target.value)}
-                className={inputCls}
+                className="input input-sm mt-1.5"
               />
             </Field>
             <Field label="Box padding">
@@ -201,7 +203,7 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
                 max={40}
                 value={merged.highlightBoxPadding}
                 onChange={(e) => update("highlightBoxPadding", Number(e.target.value))}
-                className={inputCls}
+                className="input input-sm mt-1.5"
               />
             </Field>
           </>
@@ -211,13 +213,10 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
   );
 }
 
-const inputCls =
-  "mt-1 block w-full rounded-md border border-neutral-300 px-2 py-1 text-xs text-neutral-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-neutral-700">{label}</span>
+      <span className="label">{label}</span>
       {children}
     </label>
   );

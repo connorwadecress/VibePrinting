@@ -26,13 +26,10 @@ export function RunStreamView({ initialJob }: Props) {
   const followRef = useRef(true);
 
   useEffect(() => {
-    // Only attach SSE if the job is still live. Terminal jobs render
-    // their captured logTail directly from the server prop.
     if (TERMINAL.has(initialJob.status)) {
       setLines(initialJob.logTail);
       return;
     }
-    // Reset to the server-provided buffer; the SSE replay will refill it.
     setLines([]);
 
     const es = new EventSource(`/api/runs/stream?jobId=${encodeURIComponent(initialJob.jobId)}`);
@@ -50,16 +47,12 @@ export function RunStreamView({ initialJob }: Props) {
     });
     es.addEventListener("end", () => {
       es.close();
-      // Pull a fresh server-rendered version once the run lands.
       router.refresh();
     });
-    es.onerror = () => {
-      // EventSource auto-retries on transient errors; we let it.
-    };
+    es.onerror = () => {};
     return () => es.close();
   }, [initialJob.jobId, initialJob.status, initialJob.logTail, router]);
 
-  // Auto-scroll to the bottom unless the user has scrolled up.
   useEffect(() => {
     const el = logRef.current;
     if (!el) return;
@@ -82,19 +75,23 @@ export function RunStreamView({ initialJob }: Props) {
     }
   }
 
+  const isLive = !TERMINAL.has(job.status);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-md border border-neutral-200 bg-white px-4 py-3">
+      <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           <StatusBadge status={job.status} />
-          <span className="font-mono text-xs text-neutral-500">{job.jobId}</span>
+          {isLive && (
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
+          )}
+          <span className="font-mono text-xs text-fg-subtle">{job.jobId}</span>
         </div>
-        {!TERMINAL.has(job.status) && (
-          <button
-            onClick={onCancel}
-            disabled={cancelling}
-            className="rounded-md border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+        {isLive && (
+          <button onClick={onCancel} disabled={cancelling} className="btn-danger btn-sm">
             {cancelling ? "Cancelling…" : "Cancel"}
           </button>
         )}
@@ -103,10 +100,10 @@ export function RunStreamView({ initialJob }: Props) {
       <pre
         ref={logRef}
         onScroll={onScroll}
-        className="h-[60vh] overflow-auto rounded-md border border-neutral-200 bg-neutral-950 p-3 font-mono text-xs leading-relaxed text-neutral-100"
+        className="h-[60vh] overflow-auto rounded-xl border border-border bg-[#070810] p-4 font-mono text-xs leading-relaxed text-fg shadow-inner shadow-black/50"
       >
         {lines.length === 0 ? (
-          <span className="text-neutral-500">(no output yet)</span>
+          <span className="text-fg-subtle">(no output yet)</span>
         ) : (
           lines.join("\n")
         )}
@@ -118,15 +115,11 @@ export function RunStreamView({ initialJob }: Props) {
 function StatusBadge({ status }: { status: JobRecord["status"] }) {
   const cls =
     status === "success"
-      ? "bg-emerald-100 text-emerald-800"
+      ? "pill-success"
       : status === "failed"
-        ? "bg-red-100 text-red-800"
+        ? "pill-danger"
         : status === "cancelled"
-          ? "bg-neutral-200 text-neutral-700"
-          : "bg-indigo-100 text-indigo-800";
-  return (
-    <span className={`rounded px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {status}
-    </span>
-  );
+          ? "pill-muted"
+          : "pill-info";
+  return <span className={cls}>{status}</span>;
 }

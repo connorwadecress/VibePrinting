@@ -30,10 +30,15 @@ export default function SchedulePage() {
     .filter((r): r is BrandRowInput => r !== null);
 
   return (
-    <section className="space-y-6">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Schedule</h1>
-        <span className="text-xs text-neutral-500">{rows.length} brands</span>
+    <section className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">Schedule</h1>
+          <p className="mt-1 text-sm text-fg-muted">
+            Cron-driven runs per brand. Edits hot-reload without restart.
+          </p>
+        </div>
+        <span className="pill-muted">{rows.length} brands</span>
       </header>
 
       <ScheduleEditor rows={rows} initialPaused={data.globalPaused} />

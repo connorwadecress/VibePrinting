@@ -40,30 +40,34 @@ export default function RunsPage() {
   const recent = jobs.filter((j) => TERMINAL.has(j.status)).slice(0, 25);
 
   return (
-    <section className="space-y-8">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Runs</h1>
-        <span className="text-xs text-neutral-500">
-          {active.length} active · {recent.length} recent
-        </span>
+    <section className="space-y-10">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">Runs</h1>
+          <p className="mt-1 text-sm text-fg-muted">Trigger pipelines and watch them stream.</p>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="pill-info">{active.length} active</span>
+          <span className="pill-muted">{recent.length} recent</span>
+        </div>
       </header>
 
       <div>
-        <h2 className="mb-2 text-sm font-medium text-neutral-700">Trigger a run</h2>
+        <h2 className="section-title mb-3">Trigger a run</h2>
         <TriggerRunForm brands={brands} />
       </div>
 
       {active.length > 0 && (
         <div>
-          <h2 className="mb-2 text-sm font-medium text-neutral-700">Active</h2>
+          <h2 className="section-title mb-3">Active</h2>
           <JobTable jobs={active} />
         </div>
       )}
 
       <div>
-        <h2 className="mb-2 text-sm font-medium text-neutral-700">Recent</h2>
+        <h2 className="section-title mb-3">Recent</h2>
         {recent.length === 0 ? (
-          <div className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-xs text-neutral-500">
+          <div className="rounded-xl border border-dashed border-border bg-surface/60 px-4 py-10 text-center text-xs text-fg-muted">
             No runs yet.
           </div>
         ) : (
@@ -76,34 +80,34 @@ export default function RunsPage() {
 
 function JobTable({ jobs }: { jobs: JobRecord[] }) {
   return (
-    <div className="overflow-hidden rounded-md border border-neutral-200 bg-white">
-      <table className="w-full text-sm">
-        <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+    <div className="table-wrap">
+      <table className="data-table">
+        <thead>
           <tr>
-            <th className="px-3 py-2 text-left">Started</th>
-            <th className="px-3 py-2 text-left">Brand</th>
-            <th className="px-3 py-2 text-left">Lane</th>
-            <th className="px-3 py-2 text-left">Trigger</th>
-            <th className="px-3 py-2 text-left">Status</th>
-            <th className="px-3 py-2"></th>
+            <th>Started</th>
+            <th>Brand</th>
+            <th>Lane</th>
+            <th>Trigger</th>
+            <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           {jobs.map((j) => (
-            <tr key={j.jobId} className="border-t border-neutral-100">
-              <td className="px-3 py-2 font-mono text-xs text-neutral-600">
+            <tr key={j.jobId}>
+              <td className="whitespace-nowrap font-mono text-xs text-fg-muted">
                 {formatTime(j.startedAt)}
               </td>
-              <td className="px-3 py-2 text-neutral-800">{j.brandId}</td>
-              <td className="px-3 py-2 text-neutral-600">{j.lane ?? "(any)"}</td>
-              <td className="px-3 py-2 text-xs text-neutral-500">{j.trigger}</td>
-              <td className="px-3 py-2">
+              <td className="font-medium text-fg">{j.brandId}</td>
+              <td className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
+              <td className="text-xs text-fg-muted">{j.trigger}</td>
+              <td>
                 <StatusPill status={j.status} />
               </td>
-              <td className="px-3 py-2 text-right">
+              <td className="text-right">
                 <Link
                   href={`/runs/${j.jobId}`}
-                  className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                  className="text-xs font-medium text-accent hover:text-accent-hover"
                 >
                   view →
                 </Link>
@@ -119,17 +123,13 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
 function StatusPill({ status }: { status: JobRecord["status"] }) {
   const cls =
     status === "success"
-      ? "bg-emerald-100 text-emerald-800"
+      ? "pill-success"
       : status === "failed"
-        ? "bg-red-100 text-red-800"
+        ? "pill-danger"
         : status === "cancelled"
-          ? "bg-neutral-200 text-neutral-700"
-          : "bg-indigo-100 text-indigo-800";
-  return (
-    <span className={`rounded px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {status}
-    </span>
-  );
+          ? "pill-muted"
+          : "pill-info";
+  return <span className={cls}>{status}</span>;
 }
 
 function formatTime(iso: string): string {

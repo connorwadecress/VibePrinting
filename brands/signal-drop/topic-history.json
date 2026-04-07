@@ -740,5 +740,19 @@
     "seedQuestion": "Why do airports deliberately make bathrooms hard to find — and what are they actually trying to prevent?",
     "runId": "20260407-211822",
     "date": "2026-04-07"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Bulk Pricing Trap: Why Buying More Costs You More (Not Less)",
+    "seedQuestion": "Why do stores charge you MORE when you buy in bulk — when bulk buying is supposed to save money?",
+    "runId": "20260407-212131",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The stat that convinced millions it was real — until scientists tried to repeat it",
+    "seedQuestion": "Why does a 'statistically significant' study result often fail to replicate in the real world — and what's the hidden math that makes p-values completely backwards?",
+    "runId": "20260407-212217",
+    "date": "2026-04-07"
   }
 ]

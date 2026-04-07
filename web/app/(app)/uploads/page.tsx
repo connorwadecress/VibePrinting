@@ -28,10 +28,14 @@ export default async function UploadsPage({ searchParams }: PageProps) {
   const brands = listLoggedBrands();
 
   return (
-    <section className="space-y-6">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Uploads</h1>
-        <span className="text-xs text-neutral-500">log: logs/upload-log.jsonl</span>
+    <section className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">Uploads</h1>
+          <p className="mt-1 text-sm text-fg-muted">
+            Read-only feed from <code className="font-mono text-fg-subtle">logs/upload-log.jsonl</code>.
+          </p>
+        </div>
       </header>
 
       <Suspense fallback={null}>

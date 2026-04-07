@@ -28,12 +28,12 @@ export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-medium text-neutral-700">Brand</label>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="label">Brand</label>
         <select
           value={selectedBrand ?? ""}
           onChange={(e) => setBrand(e.target.value)}
-          className="rounded border border-neutral-300 bg-white px-2 py-1 text-sm"
+          className="input input-sm w-auto min-w-[10rem]"
         >
           <option value="">All brands</option>
           {brands.map((b) => (
@@ -42,56 +42,56 @@ export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
             </option>
           ))}
         </select>
-        <span className="text-xs text-neutral-500">{entries.length} entries</span>
+        <span className="pill-muted">{entries.length} entries</span>
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-8 text-center text-xs text-neutral-500">
+        <div className="rounded-xl border border-dashed border-border bg-surface/60 px-4 py-10 text-center text-xs text-fg-muted">
           No upload attempts logged yet.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md border border-neutral-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="px-3 py-2 text-left">When</th>
-                <th className="px-3 py-2 text-left">Brand</th>
-                <th className="px-3 py-2 text-left">Lane</th>
-                <th className="px-3 py-2 text-left">Platform</th>
-                <th className="px-3 py-2 text-left">Status</th>
-                <th className="px-3 py-2 text-left">Title</th>
-                <th className="px-3 py-2 text-right">Took</th>
+                <th>When</th>
+                <th>Brand</th>
+                <th>Lane</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Title</th>
+                <th className="text-right">Took</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((e, i) => (
-                <tr key={`${e.runId}-${e.platform}-${i}`} className="border-t border-neutral-100 align-top">
-                  <td className="px-3 py-2 font-mono text-xs text-neutral-600">
+                <tr key={`${e.runId}-${e.platform}-${i}`}>
+                  <td className="whitespace-nowrap font-mono text-xs text-fg-muted">
                     {formatTime(e.ts)}
                   </td>
-                  <td className="px-3 py-2 text-neutral-800">{e.brandId}</td>
-                  <td className="px-3 py-2 text-neutral-600">{e.lane ?? "—"}</td>
-                  <td className="px-3 py-2 text-neutral-600">{e.platform}</td>
-                  <td className="px-3 py-2">
+                  <td className="font-medium text-fg">{e.brandId}</td>
+                  <td className="text-fg-muted">{e.lane ?? "—"}</td>
+                  <td className="text-fg-muted">{e.platform}</td>
+                  <td>
                     <StatusPill status={e.status} />
                   </td>
-                  <td className="px-3 py-2 text-neutral-700">
+                  <td className="text-fg">
                     {e.url && e.title ? (
                       <a
                         href={e.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-accent hover:text-accent-hover"
                       >
                         {e.title}
                       </a>
                     ) : e.error ? (
-                      <span className="text-red-700">{e.error}</span>
+                      <span className="text-danger">{e.error}</span>
                     ) : (
                       e.title ?? "—"
                     )}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs text-neutral-500">
+                  <td className="text-right font-mono text-xs text-fg-subtle">
                     {formatDuration(e.durationMs)}
                   </td>
                 </tr>
@@ -105,11 +105,7 @@ export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
 }
 
 function StatusPill({ status }: { status: UploadLogEntry["status"] }) {
-  const cls =
-    status === "success"
-      ? "bg-emerald-100 text-emerald-800"
-      : "bg-red-100 text-red-800";
-  return <span className={`rounded px-2 py-0.5 text-xs font-medium ${cls}`}>{status}</span>;
+  return <span className={status === "success" ? "pill-success" : "pill-danger"}>{status}</span>;
 }
 
 function formatTime(iso: string): string {

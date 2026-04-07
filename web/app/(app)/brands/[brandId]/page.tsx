@@ -30,29 +30,25 @@ export default async function BrandEditorPage({ params }: PageProps) {
 
   return (
     <section>
-      <header className="mb-6 flex items-baseline justify-between">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link href="/brands" className="text-xs text-neutral-500 hover:text-neutral-700">
-            ← Brands
+          <Link
+            href="/brands"
+            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
+          >
+            <span aria-hidden>←</span> Brands
           </Link>
-          <h1 className="mt-1 text-xl font-semibold tracking-tight">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">
             {profile?.displayName ?? brandId}
           </h1>
-          <p className="mt-0.5 font-mono text-xs text-neutral-500">{brandId}</p>
+          <p className="mt-0.5 font-mono text-xs text-fg-subtle">{brandId}</p>
         </div>
-        <Link
-          href={`/brands/${brandId}/history`}
-          className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
-        >
+        <Link href={`/brands/${brandId}/history`} className="btn-secondary btn-sm">
           Topic history
         </Link>
       </header>
 
-      {error && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-4 alert-error">{error}</div>}
 
       {profile && <BrandForm initial={profile} />}
     </section>

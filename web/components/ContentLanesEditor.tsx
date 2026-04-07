@@ -54,14 +54,14 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
   return (
     <div className="space-y-3">
       {value.map((lane, idx) => (
-        <div key={idx} className="rounded-md border border-neutral-200 bg-white p-3">
+        <div key={idx} className="rounded-lg border border-border bg-surface-2/60 p-4">
           <div className="flex items-start gap-3">
             <div className="flex flex-col gap-1 pt-1">
               <button
                 type="button"
                 onClick={() => move(idx, -1)}
                 disabled={idx === 0}
-                className="text-xs text-neutral-400 hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-200"
+                className="grid h-6 w-6 place-items-center rounded text-xs text-fg-subtle hover:bg-surface-3 hover:text-fg disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="Move up"
               >
                 ▲
@@ -70,24 +70,24 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
                 type="button"
                 onClick={() => move(idx, +1)}
                 disabled={idx === value.length - 1}
-                className="text-xs text-neutral-400 hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-200"
+                className="grid h-6 w-6 place-items-center rounded text-xs text-fg-subtle hover:bg-surface-3 hover:text-fg disabled:cursor-not-allowed disabled:opacity-30"
                 aria-label="Move down"
               >
                 ▼
               </button>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="grid grid-cols-3 gap-2">
+            <div className="flex-1 space-y-3">
+              <div className="grid grid-cols-3 gap-3">
                 <label className="col-span-2 block">
-                  <span className="text-xs font-medium text-neutral-700">Lane id</span>
+                  <span className="label">Lane id</span>
                   <input
                     value={lane.id}
                     onChange={(e) => update(idx, { id: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-neutral-300 px-2 py-1 font-mono text-xs text-neutral-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="input input-sm mt-1.5 font-mono"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-neutral-700">Target seconds</span>
+                  <span className="label">Target seconds</span>
                   <input
                     type="number"
                     min={5}
@@ -96,22 +96,22 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
                     onChange={(e) =>
                       update(idx, { targetDurationSeconds: Number(e.target.value) || 0 })
                     }
-                    className="mt-1 block w-full rounded-md border border-neutral-300 px-2 py-1 text-xs text-neutral-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="input input-sm mt-1.5"
                   />
                 </label>
               </div>
               <label className="block">
-                <span className="text-xs font-medium text-neutral-700">Description</span>
+                <span className="label">Description</span>
                 <textarea
                   rows={2}
                   value={lane.description}
                   onChange={(e) => update(idx, { description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-neutral-300 px-2 py-1 text-xs text-neutral-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="input input-sm mt-1.5"
                 />
               </label>
               <div className="block">
-                <span className="text-xs font-medium text-neutral-700">Example hooks</span>
-                <div className="mt-1">
+                <span className="label">Example hooks</span>
+                <div className="mt-1.5">
                   <TagInput
                     value={lane.exampleHooks ?? []}
                     onChange={(hooks) => update(idx, { exampleHooks: hooks })}
@@ -123,7 +123,7 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
             <button
               type="button"
               onClick={() => remove(idx)}
-              className="text-xs text-neutral-400 hover:text-red-600"
+              className="text-xs font-medium text-fg-subtle hover:text-danger"
               aria-label="Delete lane"
             >
               Delete
@@ -134,7 +134,7 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
       <button
         type="button"
         onClick={add}
-        className="w-full rounded-md border border-dashed border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-600 hover:border-indigo-300 hover:text-indigo-700"
+        className="w-full rounded-lg border border-dashed border-border bg-surface/40 px-3 py-3 text-xs font-medium text-fg-muted transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
       >
         + Add lane
       </button>

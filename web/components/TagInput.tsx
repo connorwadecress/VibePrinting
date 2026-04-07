@@ -52,19 +52,19 @@ export function TagInput({ value, onChange, placeholder, validate, ariaLabel }: 
 
   return (
     <div
-      className="flex flex-wrap items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-2 py-1.5 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+      className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-surface px-2 py-1.5 transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/40"
       aria-label={ariaLabel}
     >
       {value.map((tag, idx) => (
         <span
           key={`${tag}-${idx}`}
-          className="inline-flex items-center gap-1 rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-800"
+          className="inline-flex items-center gap-1 rounded-md border border-border-strong/70 bg-surface-2 px-2 py-0.5 text-xs text-fg"
         >
           <span className="font-mono">{tag}</span>
           <button
             type="button"
             onClick={() => remove(idx)}
-            className="text-neutral-400 hover:text-red-600"
+            className="text-fg-subtle hover:text-danger"
             aria-label={`Remove ${tag}`}
           >
             ×
@@ -77,7 +77,7 @@ export function TagInput({ value, onChange, placeholder, validate, ariaLabel }: 
         onKeyDown={onKeyDown}
         onBlur={commit}
         placeholder={placeholder ?? "Add…"}
-        className="min-w-[6rem] flex-1 bg-transparent px-1 py-0.5 text-xs text-neutral-900 outline-none placeholder:text-neutral-400"
+        className="min-w-[6rem] flex-1 bg-transparent px-1 py-0.5 text-xs text-fg outline-none placeholder:text-fg-subtle"
       />
     </div>
   );

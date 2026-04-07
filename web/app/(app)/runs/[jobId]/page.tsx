@@ -21,48 +21,53 @@ export default async function RunPage({ params }: PageProps) {
   if (!job) notFound();
 
   return (
-    <section className="space-y-4">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Run</h1>
-        <Link href="/runs" className="text-xs text-indigo-600 hover:text-indigo-800">
-          ← all runs
-        </Link>
+    <section className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <Link
+            href="/runs"
+            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
+          >
+            <span aria-hidden>←</span> All runs
+          </Link>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">Run</h1>
+        </div>
       </header>
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-md border border-neutral-200 bg-white p-4 text-sm sm:grid-cols-4">
-        <div>
-          <dt className="text-xs text-neutral-500">Brand</dt>
-          <dd className="font-medium text-neutral-900">{job.brandId}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-neutral-500">Lane</dt>
-          <dd className="text-neutral-700">{job.lane ?? "(any)"}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-neutral-500">Trigger</dt>
-          <dd className="text-neutral-700">{job.trigger}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-neutral-500">Started</dt>
-          <dd className="font-mono text-xs text-neutral-700">
-            {new Date(job.startedAt).toLocaleString()}
-          </dd>
-        </div>
+      <dl className="card grid grid-cols-2 gap-x-6 gap-y-4 p-5 text-sm sm:grid-cols-4">
+        <Meta label="Brand" value={<span className="font-medium text-fg">{job.brandId}</span>} />
+        <Meta label="Lane" value={job.lane ?? <span className="text-fg-subtle">(any)</span>} />
+        <Meta label="Trigger" value={job.trigger} />
+        <Meta
+          label="Started"
+          value={
+            <span className="font-mono text-xs">{new Date(job.startedAt).toLocaleString()}</span>
+          }
+        />
         {job.runDir && (
           <div className="col-span-2 sm:col-span-4">
-            <dt className="text-xs text-neutral-500">Run dir</dt>
-            <dd className="break-all font-mono text-xs text-neutral-700">{job.runDir}</dd>
+            <dt className="label">Run dir</dt>
+            <dd className="mt-1 break-all font-mono text-xs text-fg-muted">{job.runDir}</dd>
           </div>
         )}
         {job.error && (
           <div className="col-span-2 sm:col-span-4">
-            <dt className="text-xs text-neutral-500">Error</dt>
-            <dd className="break-all text-xs text-red-700">{job.error}</dd>
+            <dt className="label">Error</dt>
+            <dd className="mt-1 break-all text-xs text-danger">{job.error}</dd>
           </div>
         )}
       </dl>
 
       <RunStreamView initialJob={job} />
     </section>
+  );
+}
+
+function Meta({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="label">{label}</dt>
+      <dd className="mt-1 text-fg-muted">{value}</dd>
+    </div>
   );
 }

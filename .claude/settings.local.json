@@ -49,7 +49,10 @@
       "Bash(powershell.exe -Command \"\\(Get-ScheduledTask -TaskName ''VibePrinting-AutoGenerate''\\).Triggers.Repetition | Format-List Interval, Duration, StopAtDurationEnd\")",
       "Bash(powershell.exe -Command \"Disable-ScheduledTask -TaskName ''VibePrinting-AutoGenerate''; Disable-ScheduledTask -TaskName ''VibePrinting-LegacyTikTokUpload''\")",
       "Bash(npm --version)",
-      "Bash(ffmpeg -version)"
+      "Bash(ffmpeg -version)",
+      "Bash(npm run:*)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(npx next:*)"
     ]
   }
 }

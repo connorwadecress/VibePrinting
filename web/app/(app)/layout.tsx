@@ -11,7 +11,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <Nav />
       <main className="flex-1">
-        <div className="mx-auto max-w-5xl px-8 py-10">{children}</div>
+        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          {children}
+        </div>
       </main>
     </div>
   );

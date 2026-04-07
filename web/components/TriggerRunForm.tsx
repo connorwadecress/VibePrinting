@@ -66,19 +66,19 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
 
   if (brands.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-xs text-neutral-500">
+      <div className="rounded-xl border border-dashed border-border bg-surface/60 px-4 py-10 text-center text-xs text-fg-muted">
         No brands configured.
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-md border border-neutral-200 bg-white p-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <form onSubmit={onSubmit} className="card space-y-5 p-5">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-neutral-700">Brand</span>
+          <span className="label">Brand</span>
           <select
-            className="block w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm"
+            className="input input-sm mt-1.5"
             value={brandId}
             onChange={(e) => {
               setBrandId(e.target.value);
@@ -94,9 +94,9 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-neutral-700">Lane</span>
+          <span className="label">Lane</span>
           <select
-            className="block w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm"
+            className="input input-sm mt-1.5"
             value={lane}
             onChange={(e) => setLane(e.target.value)}
           >
@@ -111,52 +111,48 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
       </div>
 
       <fieldset className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <label className="flex items-center gap-2 text-sm text-neutral-800">
-          <input
-            type="checkbox"
-            checked={dryRun}
-            onChange={(e) => setDryRun(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Dry run (script only)
-        </label>
-        <label className="flex items-center gap-2 text-sm text-neutral-800">
-          <input
-            type="checkbox"
-            checked={youtube}
-            onChange={(e) => setYoutube(e.target.checked)}
-            className="h-4 w-4"
-            disabled={dryRun}
-          />
-          Upload to YouTube
-        </label>
-        <label className="flex items-center gap-2 text-sm text-neutral-800">
-          <input
-            type="checkbox"
-            checked={tiktok}
-            onChange={(e) => setTiktok(e.target.checked)}
-            className="h-4 w-4"
-            disabled={dryRun}
-          />
-          Upload to TikTok
-        </label>
+        <Check label="Dry run (script only)" checked={dryRun} onChange={setDryRun} />
+        <Check label="Upload to YouTube" checked={youtube} onChange={setYoutube} disabled={dryRun} />
+        <Check label="Upload to TikTok" checked={tiktok} onChange={setTiktok} disabled={dryRun} />
       </fieldset>
 
-      {error && (
-        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className="alert-error">{error}</div>}
 
       <div className="flex items-center justify-end">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
-        >
+        <button type="submit" disabled={pending} className="btn-primary">
           {pending ? "Starting…" : "Start run"}
         </button>
       </div>
     </form>
+  );
+}
+
+function Check({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label
+      className={
+        "flex items-center gap-2 text-sm " +
+        (disabled ? "cursor-not-allowed text-fg-subtle" : "text-fg-muted hover:text-fg")
+      }
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 rounded border-border bg-surface"
+        disabled={disabled}
+      />
+      {label}
+    </label>
   );
 }
