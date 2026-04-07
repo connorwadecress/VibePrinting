@@ -66,16 +66,16 @@ export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
             <tbody>
               {entries.map((e, i) => (
                 <tr key={`${e.runId}-${e.platform}-${i}`}>
-                  <td className="whitespace-nowrap font-mono text-xs text-fg-muted">
+                  <td data-label="When" className="whitespace-nowrap font-mono text-xs text-fg-muted">
                     {formatTime(e.ts)}
                   </td>
-                  <td className="font-medium text-fg">{e.brandId}</td>
-                  <td className="text-fg-muted">{e.lane ?? "—"}</td>
-                  <td className="text-fg-muted">{e.platform}</td>
-                  <td>
+                  <td data-label="Brand" className="font-medium text-fg">{e.brandId}</td>
+                  <td data-label="Lane" className="text-fg-muted">{e.lane ?? "—"}</td>
+                  <td data-label="Platform" className="text-fg-muted">{e.platform}</td>
+                  <td data-label="Status">
                     <StatusPill status={e.status} />
                   </td>
-                  <td className="text-fg">
+                  <td data-label="Title" className="text-fg">
                     {e.url && e.title ? (
                       <a
                         href={e.url}
@@ -91,7 +91,7 @@ export function UploadHistoryTable({ entries, brands, selectedBrand }: Props) {
                       e.title ?? "—"
                     )}
                   </td>
-                  <td className="text-right font-mono text-xs text-fg-subtle">
+                  <td data-label="Took" className="text-right font-mono text-xs text-fg-subtle">
                     {formatDuration(e.durationMs)}
                   </td>
                 </tr>

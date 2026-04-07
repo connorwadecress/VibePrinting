@@ -215,4 +215,44 @@ input[type="range"] {
   .data-table td {
     @apply px-3 py-2.5 align-top;
   }
+
+  /* Mobile: stack each row as a card with inline field labels so
+     operators can scan "Started / Brand / Status / view →" without
+     horizontal scrolling. Cells pull their label from data-label. */
+  @media (max-width: 640px) {
+    .table-wrap {
+      @apply overflow-x-visible;
+    }
+    .data-table {
+      @apply block;
+    }
+    .data-table thead {
+      @apply hidden;
+    }
+    .data-table tbody,
+    .data-table tr,
+    .data-table td {
+      @apply block w-full;
+    }
+    .data-table tr {
+      @apply border-t border-border/70 px-3 py-3;
+    }
+    .data-table tbody tr:first-child {
+      @apply border-t-0;
+    }
+    .data-table td {
+      @apply flex items-baseline justify-between gap-4 px-0 py-1 text-right;
+    }
+    .data-table td::before {
+      content: attr(data-label);
+      @apply text-left text-[10px] font-medium uppercase tracking-wide text-fg-subtle;
+      flex-shrink: 0;
+    }
+    .data-table td:not([data-label])::before {
+      content: none;
+    }
+    .data-table td:not([data-label]) {
+      @apply justify-end;
+    }
+  }
 }

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import fs from "node:fs";
-import path from "node:path";
 import { TriggerRunForm, type TriggerBrandOption } from "@/components/TriggerRunForm";
 import { listJobs, type JobRecord } from "@/lib/job-store";
 import { listBrandIds, readBrandProfile } from "@/lib/brand-io";
@@ -91,24 +89,20 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
             <th>Lane</th>
             <th>Trigger</th>
             <th>Status</th>
-            <th>Files</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {jobs.map((j) => (
             <tr key={j.jobId}>
-              <td className="whitespace-nowrap font-mono text-xs text-fg-muted">
+              <td data-label="Started" className="whitespace-nowrap font-mono text-xs text-fg-muted">
                 {formatTime(j.startedAt)}
               </td>
-              <td className="font-medium text-fg">{j.brandId}</td>
-              <td className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
-              <td className="text-xs text-fg-muted">{j.trigger}</td>
-              <td>
+              <td data-label="Brand" className="font-medium text-fg">{j.brandId}</td>
+              <td data-label="Lane" className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
+              <td data-label="Trigger" className="text-xs text-fg-muted">{j.trigger}</td>
+              <td data-label="Status">
                 <StatusPill status={j.status} />
-              </td>
-              <td>
-                <FilesIndicator job={j} />
               </td>
               <td className="text-right">
                 <Link
@@ -123,21 +117,6 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
         </tbody>
       </table>
     </div>
-  );
-}
-
-function FilesIndicator({ job }: { job: JobRecord }) {
-  if (!TERMINAL.has(job.status) || !job.runDir) {
-    return <span className="text-fg-subtle">—</span>;
-  }
-  let exists = false;
-  try {
-    exists = fs.existsSync(path.join(job.runDir, "final.mp4"));
-  } catch {}
-  return exists ? (
-    <span className="pill-info">on disk</span>
-  ) : (
-    <span className="pill-muted">expired</span>
   );
 }
 

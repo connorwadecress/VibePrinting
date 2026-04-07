@@ -53,15 +53,15 @@ export default async function TopicHistoryPage({ params }: PageProps) {
             <tbody>
               {sorted.map((e) => (
                 <tr key={`${e.runId}-${e.titleAngle}`}>
-                  <td className="font-mono text-xs text-fg-muted">{e.date}</td>
-                  <td className="font-mono text-xs text-fg-muted">{e.laneId}</td>
-                  <td>
+                  <td data-label="Date" className="font-mono text-xs text-fg-muted">{e.date}</td>
+                  <td data-label="Lane" className="font-mono text-xs text-fg-muted">{e.laneId}</td>
+                  <td data-label="Title angle">
                     <div className="font-medium text-fg">{e.titleAngle}</div>
                     {e.seedQuestion && (
                       <div className="mt-0.5 text-xs text-fg-muted">{e.seedQuestion}</div>
                     )}
                   </td>
-                  <td className="font-mono text-xs text-fg-subtle">{e.runId}</td>
+                  <td data-label="Run" className="font-mono text-xs text-fg-subtle">{e.runId}</td>
                 </tr>
               ))}
             </tbody>
