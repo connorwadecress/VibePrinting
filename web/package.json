@@ -2,6 +2,7 @@
   "name": "@vibe-printing/web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Admin UI for VibePrinting — brand editor, manual triggers, scheduler, upload history.",
   "scripts": {
     "dev": "next dev --port 3000",

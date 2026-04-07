@@ -4,6 +4,7 @@ import type { PipelineState, ShortScript } from "../../domain/models.js";
 import type { UploadLogEntry } from "../../domain/upload-log.js";
 import { log, logError } from "../../utils/logger.js";
 import { appendUploadLog, readTriggerFromEnv } from "../../utils/upload-log.js";
+import { enqueueDeletion } from "../../utils/deletion-queue.js";
 import fs from "node:fs";
 
 export class UploadStage implements PipelineStage {
@@ -82,6 +83,28 @@ export class UploadStage implements PipelineStage {
 
     await Promise.all(promises);
     state.uploadResults = results;
+
+    // If at least one upload succeeded and the brand allows cleanup,
+    // schedule the run directory for deletion. The deletion queue file
+    // is consumed by web/lib/deletion-worker.ts (Phase 6). Defaults:
+    // cleanup.enabled = true, cleanup.delayMinutes = 30.
+    if (results.length > 0) {
+      const cleanup = context.profile.cleanup ?? { enabled: true, delayMinutes: 30 };
+      if (cleanup.enabled !== false) {
+        const entry = enqueueDeletion({
+          runDir: context.workDir,
+          brandId: context.profile.id,
+          delayMinutes: cleanup.delayMinutes,
+          uploadResults: results,
+        });
+        if (entry) {
+          log(
+            this.name,
+            `Scheduled cleanup of ${context.workDir} at ${entry.deleteAfter}`,
+          );
+        }
+      }
+    }
   }
 
   private buildMetadata(script: ShortScript, context: StageContext): UploadMetadata {

@@ -28,3 +28,4 @@ web/.next/
 web/next-env.d.ts
 
 .vercel
+web/tsconfig.tsbuildinfo
