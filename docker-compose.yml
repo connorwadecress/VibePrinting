@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=America/Los_Angeles
-      - ADMIN_TOKEN=${VP_ADMIN_TOKEN}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-${VP_ADMIN_TOKEN}}
       - LLM_PROVIDER=${LLM_PROVIDER:-claude}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-haiku-4-5-20251001}
