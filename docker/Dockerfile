@@ -76,6 +76,4 @@ RUN mkdir -p /app/brands /app/output /app/data /app/logs
 EXPOSE 3000
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-# `next start` is invoked from the web/ workspace so it picks up
-# the .next build artifacts copied above.
-CMD ["npx", "--prefix", "web", "next", "start", "--port", "3000", "--hostname", "0.0.0.0"]
+CMD ["sh", "-c", "cd /app/web && npx next start --port 3000 --hostname 0.0.0.0"]
