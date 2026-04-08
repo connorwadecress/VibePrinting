@@ -19,6 +19,7 @@ services:
       - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
       - VP_MAX_CONCURRENT=1
       - VP_MAX_CONCURRENT_PER_BRAND=1
+      - SECURE_COOKIE=${SECURE_COOKIE:-false}
     volumes:
       - ./brands:/app/brands
       - ./output:/app/output

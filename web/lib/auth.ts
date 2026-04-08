@@ -115,7 +115,7 @@ export function buildSessionCookie(session: Session): string {
     "SameSite=Lax",
     `Max-Age=${maxAgeSec}`,
   ];
-  if (process.env.NODE_ENV === "production") pieces.push("Secure");
+  if (process.env.NODE_ENV === "production" && process.env.SECURE_COOKIE !== "false") pieces.push("Secure");
   return pieces.join("; ");
 }
 
