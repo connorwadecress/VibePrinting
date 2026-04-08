@@ -16,6 +16,7 @@ brands/**/.env
 # Topic history (generated, brand-specific, runtime state)
 topic-history.json
 brands/**/topic-history.json
+brands/**/channel.json
 
 # Runtime state (persistent on the host via Docker volumes in prod)
 data/*
