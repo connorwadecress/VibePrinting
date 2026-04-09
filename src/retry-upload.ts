@@ -17,11 +17,15 @@ import path from "node:path";
 import { loadConfig } from "./config.js";
 import { loadProfile } from "./domain/channel-profile.js";
 import type { UploadMetadata } from "./domain/interfaces/uploader.js";
-import type { ShortScript } from "./domain/models.js";
+import type { ShortScript, TopicCandidate, ResearchPack } from "./domain/models.js";
+import type { UploadLogEntry } from "./domain/upload-log.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
 import { resolveBrand, loadBrandEnv } from "./utils/brand-resolver.js";
 import { log, logError } from "./utils/logger.js";
+import { appendUploadLog, readTriggerFromEnv } from "./utils/upload-log.js";
+
+type ScriptFile = { topic?: TopicCandidate; research?: ResearchPack; script: ShortScript };
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -143,19 +147,69 @@ async function uploadRun(
     return false;
   }
 
-  const scriptData = JSON.parse(fs.readFileSync(scriptPath, "utf-8")) as { script: ShortScript };
+  const scriptData = JSON.parse(fs.readFileSync(scriptPath, "utf-8")) as ScriptFile;
   const metadata = buildMetadata(scriptData.script, profile);
 
   log("retry", `Title: ${metadata.title}`);
   log("retry", `Video: ${videoPath}`);
 
-  const startMs = Date.now();
-  const result = await uploader.upload(videoPath, metadata);
-  const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+  // Upload-log bookkeeping. runId is derived from the run directory name
+  // (e.g. "run-20260407-140005"). lane is extracted from the persisted
+  // topic on the script.json. trigger defaults to "cli" via VP_TRIGGER.
+  const runId = path.basename(runDir);
+  const laneId = scriptData.topic?.laneId ?? null;
+  const fileSizeBytes = fs.statSync(videoPath).size;
+  const trigger = readTriggerFromEnv();
+  const schedulerId = process.env.VP_SCHEDULER_ID || null;
 
-  log("retry", `Upload complete in ${elapsed}s`);
-  log("retry", `${result.platform}: ${result.url}`);
-  return true;
+  const startMs = Date.now();
+  try {
+    const result = await uploader.upload(videoPath, metadata);
+    const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+
+    log("retry", `Upload complete in ${elapsed}s`);
+    log("retry", `${result.platform}: ${result.url}`);
+
+    const entry: UploadLogEntry = {
+      ts: new Date().toISOString(),
+      runId,
+      brandId: profile.id,
+      lane: laneId,
+      platform: uploader.platform,
+      status: "success",
+      videoId: result.id,
+      url: result.url,
+      title: result.title,
+      durationMs: Date.now() - startMs,
+      fileSizeBytes,
+      error: null,
+      trigger,
+      schedulerId,
+    };
+    appendUploadLog(entry);
+    return true;
+  } catch (err: any) {
+    const entry: UploadLogEntry = {
+      ts: new Date().toISOString(),
+      runId,
+      brandId: profile.id,
+      lane: laneId,
+      platform: uploader.platform,
+      status: "failure",
+      videoId: null,
+      url: null,
+      title: null,
+      durationMs: Date.now() - startMs,
+      fileSizeBytes,
+      error: err?.message ?? String(err),
+      trigger,
+      schedulerId,
+    };
+    appendUploadLog(entry);
+    // Preserve the original throw-on-failure behavior so the existing
+    // --all loop and main() catch continue to work unchanged.
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------

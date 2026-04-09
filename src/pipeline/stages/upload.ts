@@ -1,7 +1,11 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { UploadMetadata, UploadResult } from "../../domain/interfaces/uploader.js";
 import type { PipelineState, ShortScript } from "../../domain/models.js";
+import type { UploadLogEntry } from "../../domain/upload-log.js";
 import { log, logError } from "../../utils/logger.js";
+import { appendUploadLog, readTriggerFromEnv } from "../../utils/upload-log.js";
+import { enqueueDeletion } from "../../utils/deletion-queue.js";
+import fs from "node:fs";
 
 export class UploadStage implements PipelineStage {
   readonly name = "upload";
@@ -22,20 +26,85 @@ export class UploadStage implements PipelineStage {
     const metadata = this.buildMetadata(script, context);
     const results: UploadResult[] = [];
 
+    // Cache values that are identical for every parallel upload attempt.
+    const fileSizeBytes = fs.existsSync(videoPath) ? fs.statSync(videoPath).size : 0;
+    const trigger = readTriggerFromEnv();
+    const schedulerId = process.env.VP_SCHEDULER_ID || null;
+    const laneId = state.lane?.id ?? null;
+
     // Upload to all configured platforms in parallel
     const promises = configuredUploaders.map(async (uploader) => {
+      const startMs = Date.now();
       try {
         const result = await uploader.upload(videoPath, metadata);
         results.push(result);
         log(this.name, `${result.platform}: ${result.url}`);
+
+        const entry: UploadLogEntry = {
+          ts: new Date().toISOString(),
+          runId: context.runId,
+          brandId: context.profile.id,
+          lane: laneId,
+          platform: uploader.platform,
+          status: "success",
+          videoId: result.id,
+          url: result.url,
+          title: result.title,
+          durationMs: Date.now() - startMs,
+          fileSizeBytes,
+          error: null,
+          trigger,
+          schedulerId,
+        };
+        appendUploadLog(entry);
       } catch (err: any) {
         logError(this.name, `${uploader.platform} upload failed: ${err.message}`);
         log(this.name, "Video was saved locally. You can upload manually.");
+
+        const entry: UploadLogEntry = {
+          ts: new Date().toISOString(),
+          runId: context.runId,
+          brandId: context.profile.id,
+          lane: laneId,
+          platform: uploader.platform,
+          status: "failure",
+          videoId: null,
+          url: null,
+          title: null,
+          durationMs: Date.now() - startMs,
+          fileSizeBytes,
+          error: err?.message ?? String(err),
+          trigger,
+          schedulerId,
+        };
+        appendUploadLog(entry);
       }
     });
 
     await Promise.all(promises);
     state.uploadResults = results;
+
+    // If at least one upload succeeded and the brand allows cleanup,
+    // schedule the run directory for deletion. The deletion queue file
+    // is consumed by web/lib/deletion-worker.ts (Phase 6). Defaults:
+    // cleanup.enabled = true, cleanup.delayMinutes = 30.
+    if (results.length > 0) {
+      const cleanup = context.profile.cleanup ?? { enabled: true, delayMinutes: 30 };
+      if (cleanup.enabled !== false) {
+        const entry = enqueueDeletion({
+          runDir: context.workDir,
+          brandId: context.profile.id,
+          delayMinutes: cleanup.delayMinutes,
+          uploadResults: results,
+        });
+        if (entry) {
+          log(
+            this.name,
+            `Scheduled cleanup of ${context.workDir} at ${entry.deleteAfter}`,
+          );
+        }
+      }
+    }
   }
 
   private buildMetadata(script: ShortScript, context: StageContext): UploadMetadata {

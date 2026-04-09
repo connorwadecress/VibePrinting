@@ -12,8 +12,9 @@ This folder contains all configuration, branding, and deployment files for the *
 
 | File | Purpose | Sensitive? |
 |---|---|---|
-| `channel.json` | Channel profile (lanes, branding, TTS settings) | Gitignored -- contains content strategy |
+| `channel.json` | Channel profile (lanes, branding, TTS settings) | **Committed to git** -- content strategy, no secrets. Edited via the admin UI. |
 | `.env` | YouTube/TikTok OAuth tokens | Gitignored -- credentials |
+| `topic-history.json` | Per-brand topic dedup log | Gitignored -- runtime state |
 | `branding/brand-guide.md` | Visual identity, voice, tone | No |
 | `branding/logo.png` | Channel logo | No |
 | `branding/banner.png` | Channel banner | No |

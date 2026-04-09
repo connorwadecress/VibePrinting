@@ -1,17 +1,36 @@
 node_modules/
 dist/
 .env
-channel.json
+# Only the root-level legacy channel.json is ignored. Brand configs at
+# brands/<id>/channel.json are committed to the repo and edited via the UI.
+/channel.json
 artifacts/
 output/
 *.log
 
-# Brand-specific secrets (each brand has its own channel.json and .env)
-brands/**/channel.json
+# Brand-specific secrets (each brand has its own .env — credentials only)
+# channel.json is NOT gitignored: it contains content strategy, not secrets,
+# and is edited via the admin UI.
 brands/**/.env
 
-# Topic history (generated, brand-specific, should not be committed)
+# Topic history (generated, brand-specific, runtime state)
 topic-history.json
 brands/**/topic-history.json
+brands/**/channel.json
+
+# Runtime state (persistent on the host via Docker volumes in prod)
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Next.js build output
+web/.next/
+web/next-env.d.ts
 
 .vercel
+web/tsconfig.tsbuildinfo
+
+# Local Docker Compose overrides (per-instance config, VPS-only)
+docker-compose.*.yml
+docker-compose.override.yml

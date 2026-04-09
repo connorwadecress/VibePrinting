@@ -1,0 +1,258 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Vibe Printing admin — design tokens.
+ *
+ * Dark-first palette. Tokens are stored as space-separated R G B
+ * triples so Tailwind utilities like `bg-accent/20` work via the
+ * <alpha-value> placeholder defined in tailwind.config.ts. The plain
+ * `--token` variants below are aliases for raw CSS use.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg-rgb: 11 13 18;
+  --surface-rgb: 20 24 35;
+  --surface-2-rgb: 27 32 48;
+  --surface-3-rgb: 35 42 61;
+  --border-rgb: 36 43 61;
+  --border-strong-rgb: 49 58 82;
+
+  /* Foreground */
+  --fg-rgb: 231 233 240;
+  --fg-muted-rgb: 154 163 184;
+  --fg-subtle-rgb: 107 115 144;
+
+  /* Accent (violet) */
+  --accent-rgb: 139 92 246;
+  --accent-hover-rgb: 167 139 250;
+
+  /* Status */
+  --success-rgb: 52 211 153;
+  --danger-rgb: 248 113 113;
+  --warning-rgb: 251 191 36;
+  --info-rgb: 96 165 250;
+
+  /* Convenience aliases for raw CSS (gradients, scrollbars). */
+  --bg: rgb(var(--bg-rgb));
+  --surface: rgb(var(--surface-rgb));
+  --surface-2: rgb(var(--surface-2-rgb));
+  --border: rgb(var(--border-rgb));
+  --border-strong: rgb(var(--border-strong-rgb));
+  --fg: rgb(var(--fg-rgb));
+  --fg-subtle: rgb(var(--fg-subtle-rgb));
+  --accent: rgb(var(--accent-rgb));
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(139, 92, 246, 0.10),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 0%,
+      rgba(96, 165, 250, 0.06),
+      transparent 60%
+    ),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--fg-subtle);
+}
+
+/* Hide spinner on number inputs across browsers. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Slim, modern scrollbars. */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bg);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
+}
+
+/*
+ * Reusable component classes. Page components extend with utilities
+ * for layout/spacing.
+ */
+@layer components {
+  .card {
+    @apply rounded-xl border border-border bg-surface shadow-sm shadow-black/20;
+  }
+  .card-elev {
+    @apply rounded-xl border border-border bg-surface-2 shadow-sm shadow-black/20;
+  }
+
+  .input {
+    @apply block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg shadow-inner shadow-black/10 transition-colors;
+    @apply placeholder:text-fg-subtle;
+    @apply focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40;
+    @apply disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .input-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-150;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white shadow-sm shadow-accent/30;
+    @apply hover:bg-accent-hover hover:shadow-accent/40;
+    @apply active:translate-y-px;
+  }
+  .btn-secondary {
+    @apply btn border border-border bg-surface text-fg;
+    @apply hover:border-border-strong hover:bg-surface-2;
+  }
+  .btn-ghost {
+    @apply btn text-fg-muted hover:bg-surface-2 hover:text-fg;
+  }
+  .btn-danger {
+    @apply btn border border-danger/30 bg-danger/10 text-danger;
+    @apply hover:border-danger/60 hover:bg-danger/20;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide;
+  }
+  .pill-success {
+    @apply pill bg-success/15 text-success;
+  }
+  .pill-danger {
+    @apply pill bg-danger/15 text-danger;
+  }
+  .pill-warning {
+    @apply pill bg-warning/15 text-warning;
+  }
+  .pill-info {
+    @apply pill bg-info/15 text-info;
+  }
+  .pill-muted {
+    @apply pill bg-surface-3 text-fg-muted;
+  }
+
+  .alert-error {
+    @apply rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger;
+  }
+  .alert-success {
+    @apply rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-xs text-success;
+  }
+
+  .label {
+    @apply text-xs font-medium text-fg-muted;
+  }
+
+  .section-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-subtle;
+  }
+
+  .table-wrap {
+    @apply overflow-x-auto rounded-xl border border-border bg-surface;
+  }
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead {
+    @apply bg-surface-2 text-[11px] font-medium uppercase tracking-wide text-fg-subtle;
+  }
+  .data-table th {
+    @apply px-3 py-2.5 text-left font-medium;
+  }
+  .data-table tbody tr {
+    @apply border-t border-border/70 transition-colors hover:bg-surface-2/60;
+  }
+  .data-table td {
+    @apply px-3 py-2.5 align-top;
+  }
+
+  /* Mobile: stack each row as a card with inline field labels so
+     operators can scan "Started / Brand / Status / view →" without
+     horizontal scrolling. Cells pull their label from data-label. */
+  @media (max-width: 640px) {
+    .table-wrap {
+      @apply overflow-x-visible;
+    }
+    .data-table {
+      @apply block;
+    }
+    .data-table thead {
+      @apply hidden;
+    }
+    .data-table tbody,
+    .data-table tr,
+    .data-table td {
+      @apply block w-full;
+    }
+    .data-table tr {
+      @apply border-t border-border/70 px-3 py-3;
+    }
+    .data-table tbody tr:first-child {
+      @apply border-t-0;
+    }
+    .data-table td {
+      @apply flex items-baseline justify-between gap-4 px-0 py-1 text-right;
+    }
+    .data-table td::before {
+      content: attr(data-label);
+      @apply text-left text-[10px] font-medium uppercase tracking-wide text-fg-subtle;
+      flex-shrink: 0;
+    }
+    .data-table td:not([data-label])::before {
+      content: none;
+    }
+    .data-table td:not([data-label]) {
+      @apply justify-end;
+    }
+  }
+}

@@ -530,5 +530,243 @@
     "seedQuestion": "Why does salt make ice cream freeze faster when salt itself melts ice?",
     "runId": "20260406-120004",
     "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Cake Cutting Looks Nothing Like Bread Cutting — The Victorian Rule Nobody Questions",
+    "seedQuestion": "Why do we cut the cake from the CENTER outward instead of slicing from the edge like bread?",
+    "runId": "20260406-130005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Salt in Pasta Water Is a Lie (But It Still Works) — Here's the Plot Twist",
+    "seedQuestion": "Why does cooking pasta in salted water make it taste better when the salt doesn't actually penetrate the pasta itself?",
+    "runId": "20260406-133005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Fish Scales Are Tiny Hydrodynamic Engineers (Boats Should Copy This Design)",
+    "seedQuestion": "How do fish scales redirect water flow to reduce drag, and why haven't we copied this in ship design?",
+    "runId": "20260406-140005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "Why You Instantly Forget Names (Even When You're Paying Attention) — The Cognitive Overload Trap",
+    "seedQuestion": "Why does your brain make you forget someone's name the moment they introduce themselves, even though you're actively listening?",
+    "runId": "20260406-143005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "tech-under-the-hood",
+    "titleAngle": "Your Phone Has a Secret Light Sensor That Decides What You See (And It's Not Where You Think)",
+    "seedQuestion": "Why does your phone's screen brightness automatically dim in bright sunlight, and what's actually measuring that light?",
+    "runId": "20260406-150005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Birthday Cakes Break the Cutting Rule (Victorian Bakers Got This Right)",
+    "seedQuestion": "Why do we cut birthday cakes from the center outward instead of slicing from the edge like bread?",
+    "runId": "20260406-153005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "tech-under-the-hood",
+    "titleAngle": "Your Deleted Files Are Still There (Here's Why Your SSD Doesn't Actually Erase Them)",
+    "seedQuestion": "Why does deleting a file not actually erase it from your drive — and what's really happening when you hit 'delete'?",
+    "runId": "20260406-155931",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Hidden Mechanism Inside Your Gas Pump That Knows When to Stop (It's Not What You Think)",
+    "seedQuestion": "Why do gas pumps stop automatically at exactly full — and how do they know?",
+    "runId": "20260406-160004",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Engineering Problem Vending Machines Solve (That You Never Knew Existed)",
+    "seedQuestion": "Why do vending machines have that metal spiral that rotates to drop your snack — instead of just letting gravity do it?",
+    "runId": "20260406-163006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Why Overcooking Steak Makes It HARDER (Not Softer) — The Protein Plot Twist",
+    "seedQuestion": "Why does cooking meat at a higher temperature actually make it tougher, even though heat is supposed to cook it?",
+    "runId": "20260406-170007",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Why Romans Chose the Cruelest Execution Method (And It Wasn't About Punishment)",
+    "seedQuestion": "Why did ancient Romans execute criminals by throwing them off cliffs instead of using swords or poison?",
+    "runId": "20260406-173011",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Why Low Heat Wins: The Collagen Conspiracy in Your Steak",
+    "seedQuestion": "Why does cooking meat at high heat make it tougher, but cooking it longer at low heat makes it tender — even though both are just heat?",
+    "runId": "20260406-180006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Overdraft Fee Trap: Why Banks PROFIT From Your Poorest Moment",
+    "seedQuestion": "Why do banks charge you fees when you DON'T have enough money — when they're already making money off your account?",
+    "runId": "20260406-183009",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "tech-under-the-hood",
+    "titleAngle": "Your Phone's Camera Sees Ghosts (But You Don't)",
+    "seedQuestion": "Why does your smartphone camera see infrared light that your eyes can't — and how does it secretly filter it out before you ever see the photo?",
+    "runId": "20260406-190006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Why Luxury Restaurants Make Their Menus Impossible to Read (It's Intentional)",
+    "seedQuestion": "Why do high-end restaurants deliberately make their menus HARD to read — small fonts, dim lighting, fancy scripts — when customers need to actually see what they're ordering?",
+    "runId": "20260406-193006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Why Boiling Water Cooks Pasta (But Not The Way You Think)",
+    "seedQuestion": "Why does cooking pasta in boiling water make it taste better when the starch literally can't penetrate the noodle from the outside?",
+    "runId": "20260406-200006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Trees Have a Underground Blueprint System (And It Works Without Eyes)",
+    "seedQuestion": "Why do trees grow their roots in exact mirror patterns underground, even though they can't see each other?",
+    "runId": "20260406-203006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The wealth inequality stat that sounds devastating until you do the math",
+    "seedQuestion": "Why does 'the richest 1% owns 35% of all wealth' sound way more extreme when you see the actual dollar breakdown?",
+    "runId": "20260406-210006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "The Ironic Rebound Effect: Why Suppressing Thoughts Backfires (The Psychology Behind It)",
+    "seedQuestion": "Why does your brain make you MORE anxious when you try NOT to think about something scary?",
+    "runId": "20260406-213007",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "Gyms Make More Money From Quitters Than Paying Members (Here's the Trap)",
+    "seedQuestion": "Why do gyms deliberately make cancellation harder than signing up — and what's the actual math behind how much money they make from people who quit but never unsubscribe?",
+    "runId": "20260406-223007",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Why Buildings Force You Through Revolving Doors (The Energy Trap You Never Notice)",
+    "seedQuestion": "Why do revolving doors exist when regular doors are cheaper and easier?",
+    "runId": "20260406-230006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Jellyfish Built Their Bodies Backwards (And It's Actually Genius)",
+    "seedQuestion": "How do jellyfish stay alive without a brain, heart, or blood — and what engineering principle makes that possible?",
+    "runId": "20260406-233006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Birthday Candles Are Blown Out (Not Snuffed) — The Medieval Reason Nobody Questions",
+    "seedQuestion": "Why do we blow out birthday candles instead of snuffing them like we do everywhere else?",
+    "runId": "20260407-000005",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Giraffes Have a Built-In Hydraulic System (It's Genius Engineering)",
+    "seedQuestion": "How do giraffe necks stay upright without snapping their spine when they bend down to drink water?",
+    "runId": "20260407-003006",
+    "date": "2026-04-06"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "The Searing Myth That Fooled Cooks For 100 Years (Here's What REALLY Happens)",
+    "seedQuestion": "Why does searing meat at high heat actually LOCK IN moisture — when the old myth said it sealed the surface to trap juices?",
+    "runId": "20260407-032952",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Ancient Builders Worked on Projects They'd Never Live to See — Here's the Dark Reason Why",
+    "seedQuestion": "Why did ancient civilizations build massive monuments that took decades to complete when they'd never see them finished?",
+    "runId": "20260407-040006",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "psych-wiring",
+    "titleAngle": "The Baader-Meinhof Effect: Why You Start Seeing That Word EVERYWHERE (The Frequency Illusion Your Brain Plays)",
+    "seedQuestion": "Why does your brain make you MORE likely to notice a word after someone says it — even though you've heard that word a thousand times before?",
+    "runId": "20260407-043006",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "everyday-systems",
+    "titleAngle": "The Hidden Pressure System Inside Your Walls That Nobody Understands",
+    "seedQuestion": "Why does your shower suddenly get scalding hot when someone flushes the toilet in another room?",
+    "runId": "20260407-050007",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why Light Switches Go UP to Turn Lights ON (It's Backwards — Here's Why We're Stuck With It)",
+    "seedQuestion": "Why do we flip light switches UP to turn lights ON — when logically DOWN should mean 'on' (like opening a door)?",
+    "runId": "20260407-084452",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Airports Hide Bathrooms On Purpose (Here's The Dark Reason Why)",
+    "seedQuestion": "Why do airports deliberately make bathrooms hard to find — and what are they actually trying to prevent?",
+    "runId": "20260407-211822",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "money-mechanics",
+    "titleAngle": "The Bulk Pricing Trap: Why Buying More Costs You More (Not Less)",
+    "seedQuestion": "Why do stores charge you MORE when you buy in bulk — when bulk buying is supposed to save money?",
+    "runId": "20260407-212131",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The stat that convinced millions it was real — until scientists tried to repeat it",
+    "seedQuestion": "Why does a 'statistically significant' study result often fail to replicate in the real world — and what's the hidden math that makes p-values completely backwards?",
+    "runId": "20260407-212217",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "design-on-purpose",
+    "titleAngle": "Why Stores Hide the Cheap Stuff Below Your Knees (The Shelf Height Hack That Costs You Thousands)",
+    "seedQuestion": "Why do grocery stores deliberately put the most expensive items at eye level on shelves — when the cheapest alternatives are right below your feet?",
+    "runId": "20260407-215346",
+    "date": "2026-04-07"
+  },
+  {
+    "laneId": "nature-engineered",
+    "titleAngle": "Penguins Engineered Their Feathers Like Insulated Wetsuits (The Air Trap Nobody Noticed)",
+    "seedQuestion": "How do penguins stay warm in water colder than freezing when they have no blubber layer — just feathers?",
+    "runId": "20260407-215723",
+    "date": "2026-04-07"
   }
 ]

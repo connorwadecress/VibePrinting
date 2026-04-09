@@ -10,9 +10,47 @@ export interface ChannelBranding {
 }
 
 /**
+ * Which TTS provider a brand prefers. If omitted, the pipeline falls back
+ * to the global TTS_PROVIDER env var (AppConfig.ttsProvider).
+ */
+export type TtsProviderKind = "edge" | "elevenlabs";
+
+/**
+ * ElevenLabs-specific overrides that live on the channel profile. API keys
+ * are never stored here — they remain in `.env` files.
+ */
+export interface ElevenLabsTtsSettings {
+  voiceId?: string;
+  modelId?: string;
+  speed?: number;
+}
+
+/**
+ * Provider-specific TTS config. Only the entry matching `ttsProvider` is
+ * consumed; others are ignored. Kept separate so switching provider doesn't
+ * discard the other provider's settings.
+ */
+export interface TtsProviderSettings {
+  elevenLabs?: ElevenLabsTtsSettings;
+}
+
+/**
+ * Auto-cleanup policy for a brand. When enabled, the run directory is
+ * deleted `delayMinutes` after a successful upload. topic-history.json
+ * lives outside the run dir so it is never touched by cleanup.
+ */
+export interface CleanupConfig {
+  enabled: boolean;
+  delayMinutes: number;
+}
+
+/**
  * A complete channel identity — loaded from a user-created JSON file.
  * This is never hardcoded in source. Users create their own `channel.json`
  * from `channel.example.json` to define their brand.
+ *
+ * `ttsProvider`, `ttsProviderSettings`, and `cleanup` are optional for
+ * backward compatibility; existing profiles continue to work unchanged.
  */
 export interface ChannelProfile {
   id: string;
@@ -25,6 +63,9 @@ export interface ChannelProfile {
   ttsRate: string;
   genSecDefaults: GenSecAssessment;
   captionStyle?: Partial<AnimatedCaptionConfig>;
+  ttsProvider?: TtsProviderKind;
+  ttsProviderSettings?: TtsProviderSettings;
+  cleanup?: CleanupConfig;
 }
 
 /**

@@ -1,0 +1,41 @@
+# Build inputs only — keep the build context tiny.
+
+# Dependencies (re-installed inside the builder stage)
+node_modules
+web/node_modules
+
+# Build outputs
+dist
+web/.next
+web/out
+web/tsconfig.tsbuildinfo
+
+# Runtime state — these become volume mounts at runtime
+data
+logs
+output
+
+# Local secrets and per-brand credentials
+.env
+.env.*
+brands/*/.env
+brands/*/topic-history.json
+
+# Editor / VCS / docs
+.git
+.gitignore
+.vscode
+.idea
+docs
+
+# Windows-only helpers — never run inside the Linux container
+*.ps1
+
+# CI / Claude scratch
+.github
+.claude
+
+# Misc
+*.log
+README.md
+brands/_template/.env.example

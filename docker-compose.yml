@@ -1,0 +1,68 @@
+services:
+  vibeprinting:
+    container_name: vibeprinting
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Los_Angeles
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-${VP_ADMIN_TOKEN}}
+      - LLM_PROVIDER=${LLM_PROVIDER:-claude}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-haiku-4-5-20251001}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - VP_MAX_CONCURRENT=1
+      - VP_MAX_CONCURRENT_PER_BRAND=1
+      - SECURE_COOKIE=${SECURE_COOKIE:-false}
+      - VP_ALLOWED_BRANDS=lil-philosophy
+    volumes:
+      - ./brands:/app/brands
+      - ./output:/app/output
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  vibeprinting-connor:
+    container_name: vibeprinting-connor
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.connor
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Los_Angeles
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-haiku-4-5-20251001}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - VP_MAX_CONCURRENT=1
+      - VP_MAX_CONCURRENT_PER_BRAND=1
+      - SECURE_COOKIE=false
+      - VP_ALLOWED_BRANDS=signal-drop
+    volumes:
+      - ./brands:/app/brands
+      - ./output-connor:/app/output
+      - ./data-connor:/app/data
+      - ./logs-connor:/app/logs
+    ports:
+      - "3001:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
