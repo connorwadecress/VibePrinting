@@ -85,14 +85,19 @@ function ensureLoaded(): void {
     const data = JSON.parse(raw) as JobsSnapshot;
     if (!Array.isArray(data?.jobs)) return;
     const now = new Date().toISOString();
+    let hadOrphans = false;
     for (const job of data.jobs) {
       if (job.status === "running" || job.status === "queued") {
         job.status = "failed";
         job.endedAt = now;
         job.error = "container restarted while job was running";
+        hadOrphans = true;
       }
       jobs.set(job.jobId, job);
     }
+    // Write the corrected state back so disk matches memory immediately.
+    // Without this, jobs.json still shows "running" until the next write.
+    if (hadOrphans) snapshot();
   } catch {
     // Corrupt snapshot — start fresh rather than crash the UI.
   }
