@@ -48,13 +48,37 @@ interface JobsSnapshot {
   jobs: JobRecord[];
 }
 
+// ---------------------------------------------------------------------------
+// Singleton state via globalThis.
+//
+// Next.js webpack bundles this file into separate chunks for different
+// server contexts (instrumentation vs API routes). Each chunk normally gets
+// its own module-level variables, meaning the scheduler and the API routes
+// end up with *different* Map instances — jobs created by the scheduler are
+// invisible to the API layer and vice versa.
+//
+// Anchoring the Maps on globalThis ensures every chunk that imports
+// job-store shares the exact same registry, regardless of how many times
+// webpack instantiates this module.
+// ---------------------------------------------------------------------------
+type StoreGlobal = {
+  _vpJobs?: Map<string, JobRecord>;
+  _vpBuses?: Map<string, EventEmitter>;
+  _vpLoaded?: boolean;
+};
+const g = globalThis as typeof globalThis & StoreGlobal;
+if (!g._vpJobs) g._vpJobs = new Map<string, JobRecord>();
+if (!g._vpBuses) g._vpBuses = new Map<string, EventEmitter>();
+if (g._vpLoaded === undefined) g._vpLoaded = false;
+
 /** In-memory map. JobId -> record. */
-const jobs = new Map<string, JobRecord>();
+const jobs: Map<string, JobRecord> = g._vpJobs;
 
 /** Per-job event bus for live SSE streaming. */
-const buses = new Map<string, EventEmitter>();
+const buses: Map<string, EventEmitter> = g._vpBuses;
 
-let loaded = false;
+function getLoaded(): boolean { return g._vpLoaded === true; }
+function setLoaded(): void { g._vpLoaded = true; }
 
 function ensureDataDir(): void {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -77,8 +101,8 @@ function snapshot(): void {
  * process must have died mid-run) and flipped to `failed`.
  */
 function ensureLoaded(): void {
-  if (loaded) return;
-  loaded = true;
+  if (getLoaded()) return;
+  setLoaded();
   if (!fs.existsSync(JOBS_PATH)) return;
   try {
     const raw = fs.readFileSync(JOBS_PATH, "utf-8");
@@ -187,7 +211,7 @@ export function subscribeJob(
 export function _resetForTests(): void {
   jobs.clear();
   buses.clear();
-  loaded = false;
+  g._vpLoaded = false;
 }
 
 // Path is exported so other modules can reference where snapshots live.
