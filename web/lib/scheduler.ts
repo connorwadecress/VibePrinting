@@ -23,6 +23,7 @@
  */
 
 import fs from "node:fs";
+import path from "node:path";
 import cron, { type ScheduledTask } from "node-cron";
 import { readSchedules, upsertSchedule, SCHEDULES_FILE_PATH, type ScheduleEntry } from "@/lib/schedule-fs";
 import { startRun } from "@/lib/job-manager";
@@ -41,9 +42,8 @@ export function startScheduler(): void {
 
   reload();
 
-  // Set up the watcher only if the file exists. fs.watch on a
-  // missing path throws on some platforms; we re-arm it after the
-  // first write lands.
+  // Watch the data directory so we're notified when schedules.json is
+  // written (including atomic temp+rename writes that change the inode).
   attachWatcher();
 }
 
@@ -63,9 +63,17 @@ export function stopScheduler(): void {
 
 function attachWatcher(): void {
   if (watcher) return;
-  if (!fs.existsSync(SCHEDULES_FILE_PATH)) return;
+  // Watch the parent directory instead of the file itself.
+  // writeSchedules() uses an atomic temp+rename pattern which changes
+  // the file's inode on Linux — a watcher on the old inode never fires
+  // after the rename. Watching the directory is inode-independent and
+  // survives atomic writes correctly.
+  const dir = path.dirname(SCHEDULES_FILE_PATH);
+  const filename = path.basename(SCHEDULES_FILE_PATH);
+  if (!fs.existsSync(dir)) return;
   try {
-    watcher = fs.watch(SCHEDULES_FILE_PATH, { persistent: false }, () => {
+    watcher = fs.watch(dir, { persistent: false }, (_event, changedFile) => {
+      if (changedFile !== filename) return;
       // Debounce: editors often emit two events per save (truncate
       // + write). Coalesce them into a single reload.
       if (reloadTimer) clearTimeout(reloadTimer);
