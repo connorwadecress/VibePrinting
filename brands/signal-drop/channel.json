@@ -1,192 +1,177 @@
 {
-  "id": "signal-drop",
-  "displayName": "Signal Drop",
-  "thesis": "Fast, story-shaped Shorts that turn surprising history, human performance, and everyday systems into memorable explanations.",
-  "contentLanes": [
-    {
-      "id": "history-flash",
-      "description": "Unexpected historical explanations with a reversal or contrast. The hook should set up what people assume, then flip it.",
-      "targetDurationSeconds": 40,
-      "exampleHooks": [
-        "Why Roman concrete outlived modern buildings",
-        "Why marathon distance is such a weird number",
-        "The accidental invention that saved millions of lives",
-        "Why Napoleon wasn't actually short",
-        "The war that lasted 335 years with zero casualties",
-        "Why we shake hands — and what it replaced"
-      ]
-    },
-    {
-      "id": "human-limits",
-      "description": "What a benchmark means for the body in real life. Ground abstract performance numbers in physical, visceral detail.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "How fast the fastest humans actually move",
-        "What running a marathon does to your body",
-        "Why you can't hold your breath for 5 minutes — but this guy can",
-        "How much force a punch from a heavyweight actually carries",
-        "What happens to your muscles after 24 hours without sleep",
-        "The ceiling of human reaction time — and why it exists"
-      ]
-    },
-    {
-      "id": "everyday-systems",
-      "description": "Simple explanations of invisible systems and mechanisms that people interact with daily but never think about.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "What turbulence actually is",
-        "How GPS knows where you are",
-        "Why your phone battery dies faster in the cold",
-        "How traffic jams start from literally nothing",
-        "Why elevator doors wait exactly that long",
-        "How tap water gets from a dam to your glass"
-      ]
-    },
-    {
-      "id": "money-mechanics",
-      "description": "How money, pricing, and economic systems actually work behind the scenes. No financial advice — just mechanism explanations.",
-      "targetDurationSeconds": 40,
-      "exampleHooks": [
-        "Why prices end in .99 — and why it still works",
-        "How credit scores are actually calculated",
-        "Why movie popcorn costs more than the ticket",
-        "What happens to your money the second you tap your card",
-        "Why airline tickets change price every time you check",
-        "How insurance companies decide what you pay"
-      ]
-    },
-    {
-      "id": "design-on-purpose",
-      "description": "Objects, interfaces, and environments that are deliberately designed to influence your behaviour — often without you noticing.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "Why supermarkets put bread at the back",
-        "The reason stop signs are octagons",
-        "Why casino carpets are so ugly — on purpose",
-        "How Instagram's pull-to-refresh was stolen from a slot machine",
-        "Why hospital walls are that specific colour",
-        "The font on road signs was engineered to save lives"
-      ]
-    },
-    {
-      "id": "scale-check",
-      "description": "Comparisons that make incomprehensible numbers or sizes suddenly click. Always anchor to something the viewer already understands.",
-      "targetDurationSeconds": 30,
-      "exampleHooks": [
-        "If the Sun were a basketball, Earth would be this far away",
-        "How much data the internet moves every single second",
-        "The actual size of a blue whale's heart",
-        "How many humans have ever lived vs how many are alive now",
-        "If you stacked every shipping container moved last year",
-        "How deep the ocean actually goes — floor by floor"
-      ]
-    },
-    {
-      "id": "why-that-rule",
-      "description": "The origin stories behind rules, laws, and conventions that seem arbitrary but exist for a specific reason.",
-      "targetDurationSeconds": 40,
-      "exampleHooks": [
-        "Why we drive on the left in some countries and right in others",
-        "Why the drinking age is 18 in most countries but 21 in the US",
-        "The actual reason your pilot dims the cabin lights before landing",
-        "Why chefs wear those tall white hats",
-        "Why manhole covers are round — it's not what you think",
-        "The real reason QWERTY exists"
-      ]
-    },
-    {
-      "id": "food-science",
-      "description": "The chemistry and biology behind cooking, taste, and food production. Make the science feel like a plot twist.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "Why onions make you cry — and how to stop it",
-        "What actually happens when you toast bread",
-        "Why mint feels cold even though it's not",
-        "How your tongue decides what tastes good",
-        "Why microwaved food heats so unevenly",
-        "The reason honey never expires — literally never"
-      ]
-    },
-    {
-      "id": "tech-under-the-hood",
-      "description": "How modern technology actually works at the layer most people never see. Demystify without dumbing down.",
-      "targetDurationSeconds": 40,
-      "exampleHooks": [
-        "How your WiFi router decides who gets bandwidth",
-        "What actually happens when you Google something",
-        "How noise-cancelling headphones know which sounds to kill",
-        "Why your face unlocks your phone but a photo doesn't",
-        "How autocorrect predicts your next word",
-        "What happens inside a chip when you press a key"
-      ]
-    },
-    {
-      "id": "nature-engineered",
-      "description": "Biological systems and natural phenomena explained as if they were engineering solutions — because they basically are.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "How ants solve traffic better than humans",
-        "Why birds fly in a V — the physics is wild",
-        "How trees communicate underground",
-        "Why your eyes can see more shades of green than any other colour",
-        "How salmon navigate thousands of kilometres back to the exact stream they were born in",
-        "The engineering behind a spider web"
-      ]
-    },
-    {
-      "id": "psych-wiring",
-      "description": "Cognitive biases, psychological effects, and brain mechanics explained with a 'so that's why I do that' payoff.",
-      "targetDurationSeconds": 35,
-      "exampleHooks": [
-        "Why you always think of the perfect comeback too late",
-        "The reason you can't tickle yourself",
-        "Why songs get stuck in your head — and how to get them out",
-        "How your brain decides what to remember and what to forget",
-        "Why time feels slower when you're bored",
-        "The trick your brain uses to fill in your blind spot"
-      ]
-    },
-    {
-      "id": "numbers-that-lie",
-      "description": "Statistics, metrics, and numbers that are commonly cited but wildly misleading once you understand what's behind them.",
-      "targetDurationSeconds": 40,
-      "exampleHooks": [
-        "Why 'average salary' means almost nothing",
-        "The problem with BMI — and why doctors still use it",
-        "Why crime stats can say opposite things depending on who's presenting them",
-        "How a 90% effective vaccine doesn't mean what you think it means",
-        "Why your phone's battery percentage is a rough guess",
-        "The misleading stat behind 'you eat 8 spiders a year in your sleep'"
-      ]
-    }
-  ],
-  "publishSlots": [
-    "11:00",
-    "15:00",
-    "19:00"
-  ],
-  "branding": {
-    "tags": [
-      "SignalDrop",
-      "Shorts",
-      "YouTube Shorts",
-      "viral",
-      "trending"
-    ],
-    "hashtags": [
-      "#SignalDrop",
-      "#Shorts",
-      "#LearnOnTikTok",
-      "#FYP"
-    ],
-    "youTubeCategory": "22"
-  },
-  "ttsVoice": "en-US-GuyNeural",
-  "ttsRate": "+10%",
-  "genSecDefaults": {
-    "blockedReasons": [],
-    "disclosureRequired": true,
-    "riskLevel": "medium",
-    "safeToAutoPublish": false
-  }
+	"id": "signal-drop",
+	"displayName": "Signal Drop",
+	"thesis": "Fast, story-shaped Shorts that turn surprising history, human performance, and everyday systems into memorable explanations.",
+	"contentLanes": [
+		{
+			"id": "history-flash",
+			"description": "Unexpected historical explanations with a reversal or contrast. The hook should set up what people assume, then flip it.",
+			"targetDurationSeconds": 40,
+			"exampleHooks": [
+				"Why Roman concrete outlived modern buildings",
+				"Why marathon distance is such a weird number",
+				"The accidental invention that saved millions of lives",
+				"Why Napoleon wasn't actually short",
+				"The war that lasted 335 years with zero casualties",
+				"Why we shake hands — and what it replaced"
+			]
+		},
+		{
+			"id": "human-limits",
+			"description": "What a benchmark means for the body in real life. Ground abstract performance numbers in physical, visceral detail.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"How fast the fastest humans actually move",
+				"What running a marathon does to your body",
+				"Why you can't hold your breath for 5 minutes — but this guy can",
+				"How much force a punch from a heavyweight actually carries",
+				"What happens to your muscles after 24 hours without sleep",
+				"The ceiling of human reaction time — and why it exists"
+			]
+		},
+		{
+			"id": "everyday-systems",
+			"description": "Simple explanations of invisible systems and mechanisms that people interact with daily but never think about.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"What turbulence actually is",
+				"How GPS knows where you are",
+				"Why your phone battery dies faster in the cold",
+				"How traffic jams start from literally nothing",
+				"Why elevator doors wait exactly that long",
+				"How tap water gets from a dam to your glass"
+			]
+		},
+		{
+			"id": "money-mechanics",
+			"description": "How money, pricing, and economic systems actually work behind the scenes. No financial advice — just mechanism explanations.",
+			"targetDurationSeconds": 40,
+			"exampleHooks": [
+				"Why prices end in .99 — and why it still works",
+				"How credit scores are actually calculated",
+				"Why movie popcorn costs more than the ticket",
+				"What happens to your money the second you tap your card",
+				"Why airline tickets change price every time you check",
+				"How insurance companies decide what you pay"
+			]
+		},
+		{
+			"id": "design-on-purpose",
+			"description": "Objects, interfaces, and environments that are deliberately designed to influence your behaviour — often without you noticing.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"Why supermarkets put bread at the back",
+				"The reason stop signs are octagons",
+				"Why casino carpets are so ugly — on purpose",
+				"How Instagram's pull-to-refresh was stolen from a slot machine",
+				"Why hospital walls are that specific colour",
+				"The font on road signs was engineered to save lives"
+			]
+		},
+		{
+			"id": "scale-check",
+			"description": "Comparisons that make incomprehensible numbers or sizes suddenly click. Always anchor to something the viewer already understands.",
+			"targetDurationSeconds": 30,
+			"exampleHooks": [
+				"If the Sun were a basketball, Earth would be this far away",
+				"How much data the internet moves every single second",
+				"The actual size of a blue whale's heart",
+				"How many humans have ever lived vs how many are alive now",
+				"If you stacked every shipping container moved last year",
+				"How deep the ocean actually goes — floor by floor"
+			]
+		},
+		{
+			"id": "why-that-rule",
+			"description": "The origin stories behind rules, laws, and conventions that seem arbitrary but exist for a specific reason.",
+			"targetDurationSeconds": 40,
+			"exampleHooks": [
+				"Why we drive on the left in some countries and right in others",
+				"Why the drinking age is 18 in most countries but 21 in the US",
+				"The actual reason your pilot dims the cabin lights before landing",
+				"Why chefs wear those tall white hats",
+				"Why manhole covers are round — it's not what you think",
+				"The real reason QWERTY exists"
+			]
+		},
+		{
+			"id": "food-science",
+			"description": "The chemistry and biology behind cooking, taste, and food production. Make the science feel like a plot twist.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"Why onions make you cry — and how to stop it",
+				"What actually happens when you toast bread",
+				"Why mint feels cold even though it's not",
+				"How your tongue decides what tastes good",
+				"Why microwaved food heats so unevenly",
+				"The reason honey never expires — literally never"
+			]
+		},
+		{
+			"id": "tech-under-the-hood",
+			"description": "How modern technology actually works at the layer most people never see. Demystify without dumbing down.",
+			"targetDurationSeconds": 40,
+			"exampleHooks": [
+				"How your WiFi router decides who gets bandwidth",
+				"What actually happens when you Google something",
+				"How noise-cancelling headphones know which sounds to kill",
+				"Why your face unlocks your phone but a photo doesn't",
+				"How autocorrect predicts your next word",
+				"What happens inside a chip when you press a key"
+			]
+		},
+		{
+			"id": "nature-engineered",
+			"description": "Biological systems and natural phenomena explained as if they were engineering solutions — because they basically are.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"How ants solve traffic better than humans",
+				"Why birds fly in a V — the physics is wild",
+				"How trees communicate underground",
+				"Why your eyes can see more shades of green than any other colour",
+				"How salmon navigate thousands of kilometres back to the exact stream they were born in",
+				"The engineering behind a spider web"
+			]
+		},
+		{
+			"id": "psych-wiring",
+			"description": "Cognitive biases, psychological effects, and brain mechanics explained with a 'so that's why I do that' payoff.",
+			"targetDurationSeconds": 35,
+			"exampleHooks": [
+				"Why you always think of the perfect comeback too late",
+				"The reason you can't tickle yourself",
+				"Why songs get stuck in your head — and how to get them out",
+				"How your brain decides what to remember and what to forget",
+				"Why time feels slower when you're bored",
+				"The trick your brain uses to fill in your blind spot"
+			]
+		},
+		{
+			"id": "numbers-that-lie",
+			"description": "Statistics, metrics, and numbers that are commonly cited but wildly misleading once you understand what's behind them.",
+			"targetDurationSeconds": 40,
+			"exampleHooks": [
+				"Why 'average salary' means almost nothing",
+				"The problem with BMI — and why doctors still use it",
+				"Why crime stats can say opposite things depending on who's presenting them",
+				"How a 90% effective vaccine doesn't mean what you think it means",
+				"Why your phone's battery percentage is a rough guess",
+				"The misleading stat behind 'you eat 8 spiders a year in your sleep'"
+			]
+		}
+	],
+	"publishSlots": ["11:00", "15:00", "19:00"],
+	"branding": {
+		"tags": ["SignalDrop", "Shorts", "YouTube Shorts", "viral", "trending"],
+		"hashtags": ["#SignalDrop", "#Shorts", "#LearnOnTikTok", "#FYP"],
+		"youTubeCategory": "22"
+	},
+	"ttsVoice": "en-US-GuyNeural",
+	"ttsRate": "+10%",
+	"genSecDefaults": {
+		"blockedReasons": [],
+		"disclosureRequired": true,
+		"riskLevel": "medium",
+		"safeToAutoPublish": false
+	}
 }
