@@ -18,6 +18,15 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export const BRANDS_DIR = process.env.VP_BRANDS_DIR ?? path.join(REPO_ROOT, "brands");
+
+/**
+ * Optional brand allowlist. When VP_ALLOWED_BRANDS is set (comma-separated
+ * brand ids), the UI scopes itself to only those brands — dropdown, runs,
+ * schedules, and new job triggers are all filtered. Unset = show everything.
+ */
+export const ALLOWED_BRANDS: Set<string> | null = process.env.VP_ALLOWED_BRANDS
+  ? new Set(process.env.VP_ALLOWED_BRANDS.split(",").map((s) => s.trim()).filter(Boolean))
+  : null;
 export const OUTPUT_DIR = process.env.VP_OUTPUT_DIR ?? process.env.OUTPUT_DIR ?? path.join(REPO_ROOT, "output");
 export const DATA_DIR = process.env.VP_DATA_DIR ?? path.join(REPO_ROOT, "data");
 export const LOGS_DIR = process.env.VP_LOGS_DIR ?? path.join(REPO_ROOT, "logs");

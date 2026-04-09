@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ChannelProfileSchema, type ChannelProfileInput } from "@/lib/zod-schemas";
-import { brandProfilePath, brandTopicHistoryPath, BRANDS_DIR } from "@/lib/paths";
+import { brandProfilePath, brandTopicHistoryPath, BRANDS_DIR, ALLOWED_BRANDS } from "@/lib/paths";
 import { listBrands } from "@pipeline/utils/brand-resolver";
 import { loadProfile } from "@pipeline/domain/channel-profile";
 import type { ChannelProfile } from "@pipeline/domain/channel-profile";
@@ -35,15 +35,20 @@ export function listBrandIds(): string[] {
   // Ensure we read from the resolved BRANDS_DIR. listBrands() uses
   // the cwd-relative "brands" directory; when VP_BRANDS_DIR is set
   // (e.g. in tests), we fall through to our own scan.
+  let ids: string[];
   if (BRANDS_DIR === path.resolve(process.cwd(), "brands")) {
-    return listBrands();
+    ids = listBrands();
+  } else if (!fs.existsSync(BRANDS_DIR)) {
+    ids = [];
+  } else {
+    ids = fs
+      .readdirSync(BRANDS_DIR, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+      .map((d) => d.name)
+      .sort();
   }
-  if (!fs.existsSync(BRANDS_DIR)) return [];
-  return fs
-    .readdirSync(BRANDS_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
-    .map((d) => d.name)
-    .sort();
+  if (ALLOWED_BRANDS) ids = ids.filter((id) => ALLOWED_BRANDS!.has(id));
+  return ids;
 }
 
 /**

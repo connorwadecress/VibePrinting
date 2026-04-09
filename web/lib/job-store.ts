@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { EventEmitter } from "node:events";
-import { JOBS_PATH, DATA_DIR } from "@/lib/paths";
+import { JOBS_PATH, DATA_DIR, ALLOWED_BRANDS } from "@/lib/paths";
 import type { UploadResult } from "@pipeline/domain/interfaces/uploader";
 
 export type JobStatus = "queued" | "running" | "success" | "failed" | "cancelled";
@@ -177,7 +177,9 @@ export function getJob(jobId: string): JobRecord | null {
 
 export function listJobs(): JobRecord[] {
   ensureLoaded();
-  return Array.from(jobs.values()).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  const all = Array.from(jobs.values()).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  if (ALLOWED_BRANDS) return all.filter((j) => ALLOWED_BRANDS!.has(j.brandId));
+  return all;
 }
 
 export function listActiveJobs(): JobRecord[] {

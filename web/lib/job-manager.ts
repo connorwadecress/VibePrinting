@@ -22,6 +22,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
+import { ALLOWED_BRANDS } from "@/lib/paths";
 import {
   insertJob,
   updateJob,
@@ -99,6 +100,9 @@ function buildArgs(input: StartRunInput): string[] {
  * SSE stream takes over.
  */
 export function startRun(input: StartRunInput): StartRunResult {
+  if (ALLOWED_BRANDS && !ALLOWED_BRANDS.has(input.brandId)) {
+    throw new Error(`Brand "${input.brandId}" is not allowed in this instance.`);
+  }
   if (hasActiveJobForBrand(input.brandId)) {
     throw new Error(`A run is already in progress for brand "${input.brandId}".`);
   }
