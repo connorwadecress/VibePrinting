@@ -27,7 +27,7 @@ import path from "node:path";
 import cron, { type ScheduledTask } from "node-cron";
 import { readSchedules, upsertSchedule, SCHEDULES_FILE_PATH, type ScheduleEntry } from "@/lib/schedule-fs";
 import { startRun } from "@/lib/job-manager";
-import { hasActiveJobForBrand } from "@/lib/job-store";
+import { hasActiveJobForBrand, listActiveJobs } from "@/lib/job-store";
 
 let started = false;
 const tasks = new Map<string, ScheduledTask>();
@@ -151,8 +151,12 @@ async function onFire(brandId: string, entry: ScheduleEntry): Promise<void> {
   if (!live || !live.enabled) return;
 
   if (live.skipIfRunning && hasActiveJobForBrand(brandId)) {
+    const blocking = listActiveJobs()
+      .filter((j) => j.brandId === brandId)
+      .map((j) => `${j.jobId}(${j.status})`)
+      .join(", ");
     // eslint-disable-next-line no-console
-    console.log(`[scheduler] skip ${brandId}: active job already running`);
+    console.log(`[scheduler] skip ${brandId}: active job already running [${blocking}]`);
     return;
   }
 
