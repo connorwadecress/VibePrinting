@@ -30,3 +30,7 @@ web/next-env.d.ts
 
 .vercel
 web/tsconfig.tsbuildinfo
+
+# Local Docker Compose overrides (per-instance config, VPS-only)
+docker-compose.*.yml
+docker-compose.override.yml
