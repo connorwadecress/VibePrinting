@@ -85,6 +85,7 @@ export async function renderCaptionOverlay(
       pages,
       captionConfig,
     },
+    timeoutInMilliseconds: 1_800_000, // 30 minutes — let it cook
   });
 
   logTiming("caption-overlay", start);
