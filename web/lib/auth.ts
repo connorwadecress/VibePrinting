@@ -1,74 +1,121 @@
 /**
- * Single-operator authentication for the admin UI.
+ * Per-user authentication for the admin UI.
  *
- * Model: one shared `ADMIN_TOKEN` env var. Operators POST the raw
- * token to /api/login; we verify via a timing-safe compare, mint a
- * random session id, and set it as an HttpOnly cookie. Sessions
- * live in memory — restart = re-login. No database.
+ * Users are defined entirely via environment variables — no database,
+ * no self-registration:
  *
+ *   VP_USER_1_ID=alice
+ *   VP_USER_1_TOKEN=some-secret
+ *   VP_USER_1_BRANDS=brand-a,brand-b
+ *
+ *   VP_USER_2_ID=bob
+ *   VP_USER_2_TOKEN=another-secret
+ *   VP_USER_2_BRANDS=brand-c
+ *
+ * Up to VP_USER_20_* supported. Each user can only see and manage
+ * their own brands. There is no superuser / admin backdoor.
+ *
+ * Login: POST /api/login with { username, token }.
+ * Sessions live in memory — restart = re-login. No database.
  * This file is server-only. Do not import from client components.
  */
 
 import crypto from "node:crypto";
+import { cookies } from "next/headers";
 
 export const SESSION_COOKIE_NAME = "vp_admin";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-interface Session {
+export interface Session {
   id: string;
+  userId: string;
+  /** Brand ids this user is allowed to access. */
+  ownedBrands: string[];
   issuedAt: number;
   expiresAt: number;
 }
 
-// Middleware and route handlers are compiled as separate webpack bundles,
-// so module-level state is not shared between them. Hang the session map
-// off globalThis so both bundles read/write the same instance.
-const g = globalThis as typeof globalThis & { __vpSessions?: Map<string, Session> };
+interface UserEntry {
+  token: string;
+  ownedBrands: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Sessions — anchored on globalThis so all webpack chunks share one map.
+// ---------------------------------------------------------------------------
+type AuthGlobal = {
+  __vpSessions?: Map<string, Session>;
+};
+const g = globalThis as typeof globalThis & AuthGlobal;
 if (!g.__vpSessions) g.__vpSessions = new Map();
-const sessions = g.__vpSessions;
 
-/**
- * Read the admin token from the environment. Returns null if unset
- * so callers can surface a clear "token not configured" message
- * rather than accidentally auto-authenticating.
- */
-export function getAdminToken(): string | null {
-  const raw = process.env.ADMIN_TOKEN;
-  if (!raw || raw.length === 0) return null;
-  return raw;
+const sessions: Map<string, Session> = g.__vpSessions;
+
+// ---------------------------------------------------------------------------
+// User registry — rebuilt fresh on every call so HMR / late .env loads
+// never cause a stale empty registry.  Env vars are static at runtime so
+// rebuilding is cheap.
+// ---------------------------------------------------------------------------
+function buildUserRegistry(): Map<string, UserEntry> {
+  const registry = new Map<string, UserEntry>();
+  for (let i = 1; i <= 20; i++) {
+    const id = process.env[`VP_USER_${i}_ID`];
+    const token = process.env[`VP_USER_${i}_TOKEN`];
+    const brandsRaw = process.env[`VP_USER_${i}_BRANDS`];
+    if (!id || !token) continue;
+    const ownedBrands = brandsRaw
+      ? brandsRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+    registry.set(id, { token, ownedBrands });
+  }
+  return registry;
+}
+
+// ---------------------------------------------------------------------------
+// Token helpers
+// ---------------------------------------------------------------------------
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "utf-8");
+  const bufB = Buffer.from(b, "utf-8");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 /**
- * Verify an operator-supplied token against ADMIN_TOKEN using a
- * constant-time compare. Returns true only when both sides have the
- * same byte length (Buffer.compare would throw otherwise) and match.
+ * Verify username + token. Returns a resolved identity on success, null on failure.
+ *
+ * Logic:
+ * 1. If username matches a VP_USER_*_ID entry, verify token against that user.
+ * 2. Otherwise fall back to ADMIN_TOKEN (username ignored for backward compat).
  */
-export function verifyToken(candidate: string): boolean {
-  const expected = getAdminToken();
-  if (!expected) return false;
-  const a = Buffer.from(candidate, "utf-8");
-  const b = Buffer.from(expected, "utf-8");
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+export function verifyCredentials(
+  username: string,
+  token: string,
+): { userId: string; ownedBrands: string[] } | null {
+  if (!token || !username) return null;
+
+  // Rebuild the registry fresh each call so HMR never serves stale data.
+  const userRegistry = buildUserRegistry();
+
+  const user = userRegistry.get(username);
+  if (!user) return null;
+  if (!timingSafeEqual(token, user.token)) return null;
+  return { userId: username, ownedBrands: user.ownedBrands };
 }
 
-/**
- * Mint a new session id and store it in the in-memory session map.
- * Callers should serialize the returned id into a Set-Cookie header.
- */
-export function createSession(): Session {
+// ---------------------------------------------------------------------------
+// Session management
+// ---------------------------------------------------------------------------
+
+export function createSession(userId: string, ownedBrands: string[]): Session {
   const id = crypto.randomBytes(32).toString("base64url");
   const now = Date.now();
-  const session: Session = { id, issuedAt: now, expiresAt: now + SESSION_TTL_MS };
+  const session: Session = { id, userId, ownedBrands, issuedAt: now, expiresAt: now + SESSION_TTL_MS };
   sessions.set(id, session);
   return session;
 }
 
-/**
- * Look up a session by id. Returns null if unknown or expired.
- * Expired sessions are proactively removed so the map does not
- * grow forever.
- */
 export function getSession(id: string | undefined | null): Session | null {
   if (!id) return null;
   const session = sessions.get(id);
@@ -80,16 +127,14 @@ export function getSession(id: string | undefined | null): Session | null {
   return session;
 }
 
-/**
- * Revoke a session (used by the eventual logout endpoint).
- */
 export function destroySession(id: string): void {
   sessions.delete(id);
 }
 
-/**
- * Parse a session id from a cookie header string.
- */
+// ---------------------------------------------------------------------------
+// Cookie helpers
+// ---------------------------------------------------------------------------
+
 export function readSessionIdFromCookieHeader(cookieHeader: string | null | undefined): string | null {
   if (!cookieHeader) return null;
   const parts = cookieHeader.split(";").map((p) => p.trim());
@@ -102,10 +147,6 @@ export function readSessionIdFromCookieHeader(cookieHeader: string | null | unde
   return null;
 }
 
-/**
- * Build a Set-Cookie header value for a freshly-issued session.
- * HttpOnly + SameSite=Lax + Secure in production.
- */
 export function buildSessionCookie(session: Session): string {
   const maxAgeSec = Math.floor((session.expiresAt - Date.now()) / 1000);
   const pieces = [
@@ -119,20 +160,17 @@ export function buildSessionCookie(session: Session): string {
   return pieces.join("; ");
 }
 
-/**
- * Build a Set-Cookie header value that clears the session cookie.
- */
 export function buildClearSessionCookie(): string {
   return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
 
+// ---------------------------------------------------------------------------
+// Auth helpers for route handlers and server components
+// ---------------------------------------------------------------------------
+
 /**
- * Helper for API route handlers. Reads the cookie header off the
- * Request, validates the session, and returns either the session or
- * a 401 Response. Usage:
- *
- *   const auth = requireAuth(request);
- *   if (auth instanceof Response) return auth;
+ * For API route handlers. Reads the session from the request cookie header.
+ * Returns the Session or a 401 Response.
  */
 export function requireAuth(request: Request): Session | Response {
   const cookie = request.headers.get("cookie");
@@ -145,4 +183,37 @@ export function requireAuth(request: Request): Session | Response {
     });
   }
   return session;
+}
+
+/**
+ * For server components (uses next/headers). Returns null if unauthenticated.
+ */
+export async function getServerSession(): Promise<Session | null> {
+  const jar = await cookies();
+  const sessionId = jar.get(SESSION_COOKIE_NAME)?.value;
+  return getSession(sessionId);
+}
+
+/**
+ * Check if a session can access a specific brand.
+ */
+export function canAccessBrand(brandId: string, session: Session): boolean {
+  return session.ownedBrands.includes(brandId);
+}
+
+/**
+ * Filter a list of brand ids to those accessible by the session.
+ */
+export function filterBrands(brandIds: string[], session: Session): string[] {
+  return brandIds.filter((id) => session.ownedBrands.includes(id));
+}
+
+/**
+ * Return a 403 Response for brand access denial.
+ */
+export function brandForbidden(brandId: string): Response {
+  return new Response(
+    JSON.stringify({ error: `Access denied to brand "${brandId}"` }),
+    { status: 403, headers: { "content-type": "application/json" } },
+  );
 }

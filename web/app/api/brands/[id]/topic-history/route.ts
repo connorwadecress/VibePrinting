@@ -1,12 +1,11 @@
 /**
  * GET /api/brands/[id]/topic-history
  *
- * Returns the brand's topic history as a JSON array. Used by the
- * read-only history view (the page reads server-side, but the API
- * exists for future async refresh).
+ * Returns the brand's topic history as a JSON array.
+ * Requires session ownership of the brand.
  */
 
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, canAccessBrand, brandForbidden } from "@/lib/auth";
 import { readBrandTopicHistory } from "@/lib/brand-io";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +20,8 @@ export async function GET(request: Request, context: RouteContext) {
   if (auth instanceof Response) return auth;
 
   const { id } = await context.params;
+  if (!canAccessBrand(id, auth)) return brandForbidden(id);
+
   try {
     const entries = readBrandTopicHistory(id);
     return new Response(JSON.stringify({ entries }), {

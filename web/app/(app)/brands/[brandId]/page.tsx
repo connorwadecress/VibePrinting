@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { readBrandProfile } from "@/lib/brand-io";
+import { readBrandEnv } from "@/lib/brand-env-io";
 import { BrandForm } from "@/components/BrandForm";
+import { BrandEnvEditor } from "@/components/BrandEnvEditor";
 
 /**
- * Brand editor (Phase 4). Server component reads channel.json directly
- * via brand-io and hydrates the BrandForm client component with the
- * loaded profile.
+ * Brand editor. Server component reads channel.json and the brand's
+ * .env credentials, then hydrates the client components.
  *
  * Auth is enforced upstream by middleware.ts. In Next 15 the params
  * object is async and must be awaited.
@@ -21,11 +22,18 @@ export default async function BrandEditorPage({ params }: PageProps) {
   const { brandId } = await params;
 
   let profile;
-  let error: string | null = null;
+  let profileError: string | null = null;
   try {
     profile = readBrandProfile(brandId);
   } catch (err) {
-    error = (err as Error).message ?? String(err);
+    profileError = (err as Error).message ?? String(err);
+  }
+
+  let envVars;
+  try {
+    envVars = readBrandEnv(brandId);
+  } catch {
+    envVars = null;
   }
 
   return (
@@ -48,9 +56,19 @@ export default async function BrandEditorPage({ params }: PageProps) {
         </Link>
       </header>
 
-      {error && <div className="mb-4 alert-error">{error}</div>}
+      {profileError && <div className="mb-4 alert-error">{profileError}</div>}
 
       {profile && <BrandForm initial={profile} />}
+
+      {envVars && (
+        <div className="mt-10">
+          <h2 className="section-title mb-1">Platform credentials</h2>
+          <p className="mb-4 text-xs text-fg-muted">
+            Stored in <code className="font-mono">brands/{brandId}/.env</code>. Changes take effect on the next pipeline run.
+          </p>
+          <BrandEnvEditor brandId={brandId} initial={envVars} />
+        </div>
+      )}
     </section>
   );
 }
