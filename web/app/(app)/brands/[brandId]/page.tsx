@@ -3,6 +3,7 @@ import { readBrandProfile } from "@/lib/brand-io";
 import { readBrandEnv } from "@/lib/brand-env-io";
 import { BrandForm } from "@/components/BrandForm";
 import { BrandEnvEditor } from "@/components/BrandEnvEditor";
+import { BrandTabs } from "@/components/BrandTabs";
 
 /**
  * Brand editor. Server component reads channel.json and the brand's
@@ -58,17 +59,20 @@ export default async function BrandEditorPage({ params }: PageProps) {
 
       {profileError && <div className="mb-4 alert-error">{profileError}</div>}
 
-      {profile && <BrandForm initial={profile} />}
-
-      {envVars && (
-        <div className="mt-10">
-          <h2 className="section-title mb-1">Platform credentials</h2>
-          <p className="mb-4 text-xs text-fg-muted">
-            Stored in <code className="font-mono">brands/{brandId}/.env</code>. Changes take effect on the next pipeline run.
-          </p>
-          <BrandEnvEditor brandId={brandId} initial={envVars} />
-        </div>
-      )}
+      <BrandTabs
+        tabs={[
+          {
+            id: "channel",
+            label: "Channel",
+            content: profile ? <BrandForm initial={profile} /> : null,
+          },
+          {
+            id: "configuration",
+            label: "Configuration",
+            content: <BrandEnvEditor brandId={brandId} initial={envVars ?? {}} />,
+          },
+        ]}
+      />
     </section>
   );
 }
