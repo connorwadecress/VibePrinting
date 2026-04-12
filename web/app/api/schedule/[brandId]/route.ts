@@ -1,6 +1,8 @@
 /**
  * PUT /api/schedule/[brandId] — upsert one brand's schedule entry.
  *
+ * Requires session ownership of the brand.
+ *
  * Body: { enabled, cron, lane, platforms, dryRun, skipIfRunning }
  * (any subset; missing fields keep their prior value).
  *
@@ -9,7 +11,7 @@
  */
 
 import cron from "node-cron";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, canAccessBrand, brandForbidden } from "@/lib/auth";
 import { upsertSchedule, type ScheduleEntry } from "@/lib/schedule-fs";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,7 @@ export async function PUT(request: Request, context: RouteContext) {
   if (auth instanceof Response) return auth;
 
   const { brandId } = await context.params;
+  if (!canAccessBrand(brandId, auth)) return brandForbidden(brandId);
 
   let body: Partial<ScheduleEntry>;
   try {

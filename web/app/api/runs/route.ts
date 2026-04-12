@@ -1,6 +1,9 @@
 /**
- * GET  /api/runs   — list all jobs (newest first)
+ * GET  /api/runs   — list jobs visible to the current session
  * POST /api/runs   — start a new pipeline run via job-manager
+ *
+ * GET filters to brands owned by the session.
+ * POST enforces brand ownership before spawning.
  *
  * Body for POST:
  *   {
@@ -11,9 +14,10 @@
  *   }
  */
 
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, canAccessBrand, brandForbidden, filterBrands } from "@/lib/auth";
 import { listJobs } from "@/lib/job-store";
 import { startRun } from "@/lib/job-manager";
+import { listBrandIds } from "@/lib/brand-io";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,7 +26,9 @@ export async function GET(request: Request) {
   const auth = requireAuth(request);
   if (auth instanceof Response) return auth;
 
-  const jobs = listJobs();
+  const allJobs = listJobs();
+  const visibleBrands = new Set(filterBrands(listBrandIds(), auth));
+  const jobs = allJobs.filter((j) => visibleBrands.has(j.brandId));
   return new Response(JSON.stringify({ jobs }), {
     status: 200,
     headers: { "content-type": "application/json" },
@@ -54,6 +60,8 @@ export async function POST(request: Request) {
       headers: { "content-type": "application/json" },
     });
   }
+
+  if (!canAccessBrand(body.brandId, auth)) return brandForbidden(body.brandId);
 
   // Whitelist platforms so callers can't smuggle arbitrary strings
   // into VP_PLATFORMS.

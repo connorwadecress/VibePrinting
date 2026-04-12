@@ -4,14 +4,13 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 /**
- * Token entry form. POSTs to /api/login which sets the session cookie
- * on success. Then bounces to ?redirect=<path> if present, otherwise
- * to /brands. Renders full-screen because it lives outside the (app)
- * group's sidebar layout.
+ * Login form. POSTs { username, token } to /api/login which sets the
+ * session cookie on success. Then bounces to ?redirect=<path> if
+ * present, otherwise to /brands.
  *
- * useSearchParams() requires a Suspense boundary during static
- * prerendering, so the form is split into an inner client component
- * and the page exports a Suspense wrapper.
+ * For single-operator deployments using ADMIN_TOKEN, the username
+ * field can be left blank — any username combined with the admin
+ * token grants access.
  */
 export default function LoginPage() {
   return (
@@ -39,7 +38,7 @@ function LoginShell({ children }: { children?: React.ReactNode }) {
             Sign in
           </h1>
           <p className="mt-1 text-xs text-fg-muted">
-            Enter the admin token to continue.
+            Enter your username and access token.
           </p>
           {children}
         </div>
@@ -50,6 +49,7 @@ function LoginShell({ children }: { children?: React.ReactNode }) {
 
 function LoginForm() {
   const params = useSearchParams();
+  const [username, setUsername] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -62,7 +62,7 @@ function LoginForm() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ username, token }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -82,6 +82,19 @@ function LoginForm() {
     <LoginShell>
       <form onSubmit={onSubmit} className="mt-5 space-y-4">
         <label className="block">
+          <span className="label">Username</span>
+          <input
+            type="text"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="input input-sm mt-1.5"
+            autoFocus
+            placeholder="your-username"
+          />
+        </label>
+
+        <label className="block">
           <span className="label">Token</span>
           <input
             type="password"
@@ -89,7 +102,6 @@ function LoginForm() {
             value={token}
             onChange={(e) => setToken(e.target.value)}
             className="input input-sm mt-1.5 font-mono"
-            autoFocus
           />
         </label>
 

@@ -38,6 +38,12 @@ export interface JobRecord {
   trigger: JobTrigger;
   schedulerId?: string | null;
   error?: string | null;
+  /**
+   * 1-based position in the global pending queue. Present only while
+   * the job is waiting for a concurrency slot (status === "queued").
+   * Cleared (set to undefined) when the job is actually spawned.
+   */
+  queuePosition?: number;
 }
 
 const MAX_LOG_LINES = 500;
@@ -188,6 +194,16 @@ export function listActiveJobs(): JobRecord[] {
 
 export function hasActiveJobForBrand(brandId: string): boolean {
   return listActiveJobs().some((j) => j.brandId === brandId);
+}
+
+/** Count jobs that are actively running (not just queued/pending). */
+export function countRunningJobs(): number {
+  ensureLoaded();
+  let count = 0;
+  for (const j of jobs.values()) {
+    if (j.status === "running") count++;
+  }
+  return count;
 }
 
 /**

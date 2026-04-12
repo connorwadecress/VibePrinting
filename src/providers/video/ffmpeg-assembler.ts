@@ -125,8 +125,8 @@ export class FfmpegAssembler implements VideoAssembler {
     const { codec, preset, crf, audioCodec, audioBitrate, fps, captionStyle } = this.spec;
 
     const fontFile = process.platform === "win32"
-      ? "C\\\\:/Windows/Fonts/arial.ttf"
-      : "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf";
+      ? "C:/Windows/Fonts/arialbd.ttf"
+      : "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
 
     const drawtextFilters = subtitles.flatMap((sub) =>
       buildSubtitleFilters(sub, fontFile, captionStyle),

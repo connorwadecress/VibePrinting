@@ -1,21 +1,25 @@
 /**
  * Job manager — owns the lifecycle of pipeline child processes.
  *
- * The web UI never imports the pipeline directly. Instead, when a
- * user (or the scheduler) wants to run the pipeline, the job manager
- * spawns `npx tsx src/generate.ts --brand=...` and streams the
- * child's stdout/stderr into the {@link job-store} so the SSE
- * endpoint can replay it to the browser.
+ * The web UI never imports the pipeline directly. Instead, when a user
+ * (or the scheduler) wants to run the pipeline, the job manager spawns
+ * `npx tsx src/generate.ts --brand=...` and streams stdout/stderr into
+ * the job-store so the SSE endpoint can replay it to the browser.
  *
- * Concurrency policy:
- *   - At most one active job per brand. Additional starts for the
- *     same brand are rejected with a clear error message; the UI is
- *     responsible for surfacing it. (We do NOT queue them — the
- *     scheduler decides whether to skip or wait.)
+ * Concurrency policy (global queue):
+ *   At most VP_MAX_CONCURRENT_JOBS (default: 1) pipeline processes may
+ *   run simultaneously across ALL brands and users. Additional start
+ *   requests do NOT throw — they enqueue the job and return a record
+ *   with status="queued" and a queuePosition. When a running job
+ *   reaches a terminal state, drainQueue() automatically spawns the
+ *   next pending job.
  *
- * Cancellation: SIGTERM the child. The pipeline does not have a
- * graceful drain — that's fine for now; partial run dirs are not
- * a problem because nothing has been uploaded yet.
+ *   Set VP_MAX_CONCURRENT_JOBS=2 (etc.) in the environment to allow
+ *   parallel runs if the host has enough resources.
+ *
+ * Cancellation:
+ *   - Running jobs: SIGTERM the child.
+ *   - Queued jobs:  removed from the pending queue immediately.
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
@@ -28,6 +32,7 @@ import {
   updateJob,
   appendJobLog,
   hasActiveJobForBrand,
+  countRunningJobs,
   getJob,
   type JobRecord,
   type JobTrigger,
@@ -49,17 +54,37 @@ export interface StartRunResult {
   job: JobRecord;
 }
 
-/** PID -> child handle. Used so /api/runs/[jobId]/cancel can SIGTERM it. */
+// ---------------------------------------------------------------------------
+// Process handles — jobId → child. Used for SIGTERM on cancel.
+// ---------------------------------------------------------------------------
 const children = new Map<string, ChildProcessWithoutNullStreams>();
+
+// ---------------------------------------------------------------------------
+// Global pending queue — anchored on globalThis so all webpack chunks
+// share the same instance (same reason as job-store's _vpJobs).
+// ---------------------------------------------------------------------------
+type QueueEntry = { input: StartRunInput; jobId: string };
+type QueueGlobal = { _vpPendingQueue?: QueueEntry[] };
+const gq = globalThis as typeof globalThis & QueueGlobal;
+if (!gq._vpPendingQueue) gq._vpPendingQueue = [];
+const pendingQueue: QueueEntry[] = gq._vpPendingQueue;
+
+// ---------------------------------------------------------------------------
+// Config helpers
+// ---------------------------------------------------------------------------
+
+function getMaxConcurrent(): number {
+  return Math.max(1, Number(process.env.VP_MAX_CONCURRENT_JOBS ?? "1") || 1);
+}
 
 /**
  * Repo root — the directory that contains `src/generate.ts`.
  *
  * In Docker the Next server runs with cwd=`/app` so cwd already is the
  * repo root. In local dev `npm run web:dev` invokes the workspace
- * script, which sets cwd to `web/`, so we have to walk up until we find
- * `src/generate.ts`. Fall back to cwd if nothing matches so the spawn
- * still produces a recognizable error rather than silently misbehaving.
+ * script, which sets cwd to `web/`, so we walk up until we find
+ * `src/generate.ts`. Fall back to cwd so the spawn still produces a
+ * recognizable error rather than silently misbehaving.
  */
 const REPO_ROOT = (() => {
   let dir = path.resolve(process.cwd());
@@ -73,7 +98,6 @@ const REPO_ROOT = (() => {
 })();
 
 function newJobId(): string {
-  // job_<base36 epoch>_<6 hex>
   const ts = Date.now().toString(36);
   const rnd = crypto.randomBytes(3).toString("hex");
   return `job_${ts}_${rnd}`;
@@ -89,22 +113,21 @@ function buildArgs(input: StartRunInput): string[] {
   return args;
 }
 
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 /**
- * Spawn a pipeline run. Synchronous bookkeeping (job-store insert,
- * concurrency check) happens before the child returns; the child
- * itself runs in the background and updates the store via its
- * stdout/stderr listeners.
+ * Request a pipeline run. If a concurrency slot is available the job
+ * is spawned immediately (status transitions queued→running). If all
+ * slots are occupied the job is held in the pending queue with
+ * status="queued" and a queuePosition until a slot opens up.
  *
- * Returns the JobRecord at the moment of spawn. The caller (HTTP
- * handler) typically redirects the user to /runs/[jobId] where the
- * SSE stream takes over.
+ * Never throws due to concurrency — callers always get a JobRecord back.
  */
 export function startRun(input: StartRunInput): StartRunResult {
   if (ALLOWED_BRANDS && !ALLOWED_BRANDS.has(input.brandId)) {
     throw new Error(`Brand "${input.brandId}" is not allowed in this instance.`);
-  }
-  if (hasActiveJobForBrand(input.brandId)) {
-    throw new Error(`A run is already in progress for brand "${input.brandId}".`);
   }
 
   const jobId = newJobId();
@@ -126,8 +149,76 @@ export function startRun(input: StartRunInput): StartRunResult {
   };
   insertJob(record);
 
-  // Spawn `npx tsx src/generate.ts ...` from the repo root so the
-  // pipeline finds brands/, output/, .env, etc. relative to cwd.
+  const maxConcurrent = getMaxConcurrent();
+  const running = countRunningJobs();
+
+  if (running >= maxConcurrent) {
+    // No free slot — enqueue.
+    pendingQueue.push({ input, jobId });
+    const position = pendingQueue.length;
+    updateJob(jobId, { queuePosition: position });
+    appendJobLog(
+      jobId,
+      `[job] queued at position ${position} (running=${running}, max-concurrent=${maxConcurrent})`,
+    );
+    return { jobId, job: getJob(jobId)! };
+  }
+
+  // Slot available — spawn immediately.
+  spawnJob(jobId, input, args, trigger, platforms);
+  return { jobId, job: getJob(jobId)! };
+}
+
+/**
+ * Cancel a job whether it's running or still in the pending queue.
+ * Returns true if anything was actually cancelled.
+ */
+export function cancelJob(jobId: string): boolean {
+  // Check pending queue first.
+  const queueIdx = pendingQueue.findIndex((item) => item.jobId === jobId);
+  if (queueIdx !== -1) {
+    pendingQueue.splice(queueIdx, 1);
+    // Renumber remaining positions.
+    pendingQueue.forEach((item, i) => updateJob(item.jobId, { queuePosition: i + 1 }));
+    updateJob(jobId, {
+      status: "cancelled",
+      endedAt: new Date().toISOString(),
+      error: "cancelled by operator",
+      queuePosition: undefined,
+    });
+    appendJobLog(jobId, `[job] cancelled while queued`);
+    return true;
+  }
+
+  // Otherwise SIGTERM the child.
+  const child = children.get(jobId);
+  if (!child) return false;
+  // Mark cancelled BEFORE sending the signal so the close handler
+  // can read the intent and produce the right terminal status.
+  updateJob(jobId, { status: "cancelled" });
+  try {
+    child.kill("SIGTERM");
+  } catch {
+    // Already dead; the close handler will still fire.
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawn the pipeline child for a job that has a free concurrency slot.
+ * Updates the job record from queued → running.
+ */
+function spawnJob(
+  jobId: string,
+  input: StartRunInput,
+  args: string[],
+  trigger: JobTrigger,
+  platforms: string[],
+): void {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     VP_TRIGGER: trigger,
@@ -148,22 +239,50 @@ export function startRun(input: StartRunInput): StartRunResult {
       status: "failed",
       endedAt: new Date().toISOString(),
       error: `failed to spawn: ${(err as Error).message}`,
+      queuePosition: undefined,
     });
+    drainQueue();
     throw err;
   }
 
   children.set(jobId, child);
-  updateJob(jobId, { status: "running", pid: child.pid });
+  updateJob(jobId, { status: "running", pid: child.pid, queuePosition: undefined });
   appendJobLog(jobId, `[job] spawn npx tsx ${args.join(" ")}`);
   if (platforms.length > 0) appendJobLog(jobId, `[job] VP_PLATFORMS=${platforms.join(",")}`);
 
   attachStream(jobId, child);
+}
 
-  return { jobId, job: getJob(jobId)! };
+/**
+ * Check if a pending job can be promoted. Called after every terminal
+ * state transition so the queue drains automatically.
+ */
+function drainQueue(): void {
+  if (pendingQueue.length === 0) return;
+  if (countRunningJobs() >= getMaxConcurrent()) return;
+
+  const next = pendingQueue.shift();
+  if (!next) return;
+
+  // Renumber remaining queue positions after the shift.
+  pendingQueue.forEach((item, i) => updateJob(item.jobId, { queuePosition: i + 1 }));
+
+  const { input, jobId } = next;
+  const job = getJob(jobId);
+  if (!job || job.status === "cancelled") {
+    // Job was cancelled while waiting — try the next one.
+    drainQueue();
+    return;
+  }
+
+  appendJobLog(jobId, `[job] dequeued — spawning now`);
+  const args = buildArgs(input);
+  const platforms = input.upload ? input.platforms ?? [] : [];
+  const trigger = input.trigger ?? "manual";
+  spawnJob(jobId, input, args, trigger, platforms);
 }
 
 function attachStream(jobId: string, child: ChildProcessWithoutNullStreams): void {
-  // Buffered line splitter — stdout chunks aren't line-aligned.
   const splitter = (label: "out" | "err") => {
     let buf = "";
     return (chunk: Buffer) => {
@@ -194,11 +313,7 @@ function attachStream(jobId: string, child: ChildProcessWithoutNullStreams): voi
     children.delete(jobId);
     const current = getJob(jobId);
     const wasCancelled = current?.status === "cancelled";
-    const status = wasCancelled
-      ? "cancelled"
-      : code === 0
-        ? "success"
-        : "failed";
+    const status = wasCancelled ? "cancelled" : code === 0 ? "success" : "failed";
     const errMessage = wasCancelled
       ? "cancelled by operator"
       : code === 0
@@ -210,24 +325,14 @@ function attachStream(jobId: string, child: ChildProcessWithoutNullStreams): voi
       exitCode: code ?? undefined,
       error: errMessage,
     });
-    appendJobLog(jobId, `[job] ${status} (exit=${code ?? "null"}${signal ? `, signal=${signal}` : ""})`);
+    appendJobLog(
+      jobId,
+      `[job] ${status} (exit=${code ?? "null"}${signal ? `, signal=${signal}` : ""})`,
+    );
+    // Promote the next waiting job now that this slot is free.
+    drainQueue();
   });
 }
 
-/**
- * Cancel a running job. Returns true if a SIGTERM was actually sent.
- * No-ops if the job is already in a terminal state.
- */
-export function cancelJob(jobId: string): boolean {
-  const child = children.get(jobId);
-  if (!child) return false;
-  // Mark cancelled BEFORE sending the signal so the close handler
-  // can read the intent and produce the right terminal status.
-  updateJob(jobId, { status: "cancelled" });
-  try {
-    child.kill("SIGTERM");
-  } catch {
-    // Already dead; the close handler will still fire.
-  }
-  return true;
-}
+// Re-export so the scheduler can still call this without importing job-store.
+export { hasActiveJobForBrand };

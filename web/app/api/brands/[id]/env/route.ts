@@ -1,19 +1,18 @@
 /**
- * GET  /api/brands/[id]   — full ChannelProfile JSON
- * PUT  /api/brands/[id]   — replace ChannelProfile (zod-validated, atomic write)
+ * GET  /api/brands/[id]/env  — read whitelisted brand env vars
+ * PUT  /api/brands/[id]/env  — write a partial patch of whitelisted keys
  *
- * Both require the session to own the brand. Admin sessions own all brands.
+ * Both require session ownership of the brand.
+ * Only keys in BRAND_ENV_WHITELIST are readable or writable.
  */
 
 import { requireAuth, canAccessBrand, brandForbidden } from "@/lib/auth";
-import { readBrandProfile, writeBrandProfile } from "@/lib/brand-io";
-import { ZodError } from "zod";
+import { readBrandEnv, writeBrandEnv } from "@/lib/brand-env-io";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 interface RouteContext {
-  // Next 15 returns params as a Promise that must be awaited.
   params: Promise<{ id: string }>;
 }
 
@@ -25,15 +24,15 @@ export async function GET(request: Request, context: RouteContext) {
   if (!canAccessBrand(id, auth)) return brandForbidden(id);
 
   try {
-    const profile = readBrandProfile(id);
-    return new Response(JSON.stringify({ profile }), {
+    const env = readBrandEnv(id);
+    return new Response(JSON.stringify({ env }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
   } catch (err) {
     return new Response(
       JSON.stringify({ error: (err as Error).message ?? String(err) }),
-      { status: 404, headers: { "content-type": "application/json" } },
+      { status: 500, headers: { "content-type": "application/json" } },
     );
   }
 }
@@ -45,9 +44,9 @@ export async function PUT(request: Request, context: RouteContext) {
   const { id } = await context.params;
   if (!canAccessBrand(id, auth)) return brandForbidden(id);
 
-  let payload: unknown;
+  let body: unknown;
   try {
-    payload = await request.json();
+    body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: "invalid json" }), {
       status: 400,
@@ -55,22 +54,23 @@ export async function PUT(request: Request, context: RouteContext) {
     });
   }
 
+  if (!body || typeof body !== "object") {
+    return new Response(JSON.stringify({ error: "body must be an object" }), {
+      status: 400,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
   try {
-    const saved = writeBrandProfile(id, payload);
-    return new Response(JSON.stringify({ profile: saved }), {
+    const env = writeBrandEnv(id, body as Record<string, string>);
+    return new Response(JSON.stringify({ env }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
   } catch (err) {
-    if (err instanceof ZodError) {
-      return new Response(
-        JSON.stringify({ error: "validation_failed", issues: err.issues }),
-        { status: 400, headers: { "content-type": "application/json" } },
-      );
-    }
     return new Response(
       JSON.stringify({ error: (err as Error).message ?? String(err) }),
-      { status: 500, headers: { "content-type": "application/json" } },
+      { status: 400, headers: { "content-type": "application/json" } },
     );
   }
 }

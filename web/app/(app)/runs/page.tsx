@@ -106,7 +106,7 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td data-label="Lane" className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
               <td data-label="Trigger" className="text-xs text-fg-muted">{j.trigger}</td>
               <td data-label="Status">
-                <StatusPill status={j.status} />
+                <StatusPill status={j.status} queuePosition={j.queuePosition} />
               </td>
               <td className="text-right">
                 <Link
@@ -124,7 +124,7 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
   );
 }
 
-function StatusPill({ status }: { status: JobRecord["status"] }) {
+function StatusPill({ status, queuePosition }: { status: JobRecord["status"]; queuePosition?: number }) {
   const cls =
     status === "success"
       ? "pill-success"
@@ -133,7 +133,9 @@ function StatusPill({ status }: { status: JobRecord["status"] }) {
         : status === "cancelled"
           ? "pill-muted"
           : "pill-info";
-  return <span className={cls}>{status}</span>;
+  const label =
+    status === "queued" && queuePosition != null ? `queued #${queuePosition}` : status;
+  return <span className={cls}>{label}</span>;
 }
 
 function formatTime(iso: string): string {

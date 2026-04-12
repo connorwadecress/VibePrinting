@@ -1,38 +1,39 @@
 /**
  * Active-brand selection for the admin UI.
  *
- * The admin UI is scoped to one brand at a time. The operator picks a
- * brand from the header dropdown and every page reads this selection
- * to filter its data. The choice is persisted in a cookie so server
- * components can read it synchronously during SSR.
+ * The UI is scoped to one brand at a time via the header dropdown.
+ * The selected brand is persisted in a cookie so server components
+ * can read it during SSR.
  *
- * If no cookie is set (first visit, cookie expired) or the stored id
- * no longer corresponds to a real brand folder, we fall back to the
- * first available brand. This guarantees server components always
- * have a brand to render against.
+ * Brand list is filtered to the brands owned by the current session
+ * so users never see each other's brands in the dropdown.
  */
 
 import { cookies } from "next/headers";
 import { listBrandIds } from "@/lib/brand-io";
+import { getServerSession, filterBrands } from "@/lib/auth";
 
 export const ACTIVE_BRAND_COOKIE = "vp_active_brand";
-/** 365 days — this is a UI preference, not a security token. */
+/** 365 days — UI preference, not a security token. */
 export const ACTIVE_BRAND_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export interface ActiveBrandState {
   /** The resolved active brand id, or null if no brands are configured. */
   activeBrandId: string | null;
-  /** All brand ids discoverable on disk. */
+  /** All brand ids visible to this session. */
   brandIds: string[];
 }
 
 /**
- * Resolve the active brand for the current request. Falls back to the
- * first available brand if the cookie is missing or points at an
- * unknown id. Returns null when no brands are configured at all.
+ * Resolve the active brand for the current request.
+ * Filters available brands to those owned by the current user's session.
+ * Falls back to the first available brand if the cookie is missing or stale.
  */
 export async function resolveActiveBrand(): Promise<ActiveBrandState> {
-  const brandIds = listBrandIds();
+  const session = await getServerSession();
+  const allIds = listBrandIds();
+  const brandIds = session ? filterBrands(allIds, session) : [];
+
   if (brandIds.length === 0) {
     return { activeBrandId: null, brandIds: [] };
   }

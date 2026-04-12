@@ -6,6 +6,17 @@
  * alias declared in `tsconfig.json`.
  */
 
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import { config as loadDotenv } from "dotenv";
+
+// Load the repo-root .env so VP_USER_* and other engine vars are visible to
+// Next.js at dev time and during `next build`. Next only auto-loads .env from
+// its own project root (web/), so we pull in the parent explicitly.
+// .env.local at either level can still override individual keys.
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+loadDotenv({ path: path.join(REPO_ROOT, ".env"), override: false });
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
