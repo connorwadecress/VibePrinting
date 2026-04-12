@@ -68,7 +68,6 @@ function buildUserRegistry(): Map<string, UserEntry> {
       : [];
     registry.set(id, { token, ownedBrands });
   }
-  console.log("[auth] user registry:", Array.from(registry.keys()));
   return registry;
 }
 
