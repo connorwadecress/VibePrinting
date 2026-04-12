@@ -14,7 +14,7 @@ services:
     environment:
       - NODE_ENV=production
       - TZ=${TZ:-America/Los_Angeles}
-      - SECURE_COOKIE=${SECURE_COOKIE:-true}
+      - SECURE_COOKIE=${SECURE_COOKIE:-false}
       - VP_MAX_CONCURRENT_JOBS=${VP_MAX_CONCURRENT_JOBS:-1}
     volumes:
       - ./brands:/app/brands
