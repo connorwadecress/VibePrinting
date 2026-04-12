@@ -2,6 +2,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LlmClient } from "../../domain/interfaces/llm-client.js";
 import { log } from "../../utils/logger.js";
 
+function extractJson(text: string): string {
+  // Strip markdown code fences
+  let s = text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+  // Locate the outermost JSON object or array
+  const start = s.search(/[{[]/);
+  if (start > 0) s = s.slice(start);
+  const end = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+  if (end !== -1 && end < s.length - 1) s = s.slice(0, end + 1);
+  return s;
+}
+
 export class ClaudeClient implements LlmClient {
   private readonly client: Anthropic;
   private lastRequestMs = 0;
@@ -26,8 +37,7 @@ export class ClaudeClient implements LlmClient {
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
-    const cleaned = text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-    return JSON.parse(cleaned) as T;
+    return JSON.parse(extractJson(text)) as T;
   }
 
   private async rateLimit(): Promise<void> {

@@ -28,7 +28,11 @@ export class GeminiClient implements LlmClient {
     });
 
     const text = result.response.text();
-    return JSON.parse(text) as T;
+    const start = text.search(/[{[]/);
+    const trimmed = start > 0 ? text.slice(start) : text;
+    const end = Math.max(trimmed.lastIndexOf("}"), trimmed.lastIndexOf("]"));
+    const cleaned = end !== -1 && end < trimmed.length - 1 ? trimmed.slice(0, end + 1) : trimmed;
+    return JSON.parse(cleaned) as T;
   }
 
   private async rateLimit(): Promise<void> {
