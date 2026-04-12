@@ -87,12 +87,11 @@ export function BrandEnvEditor({ brandId, initial }: Props) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(values),
       });
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setError(data.error ?? `Save failed (${res.status})`);
         return;
       }
-      setValues(data.env as BrandEnvMap);
       setSaved(true);
     } catch (err) {
       setError((err as Error).message ?? "Network error");
@@ -118,7 +117,7 @@ export function BrandEnvEditor({ brandId, initial }: Props) {
                   <div className="relative mt-1.5 flex items-center gap-1">
                     <input
                       type={show ? "text" : "password"}
-                      value={values[key]}
+                      value={values[key] ?? ""}
                       onChange={(e) => onChange(key, e.target.value)}
                       placeholder={KEY_PLACEHOLDERS[key] ?? (isSecret ? "not set" : "")}
                       className="input input-sm flex-1 font-mono text-xs"

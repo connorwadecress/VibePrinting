@@ -32,7 +32,7 @@ export const BRAND_ENV_WHITELIST = [
 ] as const;
 
 export type BrandEnvKey = (typeof BRAND_ENV_WHITELIST)[number];
-export type BrandEnvMap = Record<BrandEnvKey, string>;
+export type BrandEnvMap = Partial<Record<BrandEnvKey, string>>;
 
 export interface EnvGroup {
   label: string;
