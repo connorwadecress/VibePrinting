@@ -77,6 +77,11 @@ export class ScriptGenerationStage implements PipelineStage {
   readonly name = "script-generation";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    if (state.script) {
+      log(this.name, `Resume: reusing script (${state.script.beats.length} beats)`);
+      return;
+    }
+
     const { topic, research, lane } = state;
     if (!topic) throw new Error("No topic in pipeline state");
     if (!research) throw new Error("No research in pipeline state");

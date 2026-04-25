@@ -207,6 +207,7 @@ docs/                                — architecture.md, editorial-plan.md, roa
 | `--lane=<id>` | Run a specific content lane (must match an id in channel.json) |
 | `--dry-run` | Stop after script generation — no TTS, footage, video, or upload |
 | `--upload` | Upload final video to all configured platforms |
+| `--resume=<run-dir>` | Resume a halted run in place (also accepts `latest` or a bare run id like `20260425-093015`). Skips fresh-run setup, rehydrates pipeline state from disk, and re-evaluates approval gates. |
 
 ### PowerShell wrappers
 
@@ -215,6 +216,7 @@ docs/                                — architecture.md, editorial-plan.md, roa
 .\generate.ps1 -Brand signal-drop                       # Full pipeline
 .\generate.ps1 -Brand signal-drop -Lane history-flash   # Specific lane
 .\generate.ps1 -Brand signal-drop -Upload               # Full pipeline + upload
+.\generate.ps1 -Brand signal-drop -Resume latest -Upload  # Continue halted run after editing approvals/*.json
 .\run-loop.ps1 -Brand signal-drop                       # Auto-generate + upload every 20 min
 .\run-loop.ps1 -Brand signal-drop -IntervalMinutes 30 -RunsMax 5
 .\retry-upload.ps1 -Brand signal-drop -Platform tiktok   # Re-upload latest run

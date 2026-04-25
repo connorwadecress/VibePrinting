@@ -1,12 +1,18 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { PipelineState } from "../../domain/models.js";
 import { log, logTiming } from "../../utils/logger.js";
+import fs from "node:fs";
 import path from "node:path";
 
 export class AssemblyStage implements PipelineStage {
   readonly name = "assembly";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    if (state.rawVideoPath && fs.existsSync(state.rawVideoPath)) {
+      log(this.name, `Resume: reusing assembled video at ${state.rawVideoPath}`);
+      return;
+    }
+
     const { scenes, clips, voiceover, script } = state;
     if (!scenes) throw new Error("No scenes in pipeline state");
     if (!clips) throw new Error("No clips in pipeline state");

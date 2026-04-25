@@ -1,6 +1,7 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { PipelineState, StockClip } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+import { writeClips } from "../../utils/run-resume.js";
 import path from "node:path";
 
 export class StockFootageStage implements PipelineStage {
@@ -9,6 +10,11 @@ export class StockFootageStage implements PipelineStage {
   async execute(state: PipelineState, context: StageContext): Promise<void> {
     const scenes = state.scenes;
     if (!scenes) throw new Error("No scenes in pipeline state");
+
+    if (state.clips && state.clips.length === scenes.length) {
+      log(this.name, `Resume: reusing ${state.clips.length} clips`);
+      return;
+    }
 
     log(this.name, `Fetching clips for ${scenes.length} scenes...`);
     const clipsDir = path.join(context.workDir, "clips");
@@ -40,5 +46,6 @@ export class StockFootageStage implements PipelineStage {
 
     log(this.name, `Downloaded ${clips.length} clips`);
     state.clips = clips;
+    writeClips(context.workDir, clips);
   }
 }

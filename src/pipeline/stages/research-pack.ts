@@ -32,6 +32,11 @@ export class ResearchPackStage implements PipelineStage {
   readonly name = "research-pack";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    if (state.research) {
+      log(this.name, `Resume: reusing research (${state.research.claims.length} claims)`);
+      return;
+    }
+
     const topic = state.topic;
     if (!topic) throw new Error("No topic in pipeline state");
 

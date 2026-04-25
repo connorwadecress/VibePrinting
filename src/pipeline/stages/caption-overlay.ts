@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { PipelineState } from "../../domain/models.js";
@@ -8,6 +9,12 @@ export class CaptionOverlayStage implements PipelineStage {
   readonly name = "caption-overlay";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    const finalPath = path.join(context.workDir, "final.mp4");
+    if (state.outputVideoPath && fs.existsSync(state.outputVideoPath) && state.outputVideoPath === finalPath) {
+      log(this.name, `Resume: reusing final video at ${state.outputVideoPath}`);
+      return;
+    }
+
     const { rawVideoPath, voiceover } = state;
     if (!rawVideoPath) throw new Error("No raw video path in pipeline state");
     if (!voiceover) throw new Error("No voiceover in pipeline state");

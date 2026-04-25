@@ -31,6 +31,11 @@ export class TopicDiscoveryStage implements PipelineStage {
   readonly name = "topic-discovery";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    if (state.topic) {
+      log(this.name, `Resume: reusing topic "${state.topic.titleAngle}"`);
+      return;
+    }
+
     const lane = state.lane;
     if (!lane) throw new Error("No lane set in pipeline state");
 

@@ -1,6 +1,7 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { PipelineState, ScenePlanWithKeywords } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+import { writeScenes } from "../../utils/run-resume.js";
 
 const SYSTEM_PROMPT = `You are a visual planner for YouTube Shorts. Convert script beats into scene plans with stock footage search keywords.
 
@@ -45,6 +46,11 @@ export class ScenePlanStage implements PipelineStage {
   readonly name = "scene-plan";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
+    if (state.scenes && state.scenes.length > 0) {
+      log(this.name, `Resume: reusing ${state.scenes.length} scenes`);
+      return;
+    }
+
     const script = state.script;
     if (!script) throw new Error("No script in pipeline state");
 
@@ -75,6 +81,7 @@ Plan scenes for this script. Ensure total scene durations roughly match ${script
         const scenes = await context.llm.generateJSON<ScenePlanWithKeywords[]>(SYSTEM_PROMPT, userPrompt);
         log(this.name, `Planned ${scenes.length} scenes`);
         state.scenes = scenes;
+        writeScenes(context.workDir, scenes);
         return;
       } catch (err: any) {
         lastError = err;
