@@ -5,7 +5,9 @@ param(
 
     [switch]$DryRun,
 
-    [switch]$Upload
+    [switch]$Upload,
+
+    [string]$Resume
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,6 +22,7 @@ if ($Brand)  { $tsArgs += "--brand=$Brand" }
 if ($Lane)   { $tsArgs += "--lane=$Lane" }
 if ($DryRun) { $tsArgs += "--dry-run" }
 if ($Upload) { $tsArgs += "--upload" }
+if ($Resume) { $tsArgs += "--resume=$Resume" }
 
 $argDisplay = if ($tsArgs.Count -gt 0) { $tsArgs -join " " } else { "(default - random lane, full pipeline)" }
 Write-Host "Options: $argDisplay" -ForegroundColor DarkGray

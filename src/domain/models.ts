@@ -122,6 +122,62 @@ export interface ScenePlanWithKeywords extends ScenePlan {
   visualDescription: string;
 }
 
+export type ApprovalStatus = "pending" | "approved" | "revisions_requested" | "rejected";
+
+export interface ApprovalGateRecord {
+  gateId: string;
+  label: string;
+  status: ApprovalStatus;
+  required: boolean;
+  updatedAt: string;
+  reviewer: string | null;
+  notes: string | null;
+  artifactPath: string;
+}
+
+export interface StoryboardScene {
+  sceneIndex: number;
+  title: string;
+  narration: string;
+  storyPurpose: string;
+  visualIntent: string;
+  camera: string;
+  composition: string;
+  motion: string;
+  caption: string;
+  seconds: number;
+  continuityNotes: string[];
+  assetNeeds: string[];
+  /** Stock-photo preview matching what stock-footage stage will likely fetch. */
+  sketchFramePath: string;
+  /** Optional AI-generated concept-art sketch for creative reference. */
+  aiSketchPath?: string;
+}
+
+export interface StoryboardDeck {
+  runId: string;
+  brandId: string;
+  displayName: string;
+  hook: string;
+  payoff: string;
+  scenes: StoryboardScene[];
+  generatedAt: string;
+}
+
+export interface AssetManifest {
+  version: number;
+  generatedAt: string;
+  categories: {
+    storyboardTemplates: string[];
+    captionThemes: string[];
+    motionPresets: string[];
+    textures: string[];
+    transitions: string[];
+    musicBeds: string[];
+    sfx: string[];
+  };
+}
+
 export interface ClipCandidate {
   video: { id: number; width: number; height: number; duration: number; tags: unknown[] };
   file: { link: string; width: number | null; height: number | null; quality: string };
@@ -142,6 +198,12 @@ export interface PipelineState {
   research?: ResearchPack;
   script?: ShortScript;
   scenes?: ScenePlanWithKeywords[];
+  storyboard?: StoryboardDeck;
+  approvals?: Record<string, ApprovalGateRecord>;
+  assetManifest?: AssetManifest;
+  halted?: boolean;
+  haltReason?: string;
+  haltedGateId?: string;
   voiceover?: VoiceoverResult;
   clips?: StockClip[];
   rawVideoPath?: string;

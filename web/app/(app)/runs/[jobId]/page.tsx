@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJob } from "@/lib/job-store";
-import { RunStreamView } from "@/components/RunStreamView";
+import { RunDetailView } from "@/components/RunDetailView";
 
 /**
  * /runs/[jobId] — single job page. Server-renders the current
@@ -58,7 +58,7 @@ export default async function RunPage({ params }: PageProps) {
         )}
       </dl>
 
-      <RunStreamView initialJob={job} />
+      <RunDetailView initialJob={job} />
     </section>
   );
 }

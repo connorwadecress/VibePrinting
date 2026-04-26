@@ -5,6 +5,7 @@ import type { UploadLogEntry } from "../../domain/upload-log.js";
 import { log, logError } from "../../utils/logger.js";
 import { appendUploadLog, readTriggerFromEnv } from "../../utils/upload-log.js";
 import { enqueueDeletion } from "../../utils/deletion-queue.js";
+import { isApproved } from "../../utils/approval-gates.js";
 import fs from "node:fs";
 
 export class UploadStage implements PipelineStage {
@@ -15,6 +16,11 @@ export class UploadStage implements PipelineStage {
     const script = state.script;
     if (!videoPath) throw new Error("No output video path in pipeline state");
     if (!script) throw new Error("No script in pipeline state");
+
+    const finalGate = state.approvals?.["final-gate"];
+    if (!isApproved(finalGate?.status)) {
+      throw new Error("Upload blocked: final approval gate is not approved");
+    }
 
     const configuredUploaders = context.uploaders.filter((u) => u.isConfigured());
 

@@ -1,4 +1,4 @@
-export type LlmProvider = "gemini" | "claude";
+export type LlmProvider = "gemini" | "claude" | "mock";
 
 export interface AppConfig {
   // LLM provider selection
