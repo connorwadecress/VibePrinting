@@ -148,7 +148,10 @@ export interface StoryboardScene {
   seconds: number;
   continuityNotes: string[];
   assetNeeds: string[];
+  /** Stock-photo preview matching what stock-footage stage will likely fetch. */
   sketchFramePath: string;
+  /** Optional AI-generated concept-art sketch for creative reference. */
+  aiSketchPath?: string;
 }
 
 export interface StoryboardDeck {

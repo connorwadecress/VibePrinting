@@ -88,7 +88,11 @@ test("resume with script approved reaches storyboard gate and writes storyboard 
   assert.equal(fs.existsSync(storyboardApprovalPath), true);
   assert.equal(fs.existsSync(manifestPath), true);
   assert.equal(fs.existsSync(framesDir), true);
-  assert.ok(fs.readdirSync(framesDir).some((name) => name.endsWith(".svg")));
+  // Frames may be .svg (wireframe fallback when no PEXELS_API_KEY) or .jpg
+  // (real Pexels preview when a key is configured). Assert that we got at
+  // least one frame in either format.
+  const frameFiles = fs.readdirSync(framesDir);
+  assert.ok(frameFiles.some((name) => /\.(svg|jpe?g|png)$/i.test(name)));
   assert.match(stdout, /Pipeline halted for review/i);
   assert.match(stdout, /storyboard-gate\.json/i);
 

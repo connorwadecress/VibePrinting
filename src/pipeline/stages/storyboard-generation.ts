@@ -18,7 +18,12 @@ export class StoryboardGenerationStage implements PipelineStage {
 
     log(this.name, "Generating storyboard artifacts...");
     state.assetManifest = ensureGlobalAssetManifest(context.workDir);
-    const deck = writeStoryboardArtifacts(context.workDir, context.runId, context.profile, state);
+    const deck = await writeStoryboardArtifacts(
+      context.workDir,
+      context.runId,
+      context.profile,
+      state,
+    );
     log(this.name, `Storyboard deck created with ${deck.scenes.length} scenes`);
   }
 }

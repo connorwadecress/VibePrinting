@@ -47,6 +47,12 @@ export interface StartRunInput {
   platforms?: string[];
   trigger?: JobTrigger;
   schedulerId?: string | null;
+  /**
+   * Absolute path to an existing run-* directory to resume. Passed
+   * straight through to `generate.ts --resume=<path>` — `lane` is
+   * ignored in that case (the persisted lane wins).
+   */
+  resume?: string;
 }
 
 export interface StartRunResult {
@@ -105,7 +111,8 @@ function newJobId(): string {
 
 function buildArgs(input: StartRunInput): string[] {
   const args: string[] = ["src/generate.ts", `--brand=${input.brandId}`];
-  if (input.lane) args.push(`--lane=${input.lane}`);
+  if (input.resume) args.push(`--resume=${input.resume}`);
+  else if (input.lane) args.push(`--lane=${input.lane}`);
   if (input.dryRun) args.push("--dry-run");
   if (input.upload && input.platforms && input.platforms.length > 0) {
     args.push("--upload");
@@ -293,8 +300,12 @@ function attachStream(jobId: string, child: ChildProcessWithoutNullStreams): voi
         buf = buf.slice(idx + 1);
         const prefixed = label === "err" ? `[stderr] ${line}` : line;
         appendJobLog(jobId, prefixed);
-        // Parse "Run: <id> -> <path>" so the UI knows the run dir.
-        const match = line.match(/^\[pipeline\]\s+Run:\s+(\S+)\s+->\s+(.+)$/);
+        // Parse "Run: <id> -> <path>" or "Resume: <id> -> <path>" so the UI
+        // knows the run dir. The pipeline logger prefixes most lines with
+        // "[H:MM:SS AM] " — strip that optional prefix before matching.
+        const match = line.match(
+          /^(?:\[\d{1,2}:\d{2}:\d{2}\s?[AP]M\]\s+)?\[pipeline\]\s+(?:Run|Resume):\s+(\S+)\s+->\s+(.+)$/,
+        );
         if (match) {
           updateJob(jobId, { runDir: match[2].trim() });
         }

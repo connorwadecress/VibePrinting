@@ -3,6 +3,7 @@ import path from "node:path";
 import type { ChannelProfile } from "../domain/channel-profile.js";
 import type { AssetManifest, PipelineState, StoryboardDeck, StoryboardScene } from "../domain/models.js";
 import { ensureDir } from "./fs-helpers.js";
+import { log } from "./logger.js";
 
 function esc(value: string): string {
   return value
@@ -61,13 +62,46 @@ function inferMotion(text: string): string {
   return "Subtle motion / cut-based progression";
 }
 
-export function writeStoryboardArtifacts(
+export async function writeStoryboardArtifacts(
   workDir: string,
   runId: string,
   profile: ChannelProfile,
   state: PipelineState,
-): StoryboardDeck {
+): Promise<StoryboardDeck> {
   const storyboardScenes = buildStoryboardScenes(state);
+
+  const framesDir = path.join(workDir, "storyboard-frames");
+  ensureDir(framesDir);
+
+  // Pexels handles parallel just fine — fan out for all scenes at once.
+  // On failure for a scene we fall back to writing the wireframe SVG so
+  // the UI always has something to show.
+  await Promise.all(
+    storyboardScenes.map(async (scene) => {
+      const idx = String(scene.sceneIndex).padStart(2, "0");
+      const pexelsRel = path.join("storyboard-frames", `scene-${idx}.jpg`);
+      const pexelsAbs = path.join(workDir, pexelsRel);
+      const ok = await tryFetchPexelsPreview(scene, pexelsAbs);
+      if (ok) {
+        scene.sketchFramePath = pexelsRel;
+      } else {
+        const svgAbs = path.join(workDir, scene.sketchFramePath);
+        fs.writeFileSync(svgAbs, renderStoryboardSvg(scene));
+      }
+    }),
+  );
+
+  // Pollinations rate-limits at ~1 concurrent request per IP — parallel
+  // requests get back 429 instantly. Run them sequentially so each scene
+  // has a real shot at generating; total ≈ N × ~8s.
+  for (const scene of storyboardScenes) {
+    const idx = String(scene.sceneIndex).padStart(2, "0");
+    const aiRel = path.join("storyboard-frames", `scene-${idx}-concept.jpg`);
+    const aiAbs = path.join(workDir, aiRel);
+    const ok = await tryFetchPollinationsConcept(scene, runId, aiAbs);
+    if (ok) scene.aiSketchPath = aiRel;
+  }
+
   const deck: StoryboardDeck = {
     runId,
     brandId: profile.id,
@@ -78,19 +112,104 @@ export function writeStoryboardArtifacts(
     generatedAt: new Date().toISOString(),
   };
 
-  const framesDir = path.join(workDir, "storyboard-frames");
-  ensureDir(framesDir);
-
-  for (const scene of storyboardScenes) {
-    const abs = path.join(workDir, scene.sketchFramePath);
-    fs.writeFileSync(abs, renderStoryboardSvg(scene));
-  }
-
   fs.writeFileSync(path.join(workDir, "storyboard.json"), JSON.stringify(deck, null, 2));
   fs.writeFileSync(path.join(workDir, "storyboard-deck.html"), renderStoryboardHtml(deck));
 
   state.storyboard = deck;
   return deck;
+}
+
+/**
+ * Pull one landscape image from Pexels matching the scene's keywords and
+ * write it to `targetPath`. Returns true on success, false on any failure
+ * (no key, network, no results, write error). Failures are logged but
+ * never throw — the caller falls back to the placeholder SVG.
+ */
+async function tryFetchPexelsPreview(
+  scene: StoryboardScene,
+  targetPath: string,
+): Promise<boolean> {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) return false;
+
+  const query = (scene.assetNeeds[0] ?? scene.visualIntent).trim().slice(0, 80);
+  if (!query) return false;
+
+  try {
+    const url =
+      `https://api.pexels.com/v1/search?per_page=1&orientation=landscape&query=` +
+      encodeURIComponent(query);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(url, {
+      headers: { Authorization: apiKey },
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return false;
+
+    const json = (await res.json()) as {
+      photos?: { src?: { large?: string; medium?: string; original?: string } }[];
+    };
+    const src = json.photos?.[0]?.src?.large ?? json.photos?.[0]?.src?.medium;
+    if (!src) return false;
+
+    const imgRes = await fetch(src);
+    if (!imgRes.ok) return false;
+    const buf = Buffer.from(await imgRes.arrayBuffer());
+    fs.writeFileSync(targetPath, buf);
+    return true;
+  } catch (err) {
+    log("storyboard", `Pexels preview failed for scene ${scene.sceneIndex}: ${(err as Error).message}`);
+    return false;
+  }
+}
+
+/**
+ * Generate an AI concept-art sketch for the scene via Pollinations.ai.
+ * Free, no auth, but slow (~5–15s per image since it generates on demand).
+ * Returns true on success, false on any failure. We hard-cap at 20s so a
+ * stuck request can't block the rest of the pipeline.
+ *
+ * Seed = `${runId}-${sceneIndex}` so re-runs of the same scene return a
+ * cached image (Pollinations memoizes by full URL).
+ */
+async function tryFetchPollinationsConcept(
+  scene: StoryboardScene,
+  runId: string,
+  targetPath: string,
+): Promise<boolean> {
+  const subject = scene.visualIntent?.trim() || scene.assetNeeds.join(", ").trim();
+  if (!subject) return false;
+
+  const stylePrefix = "Cinematic storyboard sketch, hand-drawn concept art, dramatic composition:";
+  const prompt = `${stylePrefix} ${subject}`.slice(0, 480);
+  // runId-sceneIndex seed → Pollinations memoizes by full URL so re-runs
+  // of the same scene return cached images instantly.
+  const seed = encodeURIComponent(`${runId}-${scene.sceneIndex}`);
+  // turbo + 768×432 keeps generation around 5–12s per image. flux at higher
+  // resolutions routinely takes 30–60s, which would block the whole stage.
+  const url =
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+    `?width=768&height=432&nologo=true&model=turbo&seed=${seed}`;
+
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 60000);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) return false;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 1024) return false; // sanity: real images are >1KB
+    fs.writeFileSync(targetPath, buf);
+    return true;
+  } catch (err) {
+    log(
+      "storyboard",
+      `Pollinations concept failed for scene ${scene.sceneIndex}: ${(err as Error).message}`,
+    );
+    return false;
+  }
 }
 
 function renderStoryboardSvg(scene: StoryboardScene): string {

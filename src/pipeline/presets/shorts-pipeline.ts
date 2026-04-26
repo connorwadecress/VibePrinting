@@ -39,10 +39,15 @@ export function buildShortsPipeline(options: ShortsPipelineOptions = {}): Pipeli
       new StockFootageStage(),
       new AssemblyStage(),
       new CaptionOverlayStage(),
+      // Final review gate is always-on, regardless of upload intent. The
+      // operator should always preview the rendered video before either
+      // publishing OR archiving — without it, a finished video silently
+      // drops into the run dir with nobody noticing.
+      new FinalApprovalGateStage(),
     );
 
     if (options.upload) {
-      stages.push(new FinalApprovalGateStage(), new UploadStage());
+      stages.push(new UploadStage());
     }
   }
 
