@@ -2,7 +2,11 @@ import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeli
 import type { PipelineState, ShortScript } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
-const SYSTEM_PROMPT = `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts using the HPC framework.
+function buildSystemPrompt(targetSeconds: number): string {
+  // ~2.3 spoken words per second at slightly-faster TTS rate.
+  const minWords = Math.max(20, Math.round(targetSeconds * 2.0));
+  const maxWords = Math.max(minWords + 5, Math.round(targetSeconds * 2.5));
+  return `You are a scriptwriter for YouTube Shorts. Write punchy, story-shaped scripts using the HPC framework.
 
 === HPC FRAMEWORK (Hook → Progression → Climax) ===
 Every viral short follows this three-act structure:
@@ -35,7 +39,7 @@ Every viral short follows this three-act structure:
 === SCRIPT RULES ===
 - 4-6 beats, each with narration text and a visual intent description.
 - Call-to-action is a simple follow/like prompt.
-- Total narration must be speakable in 30-45 seconds. That means 55-80 words MAX. Count carefully — err short rather than long.
+- Total narration must be speakable in approximately ${targetSeconds} seconds. That means ${minWords}-${maxWords} words MAX. Count carefully — err short rather than long.
 - Write conversationally — as if explaining to a friend. No formal language.
 - Every beat narration should be 1-2 sentences max.
 
@@ -72,6 +76,7 @@ Respond with JSON:
     "topicHashtags": string[]
   }
 }`;
+}
 
 export class ScriptGenerationStage implements PipelineStage {
   readonly name = "script-generation";
@@ -103,7 +108,8 @@ PROGRESSION: Use the strongest research claims to build surprise and anticipatio
 CLIMAX: Deliver the payoff at the END — the "aha" moment the viewer has been waiting for.
 Remember: if the viewer gets the answer too early, they scroll away.`;
 
-    const script = await context.llm.generateJSON<ShortScript>(SYSTEM_PROMPT, userPrompt);
+    const systemPrompt = buildSystemPrompt(lane.targetDurationSeconds);
+    const script = await context.llm.generateJSON<ShortScript>(systemPrompt, userPrompt);
     log(this.name, `Script: ${script.beats.length} beats, ~${script.totalDurationSeconds}s`);
 
     state.script = script;

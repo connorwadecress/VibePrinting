@@ -18,6 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@700&family=Montserrat:wght@700&family=Oswald:wght@700&family=Poppins:wght@700&family=Roboto:wght@700&display=swap"
+        />
+      </head>
       <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );

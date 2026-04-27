@@ -204,13 +204,21 @@ export function BrandForm({ initial }: BrandFormProps) {
             <option value="en-AU-WilliamNeural" />
           </datalist>
         </Field>
-        <Field label="Edge rate">
-          <input
-            value={profile.ttsRate}
-            onChange={(e) => update("ttsRate", e.target.value)}
-            placeholder="+10%"
-            className="input input-sm mt-1.5"
-          />
+        <Field label="Edge rate (% faster than default)">
+          <div className="mt-1.5 flex items-center gap-2">
+            <input
+              type="number"
+              min={-50}
+              max={100}
+              step={5}
+              value={parseRatePercent(profile.ttsRate)}
+              onChange={(e) => update("ttsRate", formatRatePercent(Number(e.target.value)))}
+              className="input input-sm w-32"
+            />
+            <span className="text-xs text-fg-muted">
+              0 = default speed. Try 25-40 for snappier delivery.
+            </span>
+          </div>
         </Field>
 
         {(profile.ttsProvider ?? "edge") === "elevenlabs" && (
@@ -405,6 +413,17 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
       <div className="space-y-4">{children}</div>
     </div>
   );
+}
+
+function parseRatePercent(rate: string | undefined): number {
+  if (!rate) return 0;
+  const m = rate.match(/-?\d+(\.\d+)?/);
+  return m ? Math.round(Number(m[0])) : 0;
+}
+
+function formatRatePercent(n: number): string {
+  const v = Math.round(n);
+  return v >= 0 ? `+${v}%` : `${v}%`;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

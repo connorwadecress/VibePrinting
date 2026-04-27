@@ -6,6 +6,16 @@ import {
   type AnimatedCaptionConfig,
 } from "@pipeline/remotion/styles";
 
+const SUPPORTED_FONTS = [
+  "Montserrat",
+  "Inter",
+  "Poppins",
+  "Oswald",
+  "Roboto",
+  "Anton",
+  "Bebas Neue",
+];
+
 /**
  * Collapsible caption style override panel.
  *
@@ -71,11 +81,34 @@ export function CaptionStyleEditor({ value, onChange }: CaptionStyleEditorProps)
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Font family">
-          <input
-            value={merged.fontFamily}
-            onChange={(e) => update("fontFamily", e.target.value)}
-            className="input input-sm mt-1.5"
-          />
+          <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {SUPPORTED_FONTS.map((f) => {
+              const selected =
+                (SUPPORTED_FONTS.includes(merged.fontFamily) ? merged.fontFamily : "Montserrat") === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => update("fontFamily", f)}
+                  className={`flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left transition ${
+                    selected
+                      ? "border-accent bg-accent/10"
+                      : "border-border bg-surface hover:border-fg-subtle"
+                  }`}
+                >
+                  <span
+                    className="text-lg leading-tight"
+                    style={{ fontFamily: `'${f}', sans-serif`, fontWeight: 700 }}
+                  >
+                    {f}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide text-fg-subtle">
+                    Aa Bb 123
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </Field>
         <Field label="Font weight">
           <select

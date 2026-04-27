@@ -34,6 +34,7 @@
     "@google/generative-ai": "^0.24.1",
     "@remotion/bundler": "^4.0.445",
     "@remotion/captions": "^4.0.445",
+    "@remotion/google-fonts": "^4.0.452",
     "@remotion/media-utils": "^4.0.445",
     "@remotion/renderer": "^4.0.445",
     "dotenv": "^17.4.0",
