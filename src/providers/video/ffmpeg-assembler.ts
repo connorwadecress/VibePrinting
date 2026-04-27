@@ -77,10 +77,23 @@ export class FfmpegAssembler implements VideoAssembler {
 
   async prepareClip(inputPath: string, outputPath: string, targetDuration: number): Promise<void> {
     const { width, height, fps } = this.spec;
-    log("ffmpeg", `Preparing clip: ${path.basename(inputPath)} -> ${targetDuration}s`);
+    const sourceDuration = await this.getAudioDuration(inputPath).catch(() => 0);
+    const needsLoop = sourceDuration > 0 && sourceDuration < targetDuration;
+    log(
+      "ffmpeg",
+      `Preparing clip: ${path.basename(inputPath)} -> ${targetDuration.toFixed(1)}s${
+        needsLoop ? ` (looping ${sourceDuration.toFixed(1)}s source)` : ""
+      }`,
+    );
 
     return new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
+      const cmd = ffmpeg();
+      if (needsLoop) {
+        cmd.input(inputPath).inputOptions(["-stream_loop", "-1"]);
+      } else {
+        cmd.input(inputPath);
+      }
+      cmd
         .duration(targetDuration)
         .videoFilter([
           `scale=${width}:${height}:force_original_aspect_ratio=increase`,

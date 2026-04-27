@@ -3,6 +3,7 @@ import { readBrandProfile } from "@/lib/brand-io";
 import { readBrandEnv } from "@/lib/brand-env-io";
 import { BrandForm } from "@/components/BrandForm";
 import { BrandEnvEditor } from "@/components/BrandEnvEditor";
+import { BrandJsonEditor } from "@/components/BrandJsonEditor";
 import { BrandTabs } from "@/components/BrandTabs";
 
 /**
@@ -70,6 +71,11 @@ export default async function BrandEditorPage({ params }: PageProps) {
             id: "configuration",
             label: "Configuration",
             content: <BrandEnvEditor brandId={brandId} initial={envVars ?? {}} />,
+          },
+          {
+            id: "json",
+            label: "JSON",
+            content: profile ? <BrandJsonEditor initial={profile} /> : null,
           },
         ]}
       />
