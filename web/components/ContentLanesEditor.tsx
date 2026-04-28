@@ -77,7 +77,7 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
               </button>
             </div>
             <div className="flex-1 space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <label className="col-span-2 block">
                   <span className="label">Lane id</span>
                   <input
@@ -85,6 +85,19 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
                     onChange={(e) => update(idx, { id: e.target.value })}
                     className="input input-sm mt-1.5 font-mono"
                   />
+                </label>
+                <label className="block">
+                  <span className="label">Type</span>
+                  <select
+                    value={lane.type ?? "seven-api"}
+                    onChange={(e) =>
+                      update(idx, { type: e.target.value as ContentLane["type"] })
+                    }
+                    className="input input-sm mt-1.5"
+                  >
+                    <option value="seven-api">seven-api</option>
+                    <option value="reddit-story">reddit-story</option>
+                  </select>
                 </label>
                 <label className="block">
                   <span className="label">Target seconds</span>

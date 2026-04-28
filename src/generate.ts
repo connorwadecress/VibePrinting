@@ -12,6 +12,7 @@ import { FfmpegAssembler } from "./providers/video/ffmpeg-assembler.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { buildShortsPipeline } from "./pipeline/presets/shorts-pipeline.js";
+import { buildRedditStoryPipeline } from "./pipeline/presets/reddit-story-pipeline.js";
 import { runPipeline } from "./pipeline/runner.js";
 import { createRunDir } from "./utils/fs-helpers.js";
 import { loadTopicHistory, appendTopicHistory } from "./utils/topic-history.js";
@@ -120,8 +121,19 @@ async function main(): Promise<void> {
     topicHistory,
   };
 
-  // --- Build and run pipeline ---
-  const stages = buildShortsPipeline({ dryRun, upload });
+  // --- Build and run pipeline (dispatch by lane type) ---
+  const laneType = lane.type ?? "seven-api";
+  log("pipeline", `Lane type: ${laneType}`);
+  let stages;
+  switch (laneType) {
+    case "reddit-story":
+      stages = buildRedditStoryPipeline({ dryRun, upload });
+      break;
+    case "seven-api":
+    default:
+      stages = buildShortsPipeline({ dryRun, upload });
+      break;
+  }
   const state: PipelineState = { lane };
   const result = await runPipeline(stages, context, state);
 

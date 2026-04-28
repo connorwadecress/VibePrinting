@@ -1,10 +1,19 @@
 export type RiskLevel = "low" | "medium" | "high";
 
+/**
+ * Selects which hardcoded pipeline preset runs for this lane.
+ * Add a new value here, then add a matching preset in src/pipeline/presets/
+ * and a dispatch case in src/generate.ts.
+ */
+export type LaneType = "seven-api" | "reddit-story";
+
 export interface ContentLane {
   description: string;
   exampleHooks: string[];
   id: string;
   targetDurationSeconds: number;
+  /** Pipeline preset to run. Defaults to "seven-api" when omitted. */
+  type?: LaneType;
 }
 
 export interface TopicCandidate {

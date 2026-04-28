@@ -10,11 +10,14 @@
 
 import { z } from "zod";
 
+export const LaneTypeSchema = z.enum(["seven-api", "reddit-story"]);
+
 export const ContentLaneSchema = z.object({
   id: z.string().min(1),
   description: z.string().min(1),
   targetDurationSeconds: z.number().int().positive(),
   exampleHooks: z.array(z.string()).default([]),
+  type: LaneTypeSchema.optional(),
 });
 
 export const ChannelBrandingSchema = z.object({
