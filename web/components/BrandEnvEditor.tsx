@@ -13,17 +13,9 @@ interface Props {
 }
 
 const KEY_LABELS: Record<BrandEnvKey, string> = {
-  LLM_PROVIDER: "Provider",
   ANTHROPIC_API_KEY: "Anthropic API Key",
-  CLAUDE_MODEL: "Claude Model ID",
   GEMINI_API_KEY: "Gemini API Key",
-  GEMINI_MODEL: "Gemini Model ID",
-  TTS_PROVIDER: "TTS Provider",
-  TTS_VOICE: "Voice",
-  TTS_RATE: "Rate",
   ELEVENLABS_API_KEY: "ElevenLabs API Key",
-  ELEVENLABS_VOICE_ID: "Voice ID",
-  ELEVENLABS_MODEL_ID: "Model ID",
   PEXELS_API_KEY: "Pexels API Key",
   YOUTUBE_CLIENT_ID: "Client ID",
   YOUTUBE_CLIENT_SECRET: "Client Secret",
@@ -35,14 +27,7 @@ const KEY_LABELS: Record<BrandEnvKey, string> = {
   TIKTOK_REFRESH_TOKEN: "Refresh Token",
 };
 
-const KEY_PLACEHOLDERS: Partial<Record<BrandEnvKey, string>> = {
-  LLM_PROVIDER: "claude  or  gemini",
-  CLAUDE_MODEL: "claude-haiku-4-5-20251001",
-  GEMINI_MODEL: "gemini-2.0-flash",
-  TTS_PROVIDER: "edge  or  elevenlabs",
-  TTS_VOICE: "en-US-GuyNeural",
-  TTS_RATE: "+10%",
-};
+const KEY_PLACEHOLDERS: Partial<Record<BrandEnvKey, string>> = {};
 
 const SENSITIVE: Set<BrandEnvKey> = new Set([
   "ANTHROPIC_API_KEY",

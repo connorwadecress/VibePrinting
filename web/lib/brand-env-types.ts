@@ -5,18 +5,10 @@
 
 export const BRAND_ENV_WHITELIST = [
   // LLM
-  "LLM_PROVIDER",
   "ANTHROPIC_API_KEY",
-  "CLAUDE_MODEL",
   "GEMINI_API_KEY",
-  "GEMINI_MODEL",
   // TTS
-  "TTS_PROVIDER",
-  "TTS_VOICE",
-  "TTS_RATE",
   "ELEVENLABS_API_KEY",
-  "ELEVENLABS_VOICE_ID",
-  "ELEVENLABS_MODEL_ID",
   // Stock footage
   "PEXELS_API_KEY",
   // YouTube
@@ -42,11 +34,11 @@ export interface EnvGroup {
 export const BRAND_ENV_GROUPS: EnvGroup[] = [
   {
     label: "LLM",
-    keys: ["LLM_PROVIDER", "ANTHROPIC_API_KEY", "CLAUDE_MODEL", "GEMINI_API_KEY", "GEMINI_MODEL"],
+    keys: ["ANTHROPIC_API_KEY", "GEMINI_API_KEY"],
   },
   {
     label: "Text-to-speech",
-    keys: ["TTS_PROVIDER", "TTS_VOICE", "TTS_RATE", "ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID", "ELEVENLABS_MODEL_ID"],
+    keys: ["ELEVENLABS_API_KEY"],
   },
   {
     label: "Stock footage",
