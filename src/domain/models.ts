@@ -21,18 +21,14 @@ export interface ContentLane {
 /** Tone bias for the comment-selection LLM. */
 export type CommentTone = "funny" | "sincere" | "blend";
 
-export interface SubredditConfig {
-  /** Subreddit name without the "r/" prefix. Matched case-insensitively against post.subreddit. */
-  name: string;
-  /** Read the post body aloud and show it as its own card. Default: false (most subs are title-only). */
-  showDescription?: boolean;
-  /** Per-subreddit tone override. Falls back to lane.commentTone, then "blend". */
-  commentTone?: CommentTone;
-}
-
 export interface RedditLaneConfig {
-  /** Subreddits to pull from, in priority order. Each entry carries its own format-specific config. */
-  subreddits: SubredditConfig[];
+  /** The subreddit this lane reads from (without "r/"). One subreddit per lane —
+   *  add another reddit-story lane to cover a different subreddit. */
+  subreddit: string;
+  /** Read the post body aloud and show it as its own card. Default: false. */
+  showDescription?: boolean;
+  /** Tone bias passed to the comment-selection LLM. Default: "blend". */
+  commentTone?: CommentTone;
   /** Reddit time range for /top listings. */
   timeRange?: "day" | "week" | "month" | "year" | "all";
   /** Number of top comments to feature in the video. */
@@ -40,8 +36,6 @@ export interface RedditLaneConfig {
   /** Min/max comment body length (in characters) used to filter candidates. */
   minCommentLength?: number;
   maxCommentLength?: number;
-  /** Default tone applied to any subreddit that doesn't set its own commentTone. */
-  commentTone?: CommentTone;
   /** Silent pause inserted between segments (intro/question/comments/outro). */
   segmentGapSeconds?: number;
   /** "empty" = card body starts blank and reveals word-by-word.

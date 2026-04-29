@@ -1,7 +1,6 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { CommentTone, PipelineState, RedditComment } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
-import { findSubredditConfig, resolveCommentTone } from "../../utils/reddit-config.js";
 
 const BASE_RULES = `You curate Reddit comments for short-form videos.
 Given a list of pre-filtered comments, return the indexes (0-based) of the comments you want to feature, IN THE ORDER they should be read aloud.
@@ -47,11 +46,7 @@ export class CommentSelectionStage implements PipelineStage {
     const all = state.redditComments ?? [];
     if (all.length === 0) throw new Error("No reddit comments in pipeline state");
 
-    const post = state.redditPost;
-    const subCfg = post
-      ? findSubredditConfig(cfg?.subreddits ?? [], post.subreddit)
-      : undefined;
-    const tone = resolveCommentTone(subCfg, cfg?.commentTone);
+    const tone: CommentTone = cfg?.commentTone ?? "blend";
 
     const filtered: RankedComment[] = all
       .filter((c) => c.depth === 0)

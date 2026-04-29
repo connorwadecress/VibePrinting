@@ -971,5 +971,28 @@
     "runId": "20260429-132727",
     "date": "2026-04-29",
     "redditPostId": "1su5sig"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Bill Gates said, \"I will always choose a lazy person to do a difficult job because a lazy person will find an easy way to do it.\" What's a real-life example of this?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-140616",
+    "date": "2026-04-29",
+    "redditPostId": "himsju"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "Your Entire Credit Card Debt Stacked Up — This Is How Tall It Actually Gets",
+    "seedQuestion": "How many times would you have to stack credit cards to reach the height of the average person?",
+    "runId": "20260429-143459",
+    "date": "2026-04-29"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Anthony Bourdain once said \"There's a guy in my head, and all he wants to do is lay in bed all day long, smoke pot, and watch old movies and cartoons. My life is a series of strategems, to avoid, and outwit that guy\". Who is \"that guy\" for you, and what do you do to avoid him?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-143913",
+    "date": "2026-04-29",
+    "redditPostId": "dcxylq"
   }
 ]

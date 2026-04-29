@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { readBrandProfile } from "@/lib/brand-io";
+import { readBrandProfile, listBrandAssets, type BrandAssetLists } from "@/lib/brand-io";
 import { readBrandEnv } from "@/lib/brand-env-io";
 import { BrandForm } from "@/components/BrandForm";
 import { BrandEnvEditor } from "@/components/BrandEnvEditor";
@@ -30,6 +30,8 @@ export default async function BrandEditorPage({ params }: PageProps) {
   } catch (err) {
     profileError = (err as Error).message ?? String(err);
   }
+
+  const assets: BrandAssetLists = listBrandAssets(brandId, profile);
 
   let envVars;
   try {
@@ -65,7 +67,7 @@ export default async function BrandEditorPage({ params }: PageProps) {
           {
             id: "channel",
             label: "Channel",
-            content: profile ? <BrandForm initial={profile} /> : null,
+            content: profile ? <BrandForm initial={profile} assets={assets} /> : null,
           },
           {
             id: "configuration",

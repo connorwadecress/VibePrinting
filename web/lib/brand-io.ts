@@ -13,11 +13,47 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ChannelProfileSchema, type ChannelProfileInput } from "@/lib/zod-schemas";
-import { brandProfilePath, brandTopicHistoryPath, BRANDS_DIR, ALLOWED_BRANDS } from "@/lib/paths";
+import { brandDir, brandProfilePath, brandTopicHistoryPath, BRANDS_DIR, ALLOWED_BRANDS } from "@/lib/paths";
 import { listBrands } from "@pipeline/utils/brand-resolver";
 import { loadProfile } from "@pipeline/domain/channel-profile";
 import type { ChannelProfile } from "@pipeline/domain/channel-profile";
 import type { TopicHistoryEntry } from "@pipeline/domain/models";
+
+const GAMEPLAY_EXTS = [".mp4", ".mov", ".mkv", ".webm"];
+const MUSIC_EXTS = [".mp3", ".m4a", ".wav", ".aac", ".ogg"];
+
+export interface BrandAssetLists {
+  gameplay: string[];
+  music: string[];
+}
+
+/**
+ * Return the filenames currently on disk in the brand's gameplay/ and
+ * music/ folders (or whatever paths channel.json overrides them to).
+ * Used by the brand editor to render a unified asset library against
+ * profile.gameplayLibrary / profile.musicLibrary.
+ */
+export function listBrandAssets(brandId: string, profile?: ChannelProfile | null): BrandAssetLists {
+  const root = brandDir(brandId);
+  const gameplayDir = profile?.gameplayLibraryDir
+    ? path.resolve(root, profile.gameplayLibraryDir)
+    : path.join(root, "gameplay");
+  const musicDir = profile?.musicLibraryDir
+    ? path.resolve(root, profile.musicLibraryDir)
+    : path.join(root, "music");
+  return {
+    gameplay: scan(gameplayDir, GAMEPLAY_EXTS),
+    music: scan(musicDir, MUSIC_EXTS),
+  };
+}
+
+function scan(dir: string, exts: string[]): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => exts.includes(path.extname(name).toLowerCase()))
+    .sort();
+}
 
 export interface BrandSummary {
   id: string;

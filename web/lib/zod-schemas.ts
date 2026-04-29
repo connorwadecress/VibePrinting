@@ -14,20 +14,15 @@ export const LaneTypeSchema = z.enum(["pexels-api", "reddit-story"]);
 
 export const CommentToneSchema = z.enum(["funny", "sincere", "blend"]);
 
-export const SubredditConfigSchema = z.object({
-  name: z.string().min(1),
-  showDescription: z.boolean().optional(),
-  commentTone: CommentToneSchema.optional(),
-});
-
 export const RedditLaneConfigSchema = z
   .object({
-    subreddits: z.array(SubredditConfigSchema).default([]),
+    subreddit: z.string().min(1),
+    showDescription: z.boolean().optional(),
+    commentTone: CommentToneSchema.optional(),
     timeRange: z.enum(["day", "week", "month", "year", "all"]).optional(),
     commentCount: z.number().int().positive().optional(),
     minCommentLength: z.number().int().nonnegative().optional(),
     maxCommentLength: z.number().int().positive().optional(),
-    commentTone: CommentToneSchema.optional(),
     segmentGapSeconds: z.number().nonnegative().optional(),
     cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
     cardMaxHeightPx: z.number().int().positive().optional(),
@@ -75,6 +70,11 @@ export const CleanupConfigSchema = z.object({
   delayMinutes: z.number().int().nonnegative(),
 });
 
+export const AssetEntrySchema = z.object({
+  filename: z.string().min(1),
+  enabled: z.boolean().optional(),
+});
+
 /**
  * Caption style override. Every field is optional because the pipeline
  * type is `Partial<AnimatedCaptionConfig>`. The form layer strips
@@ -116,6 +116,8 @@ export const ChannelProfileSchema = z.object({
   gameplayLibraryDir: z.string().optional(),
   musicLibraryDir: z.string().optional(),
   ytDlpFallbackUrls: z.array(z.string()).optional(),
+  gameplayLibrary: z.array(AssetEntrySchema).optional(),
+  musicLibrary: z.array(AssetEntrySchema).optional(),
 });
 
 export type ChannelProfileInput = z.infer<typeof ChannelProfileSchema>;

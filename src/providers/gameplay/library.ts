@@ -6,6 +6,7 @@ import type {
   GameplayProvider,
   GameplaySearchContext,
 } from "../../domain/interfaces/gameplay-provider.js";
+import type { AssetEntry } from "../../domain/channel-profile.js";
 import type { GameplayClip } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
@@ -25,9 +26,16 @@ function probeDuration(filePath: string): Promise<number> {
 /**
  * Picks a long-form gameplay clip from a brand-local library directory.
  * Throws when the directory is missing/empty or no file is long enough.
+ *
+ * If `entries` is provided and non-empty, only filenames present and
+ * marked enabled are eligible. Otherwise every file in the directory
+ * with an allowed extension is eligible.
  */
 export class LibraryGameplayProvider implements GameplayProvider {
-  constructor(private readonly libraryDir: string) {}
+  constructor(
+    private readonly libraryDir: string,
+    private readonly entries?: AssetEntry[],
+  ) {}
 
   async findClip(ctx: GameplaySearchContext): Promise<GameplayClip> {
     if (!fs.existsSync(this.libraryDir)) {
@@ -37,15 +45,20 @@ export class LibraryGameplayProvider implements GameplayProvider {
       );
     }
 
-    const candidates = fs
+    const onDisk = fs
       .readdirSync(this.libraryDir)
-      .filter((name) => ALLOWED_EXTS.has(path.extname(name).toLowerCase()))
-      .map((name) => path.join(this.libraryDir, name));
+      .filter((name) => ALLOWED_EXTS.has(path.extname(name).toLowerCase()));
+
+    const eligible = filterByEntries(onDisk, this.entries);
+    const candidates = eligible.map((name) => path.join(this.libraryDir, name));
 
     if (candidates.length === 0) {
       throw new Error(
-        `Gameplay library is empty: ${this.libraryDir}. ` +
-          `Drop one or more .mp4/.mov files into this directory.`,
+        this.entries && this.entries.length > 0
+          ? `No enabled gameplay clips on disk in ${this.libraryDir}. ` +
+              `Toggle some on in the brand editor's asset library.`
+          : `Gameplay library is empty: ${this.libraryDir}. ` +
+              `Drop one or more .mp4/.mov files into this directory.`,
       );
     }
 
@@ -83,4 +96,18 @@ export class LibraryGameplayProvider implements GameplayProvider {
       durationSeconds: ctx.targetDurationSeconds,
     };
   }
+}
+
+/**
+ * Apply a brand's per-file enable/order list to a flat list of filenames
+ * found on disk. Files not present in `entries` are skipped (so a brand
+ * can opt out of a clip by removing its entry; new files only become
+ * eligible after they're added in the editor).
+ */
+function filterByEntries(onDisk: string[], entries?: AssetEntry[]): string[] {
+  if (!entries || entries.length === 0) return onDisk;
+  const diskSet = new Set(onDisk);
+  return entries
+    .filter((e) => e.enabled !== false && diskSet.has(e.filename))
+    .map((e) => e.filename);
 }

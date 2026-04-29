@@ -26,6 +26,11 @@ export function BrandSwitcher({ brandIds, activeBrandId }: Props) {
     );
   }
 
+  if (brandIds.length < 2) {
+    // No point showing a one-option dropdown — the brand is implied by the session.
+    return null;
+  }
+
   async function onChange(next: string) {
     setValue(next);
     const res = await fetch("/api/active-brand", {

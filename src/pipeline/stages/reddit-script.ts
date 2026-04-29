@@ -6,7 +6,6 @@ import type {
   RedditStoryScript,
 } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
-import { findSubredditConfig } from "../../utils/reddit-config.js";
 
 const SYSTEM_PROMPT = `You write the framing narration for Reddit-story short videos.
 The video format is: an opener -> the post title (read verbatim) -> [optional post body, if the post has one] -> N user comments (read verbatim) -> a closer.
@@ -60,8 +59,7 @@ export class RedditScriptStage implements PipelineStage {
 
     const selftext = post.selftext?.trim() ?? "";
     const hasBody = selftext.length > 0;
-    const subCfg = findSubredditConfig(lane.redditConfig?.subreddits ?? [], post.subreddit);
-    const showDescription = subCfg?.showDescription === true;
+    const showDescription = lane.redditConfig?.showDescription === true;
     const includeBody = showDescription && hasBody;
     log(
       this.name,

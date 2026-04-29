@@ -118,10 +118,10 @@ async function main(): Promise<void> {
       )
     : null;
   const gameplayProvider = new CompositeGameplayProvider(
-    new LibraryGameplayProvider(gameplayLibraryDir),
+    new LibraryGameplayProvider(gameplayLibraryDir, profile.gameplayLibrary),
     ytDlpProvider,
   );
-  const musicProvider = new LibraryMusicProvider(musicLibraryDir);
+  const musicProvider = new LibraryMusicProvider(musicLibraryDir, profile.musicLibrary);
 
   // --- Wire providers (composition root) ---
   const context: StageContext = {

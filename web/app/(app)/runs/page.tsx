@@ -29,6 +29,7 @@ export default async function RunsPage() {
         lanes: profile.contentLanes.map((l) => ({
           id: l.id,
           description: l.description,
+          type: l.type ?? "pexels-api",
         })),
       });
     } catch {

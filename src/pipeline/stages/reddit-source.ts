@@ -1,7 +1,7 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { PipelineState, RedditPost } from "../../domain/models.js";
 import { fetchPostByUrl, fetchTopPosts } from "../../utils/reddit-client.js";
-import { log, logError } from "../../utils/logger.js";
+import { log } from "../../utils/logger.js";
 
 const SYSTEM_PROMPT = `You pick AskReddit-style posts to turn into short-form videos.
 Given a list of candidate posts, return the index (0-based) of the single best one.
@@ -33,26 +33,18 @@ export class RedditSourceStage implements PipelineStage {
       return;
     }
 
-    const subs = cfg.subreddits ?? [];
-    if (subs.length === 0) {
-      throw new Error(`Lane ${lane.id} redditConfig.subreddits is empty`);
+    const subreddit = cfg.subreddit?.trim();
+    if (!subreddit) {
+      throw new Error(`Lane ${lane.id} redditConfig.subreddit is empty`);
     }
 
-    const candidates: RedditPost[] = [];
-    for (const sub of subs) {
-      try {
-        const top = await fetchTopPosts(
-          sub.name,
-          { time: cfg.timeRange ?? "week", limit: 25 },
-          context.profile.id,
-        );
-        candidates.push(...top);
-      } catch (err) {
-        logError(this.name, `Failed to fetch r/${sub.name}: ${(err as Error).message}`);
-      }
-    }
+    const candidates = await fetchTopPosts(
+      subreddit,
+      { time: cfg.timeRange ?? "week", limit: 25 },
+      context.profile.id,
+    );
     if (candidates.length === 0) {
-      throw new Error("No reddit candidates fetched from any subreddit");
+      throw new Error(`No reddit candidates fetched from r/${subreddit}`);
     }
 
     const usedIds = new Set(
