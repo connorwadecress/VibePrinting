@@ -166,7 +166,12 @@
 			"targetDurationSeconds": 60,
 			"exampleHooks": [],
 			"redditConfig": {
-				"subreddits": ["AskReddit", "tifu", "AmItheAsshole"],
+				"subreddits": [
+					{ "name": "AskReddit", "showDescription": false, "commentTone": "blend" },
+					{ "name": "tifu", "showDescription": true, "commentTone": "funny" },
+					{ "name": "AmItheAsshole", "showDescription": true, "commentTone": "blend" }
+				],
+				"commentTone": "blend",
 				"timeRange": "week",
 				"commentCount": 5,
 				"minCommentLength": 80,

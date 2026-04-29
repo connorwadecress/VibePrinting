@@ -1,17 +1,31 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
-import type { PipelineState, RedditComment } from "../../domain/models.js";
+import type { CommentTone, PipelineState, RedditComment } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+import { findSubredditConfig, resolveCommentTone } from "../../utils/reddit-config.js";
 
-const SYSTEM_PROMPT = `You curate Reddit comments for short-form videos.
+const BASE_RULES = `You curate Reddit comments for short-form videos.
 Given a list of pre-filtered comments, return the indexes (0-based) of the comments you want to feature, IN THE ORDER they should be read aloud.
 
 Selection rules:
 - Prefer comments that tell a self-contained story or land a clear punchline.
-- Prefer comments that vary in tone — mix funny, surprising, heartfelt; avoid five copies of the same beat.
 - Save the strongest payoff for last — the final comment should reward viewers who watched to the end.
-- Reject comments that need outside context, contain slurs, or are unsafe for general audiences.
+- Reject comments that need outside context, contain slurs, or are unsafe for general audiences.`;
 
-Respond with JSON: {"orderedIndexes": number[], "reason": string}`;
+const TONE_RULES: Record<CommentTone, string> = {
+  funny: `Tone for THIS subreddit: FUNNY.
+- Strongly favor comments that are funny, absurd, self-deprecating, or land a clear punchline.
+- Skip earnest reflections, life lessons, and heartfelt confessions unless they double as the joke.`,
+  sincere: `Tone for THIS subreddit: SINCERE.
+- Strongly favor comments that are heartfelt, insightful, or quietly devastating.
+- Skip pure jokes and sarcasm unless they carry real emotional weight.`,
+  blend: `Tone for THIS subreddit: BLEND.
+- Vary the tone across the selection — mix funny, surprising, and heartfelt.
+- Avoid five copies of the same beat in a row.`,
+};
+
+function buildSystemPrompt(tone: CommentTone): string {
+  return `${BASE_RULES}\n\n${TONE_RULES[tone]}\n\nRespond with JSON: {"orderedIndexes": number[], "reason": string}`;
+}
 
 const URL_RE = /https?:\/\//i;
 
@@ -33,6 +47,12 @@ export class CommentSelectionStage implements PipelineStage {
     const all = state.redditComments ?? [];
     if (all.length === 0) throw new Error("No reddit comments in pipeline state");
 
+    const post = state.redditPost;
+    const subCfg = post
+      ? findSubredditConfig(cfg?.subreddits ?? [], post.subreddit)
+      : undefined;
+    const tone = resolveCommentTone(subCfg, cfg?.commentTone);
+
     const filtered: RankedComment[] = all
       .filter((c) => c.depth === 0)
       .filter((c) => c.body.length >= minLen && c.body.length <= maxLen)
@@ -51,10 +71,10 @@ export class CommentSelectionStage implements PipelineStage {
     const pool = filtered.slice(0, Math.max(targetCount * 3, 12));
     log(
       this.name,
-      `Filtered ${all.length} -> ${filtered.length} -> ${pool.length} candidates; selecting ${targetCount}`,
+      `Filtered ${all.length} -> ${filtered.length} -> ${pool.length} candidates; selecting ${targetCount} (tone=${tone})`,
     );
 
-    const selected = await this.pickAndOrder(pool, targetCount, context);
+    const selected = await this.pickAndOrder(pool, targetCount, tone, context);
     state.redditComments = selected;
     log(
       this.name,
@@ -65,6 +85,7 @@ export class CommentSelectionStage implements PipelineStage {
   private async pickAndOrder(
     pool: RankedComment[],
     target: number,
+    tone: CommentTone,
     context: StageContext,
   ): Promise<RedditComment[]> {
     const list = pool
@@ -75,7 +96,7 @@ export class CommentSelectionStage implements PipelineStage {
       const result = await context.llm.generateJSON<{
         orderedIndexes: number[];
         reason?: string;
-      }>(SYSTEM_PROMPT, userPrompt);
+      }>(buildSystemPrompt(tone), userPrompt);
       const seen = new Set<number>();
       const out: RedditComment[] = [];
       for (const raw of result.orderedIndexes ?? []) {

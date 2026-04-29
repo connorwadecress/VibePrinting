@@ -42,13 +42,13 @@ export class RedditSourceStage implements PipelineStage {
     for (const sub of subs) {
       try {
         const top = await fetchTopPosts(
-          sub,
+          sub.name,
           { time: cfg.timeRange ?? "week", limit: 25 },
           context.profile.id,
         );
         candidates.push(...top);
       } catch (err) {
-        logError(this.name, `Failed to fetch r/${sub}: ${(err as Error).message}`);
+        logError(this.name, `Failed to fetch r/${sub.name}: ${(err as Error).message}`);
       }
     }
     if (candidates.length === 0) {

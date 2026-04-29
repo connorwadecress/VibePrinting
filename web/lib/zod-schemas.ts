@@ -12,13 +12,22 @@ import { z } from "zod";
 
 export const LaneTypeSchema = z.enum(["pexels-api", "reddit-story"]);
 
+export const CommentToneSchema = z.enum(["funny", "sincere", "blend"]);
+
+export const SubredditConfigSchema = z.object({
+  name: z.string().min(1),
+  showDescription: z.boolean().optional(),
+  commentTone: CommentToneSchema.optional(),
+});
+
 export const RedditLaneConfigSchema = z
   .object({
-    subreddits: z.array(z.string().min(1)).default([]),
+    subreddits: z.array(SubredditConfigSchema).default([]),
     timeRange: z.enum(["day", "week", "month", "year", "all"]).optional(),
     commentCount: z.number().int().positive().optional(),
     minCommentLength: z.number().int().nonnegative().optional(),
     maxCommentLength: z.number().int().positive().optional(),
+    commentTone: CommentToneSchema.optional(),
     segmentGapSeconds: z.number().nonnegative().optional(),
     cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
     cardMaxHeightPx: z.number().int().positive().optional(),

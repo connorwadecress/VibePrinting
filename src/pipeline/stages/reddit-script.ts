@@ -6,6 +6,7 @@ import type {
   RedditStoryScript,
 } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+import { findSubredditConfig } from "../../utils/reddit-config.js";
 
 const SYSTEM_PROMPT = `You write the framing narration for Reddit-story short videos.
 The video format is: an opener -> the post title (read verbatim) -> [optional post body, if the post has one] -> N user comments (read verbatim) -> a closer.
@@ -59,10 +60,17 @@ export class RedditScriptStage implements PipelineStage {
 
     const selftext = post.selftext?.trim() ?? "";
     const hasBody = selftext.length > 0;
+    const subCfg = findSubredditConfig(lane.redditConfig?.subreddits ?? [], post.subreddit);
+    const showDescription = subCfg?.showDescription === true;
+    const includeBody = showDescription && hasBody;
+    log(
+      this.name,
+      `r/${post.subreddit}: showDescription=${showDescription}, hasBody=${hasBody} → includeBody=${includeBody}`,
+    );
 
     const userPrompt = `Subreddit: r/${post.subreddit}
 Post title (will be read verbatim — do NOT rewrite): ${post.title}
-Post has a body: ${hasBody ? "yes (will be read verbatim after the title)" : "no — title-only post"}
+Post has a body: ${includeBody ? "yes (will be read verbatim after the title)" : "no — title-only post"}
 Number of comments to feature: ${comments.length}
 Lane description: ${lane.description}
 
@@ -74,7 +82,7 @@ Generate the opener, closer, and publishing metadata.`;
     let idx = 0;
     segments.push({ index: idx++, kind: "intro", text: reply.opener.trim() });
     segments.push({ index: idx++, kind: "question", text: post.title.trim() });
-    if (hasBody) {
+    if (includeBody) {
       segments.push({
         index: idx++,
         kind: "description",
