@@ -59,7 +59,7 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
                   <Link
                     href={item.href}
                     className={
-                      "relative block rounded-lg px-3 py-1.5 text-sm transition-colors " +
+                      "relative block rounded-lg px-3 py-2 text-sm transition-colors " +
                       (active
                         ? "bg-accent/15 text-accent"
                         : "text-fg-muted hover:bg-surface-2 hover:text-fg")
@@ -80,7 +80,7 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
             aria-label="Toggle navigation"
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg md:hidden"
+            className="grid size-11 place-items-center rounded-lg border border-border bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg md:hidden"
           >
             <svg
               width="16"
@@ -119,7 +119,7 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className={
-                      "block rounded-lg px-3 py-2 text-sm transition-colors " +
+                      "block rounded-lg px-3 py-3 text-base font-medium transition-colors " +
                       (active
                         ? "bg-accent/15 text-accent"
                         : "text-fg-muted hover:bg-surface-2 hover:text-fg")

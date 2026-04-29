@@ -129,22 +129,28 @@ input[type="range"] {
   }
 
   .input {
-    @apply block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg shadow-inner shadow-black/10 transition-colors;
+    @apply block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-base text-fg shadow-inner shadow-black/10 transition-colors;
+    @apply sm:py-2 sm:text-sm;
     @apply placeholder:text-fg-subtle;
     @apply focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40;
     @apply disabled:cursor-not-allowed disabled:opacity-60;
   }
   .input-sm {
-    @apply px-2.5 py-1.5 text-xs;
+    /* Mobile-first: keep a 44-ish tap target; collapse to compact on >=640px. */
+    @apply px-3 py-2 text-sm;
+    @apply sm:px-2.5 sm:py-1.5 sm:text-xs;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-150;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150;
+    @apply sm:min-h-0 sm:px-3.5 sm:py-2;
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-sm {
-    @apply px-3 py-1.5 text-xs;
+    /* Mobile-first: still tap-friendly. */
+    @apply min-h-[40px] px-3.5 py-2 text-sm;
+    @apply sm:min-h-0 sm:px-3 sm:py-1.5 sm:text-xs;
   }
   .btn-primary {
     @apply btn bg-accent text-white shadow-sm shadow-accent/30;

@@ -115,7 +115,7 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td className="text-right">
                 <Link
                   href={`/runs/${j.jobId}`}
-                  className="text-xs font-medium text-accent hover:text-accent-hover"
+                  className="inline-flex min-h-[36px] items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-accent hover:bg-accent/10 hover:text-accent-hover sm:min-h-0 sm:px-1 sm:text-xs"
                 >
                   view →
                 </Link>

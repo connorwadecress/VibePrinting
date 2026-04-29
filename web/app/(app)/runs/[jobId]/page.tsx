@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJob } from "@/lib/job-store";
 import { RunStreamView } from "@/components/RunStreamView";
+import { BackLink } from "@/components/BackLink";
 
 /**
  * /runs/[jobId] — single job page. Server-renders the current
@@ -31,17 +31,12 @@ export default async function RunPage({ params }: PageProps) {
   return (
     <section className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Link
-            href="/runs"
-            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
-          >
-            <span aria-hidden>←</span> All runs
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">
+        <div className="space-y-2">
+          <BackLink href="/runs">All runs</BackLink>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
             {job.lane ?? "Random lane"}
           </h1>
-          <p className="mt-0.5 font-mono text-xs text-fg-subtle">{job.jobId}</p>
+          <p className="font-mono text-xs text-fg-subtle">{job.jobId}</p>
         </div>
       </header>
 

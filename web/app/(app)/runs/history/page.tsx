@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { readBrandTopicHistory } from "@/lib/brand-io";
 import { resolveActiveBrand } from "@/lib/active-brand";
+import { BackLink } from "@/components/BackLink";
 
 /**
  * Content history — every topic the pipeline has run for the active
@@ -18,18 +18,13 @@ export default async function ContentHistoryPage() {
   return (
     <section>
       <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Link
-            href="/runs"
-            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
-          >
-            <span aria-hidden>←</span> Runs
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">
+        <div className="space-y-2">
+          <BackLink href="/runs">Runs</BackLink>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
             Content history
           </h1>
           {activeBrandId && (
-            <p className="mt-0.5 font-mono text-xs text-fg-subtle">{activeBrandId}</p>
+            <p className="font-mono text-xs text-fg-subtle">{activeBrandId}</p>
           )}
         </div>
         <span className="pill-muted">{sorted.length} entries</span>
