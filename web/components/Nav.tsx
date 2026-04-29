@@ -75,9 +75,6 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
 
         <div className="ml-auto flex items-center gap-2">
           <BrandSwitcher brandIds={brandIds} activeBrandId={activeBrandId} />
-          <span className="hidden text-[10px] font-medium uppercase tracking-widest text-fg-subtle lg:inline">
-            v0.2
-          </span>
           <button
             type="button"
             aria-label="Toggle navigation"

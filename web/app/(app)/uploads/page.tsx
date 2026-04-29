@@ -35,14 +35,29 @@ export default async function UploadsPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-fg">Uploads</h1>
           <p className="mt-1 text-sm text-fg-muted">
-            Read-only feed from <code className="font-mono text-fg-subtle">logs/upload-log.jsonl</code>.
+            Every YouTube and TikTok upload attempt for this brand, newest first.
           </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <UploadCounts entries={entries} />
         </div>
       </header>
 
       <Suspense fallback={null}>
-        <UploadHistoryTable entries={entries} activeBrandId={activeBrandId} />
+        <UploadHistoryTable entries={entries} />
       </Suspense>
     </section>
+  );
+}
+
+function UploadCounts({ entries }: { entries: ReturnType<typeof readUploadLog> }) {
+  const success = entries.filter((e) => e.status === "success").length;
+  const failed = entries.length - success;
+  if (entries.length === 0) return null;
+  return (
+    <>
+      {success > 0 && <span className="pill-success">{success} succeeded</span>}
+      {failed > 0 && <span className="pill-danger">{failed} failed</span>}
+    </>
   );
 }

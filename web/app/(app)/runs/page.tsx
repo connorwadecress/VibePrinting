@@ -93,7 +93,6 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
         <thead>
           <tr>
             <th>Started</th>
-            <th>Brand</th>
             <th>Lane</th>
             <th>Trigger</th>
             <th>Status</th>
@@ -106,8 +105,9 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td data-label="Started" className="whitespace-nowrap font-mono text-xs text-fg-muted">
                 {formatTime(j.startedAt)}
               </td>
-              <td data-label="Brand" className="font-medium text-fg">{j.brandId}</td>
-              <td data-label="Lane" className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
+              <td data-label="Lane" className="font-mono text-xs text-fg">
+                {j.lane ?? <span className="text-fg-subtle">(any)</span>}
+              </td>
               <td data-label="Trigger" className="text-xs text-fg-muted">{j.trigger}</td>
               <td data-label="Status">
                 <StatusPill status={j.status} queuePosition={j.queuePosition} />

@@ -31,14 +31,11 @@ export default async function SchedulePage() {
 
   return (
     <section className="space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-fg">Schedule</h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Cron-driven runs per brand. Edits hot-reload without restart.
-          </p>
-        </div>
-        {activeBrandId && <span className="pill-muted">{activeBrandId}</span>}
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-fg">Schedule</h1>
+        <p className="mt-1 text-sm text-fg-muted">
+          Cron-driven runs for this brand. Edits take effect immediately — no restart.
+        </p>
       </header>
 
       <ScheduleEditor rows={rows} initialPaused={data.globalPaused} />
