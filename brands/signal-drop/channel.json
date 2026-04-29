@@ -181,7 +181,7 @@
     {
       "id": "tifu",
       "description": "Today I Fucked Up — funny self-deprecating fail stories. Title plus body is the story; comments are reactions.",
-      "targetDurationSeconds": 60,
+      "targetDurationSeconds": 90,
       "exampleHooks": [],
       "type": "reddit-story",
       "redditConfig": {
@@ -189,9 +189,11 @@
         "showDescription": true,
         "commentTone": "funny",
         "timeRange": "week",
-        "commentCount": 5,
+        "commentCount": 2,
         "minCommentLength": 80,
-        "maxCommentLength": 600,
+        "maxCommentLength": 400,
+        "trimPriority": "comments",
+        "maxSpeedupPercent": 15,
         "segmentGapSeconds": 0.3,
         "cardInitialReveal": "empty",
         "cardMaxHeightPx": 1100
@@ -200,7 +202,7 @@
     {
       "id": "aita",
       "description": "Am I The Asshole — moral-dilemma stories. The post body is the story; comments deliver the judgment.",
-      "targetDurationSeconds": 60,
+      "targetDurationSeconds": 90,
       "exampleHooks": [],
       "type": "reddit-story",
       "redditConfig": {
@@ -208,9 +210,11 @@
         "showDescription": true,
         "commentTone": "blend",
         "timeRange": "week",
-        "commentCount": 5,
+        "commentCount": 2,
         "minCommentLength": 80,
-        "maxCommentLength": 600,
+        "maxCommentLength": 400,
+        "trimPriority": "comments",
+        "maxSpeedupPercent": 15,
         "segmentGapSeconds": 0.3,
         "cardInitialReveal": "empty",
         "cardMaxHeightPx": 1100

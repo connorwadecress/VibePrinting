@@ -4,6 +4,7 @@ import type {
   PublishMeta,
   RedditStorySegment,
   RedditStoryScript,
+  TrimPriority,
 } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
@@ -48,38 +49,88 @@ function totalEstimate(segments: RedditStorySegment[]): number {
   return segments.reduce((sum, s) => sum + estimateDurationSeconds(s.text), 0);
 }
 
+function dropLastComment(segments: RedditStorySegment[]): string | null {
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (segments[i].kind === "comment") {
+      const seg = segments[i];
+      segments.splice(i, 1);
+      return `comment by u/${seg.author ?? "?"} (${seg.text.length} chars)`;
+    }
+  }
+  return null;
+}
+
+function dropBody(segments: RedditStorySegment[]): string | null {
+  const idx = segments.findIndex((s) => s.kind === "description");
+  if (idx === -1) return null;
+  const seg = segments[idx];
+  segments.splice(idx, 1);
+  return `post body (${seg.text.length} chars)`;
+}
+
+function commentCount(segments: RedditStorySegment[]): number {
+  return segments.reduce((n, s) => (s.kind === "comment" ? n + 1 : n), 0);
+}
+
 /**
- * Bring the segment list under `targetSeconds` by progressively shedding
- * content the user is most willing to lose:
- *   1. Drop trailing comments (keep at least one — the punchline).
- *   2. Drop the description segment if still over.
- * Always preserves intro / question / outro since they're the frame.
+ * Bring the segment list under `targetSeconds` by shedding the content
+ * type the lane considers least load-bearing first.
  *
- * Returns the trimmed segments plus a list of human-readable drop reasons
- * for logging. Re-indexing is the caller's job.
+ *  - "comments": drop trailing comments down to zero before touching the
+ *    body. Use for body-is-the-story subs (TIFU, AITA) so the post body
+ *    survives even when comments have to be cut entirely.
+ *  - "body": drop the body before touching comments, then drop trailing
+ *    comments down to one. Use when comments carry the punchline.
+ *  - "balanced" (default): drop trailing comments down to one, then drop
+ *    the body if still over.
+ *
+ * Always preserves intro / question / outro. Returns the trimmed list
+ * plus human-readable drop reasons for logging.
  */
 function trimSegmentsToTarget(
   segments: RedditStorySegment[],
   targetSeconds: number,
+  priority: TrimPriority,
 ): { segments: RedditStorySegment[]; drops: string[] } {
   const drops: string[] = [];
   const out = segments.slice();
 
-  while (totalEstimate(out) > targetSeconds) {
-    const commentIdxs = out
-      .map((s, i) => (s.kind === "comment" ? i : -1))
-      .filter((i) => i !== -1);
-    if (commentIdxs.length <= 1) break;
-    const lastIdx = commentIdxs[commentIdxs.length - 1];
-    drops.push(`comment by u/${out[lastIdx].author ?? "?"} (${out[lastIdx].text.length} chars)`);
-    out.splice(lastIdx, 1);
-  }
-
-  if (totalEstimate(out) > targetSeconds) {
-    const descIdx = out.findIndex((s) => s.kind === "description");
-    if (descIdx !== -1) {
-      drops.push(`post body (${out[descIdx].text.length} chars)`);
-      out.splice(descIdx, 1);
+  if (priority === "comments") {
+    while (totalEstimate(out) > targetSeconds && commentCount(out) > 0) {
+      const dropped = dropLastComment(out);
+      if (!dropped) break;
+      drops.push(dropped);
+    }
+    if (totalEstimate(out) > targetSeconds) {
+      const dropped = dropBody(out);
+      if (dropped) drops.push(dropped);
+    }
+  } else if (priority === "body") {
+    if (totalEstimate(out) > targetSeconds) {
+      const dropped = dropBody(out);
+      if (dropped) drops.push(dropped);
+    }
+    while (totalEstimate(out) > targetSeconds && commentCount(out) > 1) {
+      const dropped = dropLastComment(out);
+      if (!dropped) break;
+      drops.push(dropped);
+    }
+  } else {
+    // balanced: trim trailing comments down to 1, then drop body, then
+    // trim further comments to 0 if somehow still over.
+    while (totalEstimate(out) > targetSeconds && commentCount(out) > 1) {
+      const dropped = dropLastComment(out);
+      if (!dropped) break;
+      drops.push(dropped);
+    }
+    if (totalEstimate(out) > targetSeconds) {
+      const dropped = dropBody(out);
+      if (dropped) drops.push(dropped);
+    }
+    while (totalEstimate(out) > targetSeconds && commentCount(out) > 0) {
+      const dropped = dropLastComment(out);
+      if (!dropped) break;
+      drops.push(dropped);
     }
   }
 
@@ -147,35 +198,56 @@ Generate the opener, closer, and publishing metadata.`;
     // Aim slightly below the lane target so estimator drift doesn't push
     // us over the hard cap enforced in reddit-assembly.
     const trimTarget = lane.targetDurationSeconds * 0.92;
-    const { segments: trimmed, drops } = trimSegmentsToTarget(segments, trimTarget);
+    const priority: TrimPriority = lane.redditConfig?.trimPriority ?? "balanced";
+    const { segments: trimmed, drops } = trimSegmentsToTarget(segments, trimTarget, priority);
     trimmed.forEach((s, i) => (s.index = i));
     const trimmedEstimate = totalEstimate(trimmed);
     if (drops.length > 0) {
       log(
         this.name,
-        `Trimmed ${drops.length} segment(s) to fit ${lane.targetDurationSeconds}s target ` +
+        `Trimmed ${drops.length} segment(s) (priority=${priority}) to fit ${lane.targetDurationSeconds}s target ` +
           `(estimate ${rawEstimate.toFixed(1)}s → ${trimmedEstimate.toFixed(1)}s): dropped ${drops.join(", ")}`,
       );
     }
-    if (trimmedEstimate > lane.targetDurationSeconds) {
+
+    // Speed-up fallback: if trimming alone couldn't get us under target and
+    // the lane allows some TTS speed-up, compute the multiplier needed and
+    // bound it by maxSpeedupPercent. The voiceover stage applies this to
+    // every TTS call for this run.
+    let rateMultiplier = 1;
+    const maxSpeedup = lane.redditConfig?.maxSpeedupPercent ?? 0;
+    if (trimmedEstimate > lane.targetDurationSeconds && maxSpeedup > 0) {
+      const needed = trimmedEstimate / lane.targetDurationSeconds;
+      const cap = 1 + maxSpeedup / 100;
+      rateMultiplier = Math.min(needed, cap);
       log(
         this.name,
-        `WARNING: estimate ${trimmedEstimate.toFixed(1)}s still over target ${lane.targetDurationSeconds}s ` +
-          `with intro/question/1 comment/outro intact — assembly will hard-cap the final video`,
+        `Speed-up fallback: rate ×${rateMultiplier.toFixed(2)} ` +
+          `(needed ×${needed.toFixed(2)}, cap ×${cap.toFixed(2)}) to fit ${lane.targetDurationSeconds}s target`,
+      );
+    }
+
+    const effectiveEstimate = trimmedEstimate / rateMultiplier;
+    if (effectiveEstimate > lane.targetDurationSeconds) {
+      log(
+        this.name,
+        `WARNING: estimate ${effectiveEstimate.toFixed(1)}s still over target ${lane.targetDurationSeconds}s ` +
+          `after trimming and speed-up — assembly will hard-cap the final video`,
       );
     }
 
     const script: RedditStoryScript = {
       post,
       segments: trimmed,
-      totalDurationEstimateSeconds: trimmedEstimate,
+      totalDurationEstimateSeconds: effectiveEstimate,
+      rateMultiplier: rateMultiplier !== 1 ? rateMultiplier : undefined,
       publishMeta: reply.publishMeta,
     };
 
     state.redditScript = script;
     log(
       this.name,
-      `Script: ${trimmed.length} segments, ~${trimmedEstimate.toFixed(1)}s estimated (target ${lane.targetDurationSeconds}s)`,
+      `Script: ${trimmed.length} segments, ~${effectiveEstimate.toFixed(1)}s estimated (target ${lane.targetDurationSeconds}s)`,
     );
   }
 }

@@ -37,11 +37,12 @@ export class RedditVoiceoverStage implements PipelineStage {
     const segmentAudioPaths: string[] = [];
     let cumulativeMs = 0;
 
+    const rateMultiplier = script.rateMultiplier ?? 1;
     for (const seg of script.segments) {
       const outPath = path.join(context.workDir, safeSegmentName(seg));
       log(this.name, `TTS segment ${seg.index} (${seg.kind}, ${seg.text.length} chars)`);
       const ttsText = prepareTextForTts(seg.text);
-      const result = await context.tts.synthesize(ttsText, outPath);
+      const result = await context.tts.synthesize(ttsText, outPath, { rateMultiplier });
 
       // Edge TTS strips the input extension and writes its own filename suffix —
       // capture the path the provider actually produced.

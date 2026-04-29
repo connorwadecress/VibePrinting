@@ -1,5 +1,5 @@
 import { EdgeTTS } from "@andresaya/edge-tts";
-import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
+import type { TtsProvider, TtsSynthesizeOptions } from "../../domain/interfaces/tts-provider.js";
 import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
@@ -8,6 +8,22 @@ interface WordBoundary {
   offset: number;
   duration: number;
   text: string;
+}
+
+/**
+ * Combine the provider's base rate (e.g. "+10%") with an optional speed-up
+ * multiplier (e.g. 1.2) into a new Edge TTS rate string. The TTS engine
+ * accepts arbitrary signed percentages, but we cap at +50% so the voice
+ * stays comprehensible.
+ */
+function applyRateMultiplier(baseRate: string, multiplier?: number): string {
+  if (!multiplier || multiplier === 1) return baseRate;
+  const m = baseRate.match(/-?\d+(\.\d+)?/);
+  const basePercent = m ? Number(m[0]) : 0;
+  const baseFactor = 1 + basePercent / 100;
+  const combined = Math.max(0.5, Math.min(1.5, baseFactor * multiplier));
+  const newPercent = Math.round((combined - 1) * 100);
+  return newPercent >= 0 ? `+${newPercent}%` : `${newPercent}%`;
 }
 
 function extractWordTimings(boundaries: WordBoundary[]): WordTiming[] {
@@ -63,11 +79,22 @@ export class EdgeTtsProvider implements TtsProvider {
     private readonly rate: string = "+10%",
   ) {}
 
-  async synthesize(text: string, outputDir: string): Promise<VoiceoverResult> {
-    log("tts", `Generating voiceover with ${this.voice}...`);
+  async synthesize(
+    text: string,
+    outputDir: string,
+    options?: TtsSynthesizeOptions,
+  ): Promise<VoiceoverResult> {
+    const effectiveRate = applyRateMultiplier(this.rate, options?.rateMultiplier);
+    log(
+      "tts",
+      `Generating voiceover with ${this.voice} at ${effectiveRate}` +
+        (options?.rateMultiplier && options.rateMultiplier !== 1
+          ? ` (×${options.rateMultiplier.toFixed(2)} fit-to-target)`
+          : ""),
+    );
 
     const tts = new EdgeTTS();
-    await tts.synthesize(text, this.voice, { rate: this.rate });
+    await tts.synthesize(text, this.voice, { rate: effectiveRate });
 
     const basePath = outputDir.replace(/\.[^.]+$/, "");
     const savedPath = await tts.toFile(basePath);

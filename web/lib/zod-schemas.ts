@@ -14,6 +14,8 @@ export const LaneTypeSchema = z.enum(["pexels-api", "reddit-story"]);
 
 export const CommentToneSchema = z.enum(["funny", "sincere", "blend"]);
 
+export const TrimPrioritySchema = z.enum(["comments", "body", "balanced"]);
+
 export const RedditLaneConfigSchema = z
   .object({
     subreddit: z.string().min(1),
@@ -23,6 +25,8 @@ export const RedditLaneConfigSchema = z
     commentCount: z.number().int().positive().optional(),
     minCommentLength: z.number().int().nonnegative().optional(),
     maxCommentLength: z.number().int().positive().optional(),
+    trimPriority: TrimPrioritySchema.optional(),
+    maxSpeedupPercent: z.number().nonnegative().max(50).optional(),
     segmentGapSeconds: z.number().nonnegative().optional(),
     cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
     cardMaxHeightPx: z.number().int().positive().optional(),

@@ -21,6 +21,17 @@ export interface ContentLane {
 /** Tone bias for the comment-selection LLM. */
 export type CommentTone = "funny" | "sincere" | "blend";
 
+/**
+ * What to trim first when the script estimate exceeds the lane target.
+ *  - "comments": drop trailing comments (down to zero) before touching the body.
+ *    Use this when the body IS the story (TIFU, AITA).
+ *  - "body": drop the post body before touching comments. Use this when the
+ *    comments ARE the story (AskReddit-style with showDescription enabled).
+ *  - "balanced": drop trailing comments down to one, then drop the body.
+ *    Reasonable default when neither side is clearly load-bearing.
+ */
+export type TrimPriority = "comments" | "body" | "balanced";
+
 export interface RedditLaneConfig {
   /** The subreddit this lane reads from (without "r/"). One subreddit per lane —
    *  add another reddit-story lane to cover a different subreddit. */
@@ -36,6 +47,11 @@ export interface RedditLaneConfig {
   /** Min/max comment body length (in characters) used to filter candidates. */
   minCommentLength?: number;
   maxCommentLength?: number;
+  /** What to trim first when content exceeds targetDurationSeconds. Default: "balanced". */
+  trimPriority?: TrimPriority;
+  /** Maximum TTS speed-up (as a percentage) applied as a last resort when
+   *  trimming alone can't fit the lane target. 0 disables; default 0. */
+  maxSpeedupPercent?: number;
   /** Silent pause inserted between segments (intro/question/comments/outro). */
   segmentGapSeconds?: number;
   /** "empty" = card body starts blank and reveals word-by-word.
@@ -231,6 +247,10 @@ export interface RedditStoryScript {
   post: RedditPost;
   segments: RedditStorySegment[];
   totalDurationEstimateSeconds: number;
+  /** TTS rate multiplier applied to all segments to fit the lane target.
+   *  1.0 = base rate; 1.2 = read 20% faster. Set when trimming alone
+   *  couldn't bring the script under the target and the lane allows speed-up. */
+  rateMultiplier?: number;
   /** Reuses the same publish-metadata shape as ShortScript so UploadStage works unchanged. */
   publishMeta?: PublishMeta;
 }

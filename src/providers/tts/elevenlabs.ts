@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import type { TtsProvider } from "../../domain/interfaces/tts-provider.js";
+import type { TtsProvider, TtsSynthesizeOptions } from "../../domain/interfaces/tts-provider.js";
 import type { VoiceoverResult, SubtitleEntry, WordTiming } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
 
@@ -95,8 +95,20 @@ export class ElevenLabsProvider implements TtsProvider {
     private readonly speed: number = 1.15,
   ) {}
 
-  async synthesize(text: string, outputPath: string): Promise<VoiceoverResult> {
-    log("tts", `Generating voiceover with ElevenLabs voice ${this.voiceId}...`);
+  async synthesize(
+    text: string,
+    outputPath: string,
+    options?: TtsSynthesizeOptions,
+  ): Promise<VoiceoverResult> {
+    const multiplier = options?.rateMultiplier ?? 1;
+    // ElevenLabs caps speed at ~1.5; 1.0–1.5 is the safe range. Combine
+    // base speed with the multiplier and clamp.
+    const effectiveSpeed = Math.max(0.7, Math.min(1.5, this.speed * multiplier));
+    log(
+      "tts",
+      `Generating voiceover with ElevenLabs voice ${this.voiceId} at speed ${effectiveSpeed.toFixed(2)}` +
+        (multiplier !== 1 ? ` (×${multiplier.toFixed(2)} fit-to-target)` : ""),
+    );
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${this.voiceId}/with-timestamps`,
@@ -109,7 +121,7 @@ export class ElevenLabsProvider implements TtsProvider {
         body: JSON.stringify({
           text,
           model_id: this.modelId,
-          voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: this.speed },
+          voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: effectiveSpeed },
         }),
       },
     );

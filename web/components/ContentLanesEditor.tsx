@@ -6,6 +6,7 @@ import type {
   ContentLane,
   LaneType,
   RedditLaneConfig,
+  TrimPriority,
 } from "@pipeline/domain/models";
 import { TagInput } from "@/components/TagInput";
 
@@ -368,6 +369,41 @@ function RedditConfigBody({
             className="input input-sm mt-1.5"
           />
         </label>
+      </div>
+
+      <div className="rounded-md border border-border/60 bg-surface/30 p-3 space-y-3">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
+          If the script is longer than the target
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="label">Trim priority</span>
+            <select
+              value={cfg?.trimPriority ?? "balanced"}
+              onChange={(e) => onUpdate({ trimPriority: e.target.value as TrimPriority })}
+              className="input input-sm mt-1.5"
+            >
+              <option value="balanced">balanced — drop trailing comments, then body</option>
+              <option value="comments">comments — drop comments first (body is the story)</option>
+              <option value="body">body — drop body first (comments are the story)</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="label">Max speed-up % (last resort)</span>
+            <input
+              type="number"
+              min={0}
+              max={50}
+              step={5}
+              value={cfg?.maxSpeedupPercent ?? 0}
+              onChange={(e) => onUpdate({ maxSpeedupPercent: Number(e.target.value) || 0 })}
+              className="input input-sm mt-1.5"
+            />
+          </label>
+        </div>
+        <p className="text-[11px] text-fg-subtle">
+          Trim drops content first; speed-up nudges the TTS rate as a fallback. 0% disables speed-up.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
