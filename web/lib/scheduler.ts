@@ -1,22 +1,21 @@
 /**
- * Per-brand cron scheduler. Lives inside the same Node process as
+ * Multi-schedule cron driver. Lives inside the same Node process as
  * the admin UI and the deletion worker, so there is exactly one
  * timeline for fired jobs.
  *
  * Behavior:
  *   - On {@link startScheduler}, read `data/schedules.json` and
- *     register one node-cron task per enabled brand entry.
+ *     register one node-cron task per enabled schedule entry. Tasks
+ *     are keyed by entry.id, so a brand can have many concurrent
+ *     schedules (e.g. one for Reddit-story lanes, one for topic-driven).
  *   - On any change to `data/schedules.json` (fs.watch), tear down
- *     the active task set and rebuild from the new file. This means
- *     the UI's PUT /api/schedule/[brandId] is reflected without a
- *     restart.
+ *     the active task set and rebuild from the new file. PUT/POST/
+ *     DELETE through the API is reflected without a restart.
  *   - When a task fires, consult the current file again (so a
  *     just-written `globalPaused: true` is honored), check whether
- *     the brand already has an active job, then call job-manager.
+ *     the brand already has an active job (when skipIfRunning is set),
+ *     then call job-manager with the entry's laneType / lane / etc.
  *   - No catch-up after downtime: missed slots are skipped.
- *     Persistent absolute-time semantics are intentionally NOT used
- *     here — that's what the deletion queue is for. Schedules are
- *     "happens at the next matching minute" and that's it.
  *
  * Idempotent: calling startScheduler() twice in the same process is
  * a no-op so HMR / accidental double-init can't double-fire jobs.
@@ -25,7 +24,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import cron, { type ScheduledTask } from "node-cron";
-import { readSchedules, upsertSchedule, SCHEDULES_FILE_PATH, type ScheduleEntry } from "@/lib/schedule-fs";
+import {
+  readSchedules,
+  updateSchedule,
+  SCHEDULES_FILE_PATH,
+  type ScheduleEntry,
+} from "@/lib/schedule-fs";
 import { startRun, hasActiveJobForBrand } from "@/lib/job-manager";
 import { listActiveJobs } from "@/lib/job-store";
 
@@ -41,9 +45,6 @@ export function startScheduler(): void {
   console.log(`[scheduler] starting (file=${SCHEDULES_FILE_PATH})`);
 
   reload();
-
-  // Watch the data directory so we're notified when schedules.json is
-  // written (including atomic temp+rename writes that change the inode).
   attachWatcher();
 }
 
@@ -96,76 +97,79 @@ function attachWatcher(): void {
 /** Tear down all current tasks and rebuild from the schedules file. */
 function reload(): void {
   const data = readSchedules();
-  // Stop any tasks for brands that no longer exist in the file.
-  for (const [brandId, task] of tasks) {
-    if (!data.schedules[brandId]) {
+  const liveIds = new Set(data.schedules.map((s) => s.id));
+
+  // Stop tasks for schedules that no longer exist.
+  for (const [scheduleId, task] of tasks) {
+    if (!liveIds.has(scheduleId)) {
       task.stop();
-      tasks.delete(brandId);
+      tasks.delete(scheduleId);
       // eslint-disable-next-line no-console
-      console.log(`[scheduler] removed ${brandId}`);
+      console.log(`[scheduler] removed ${scheduleId}`);
     }
   }
 
-  // Stop+restart any task whose entry is enabled. Easier to
-  // tear-down-and-rebuild than to diff the cron string.
-  for (const [brandId, entry] of Object.entries(data.schedules)) {
-    tasks.get(brandId)?.stop();
-    tasks.delete(brandId);
+  // Tear-down-and-rebuild every entry. Cheaper than diffing cron strings.
+  for (const entry of data.schedules) {
+    tasks.get(entry.id)?.stop();
+    tasks.delete(entry.id);
 
     if (data.globalPaused) continue;
     if (!entry.enabled) continue;
     if (!cron.validate(entry.cron)) {
       // eslint-disable-next-line no-console
-      console.error(`[scheduler] invalid cron for ${brandId}: ${entry.cron}`);
+      console.error(`[scheduler] invalid cron for ${entry.id} (${entry.brandId}): ${entry.cron}`);
       continue;
     }
     const task = cron.schedule(
       entry.cron,
       () => {
-        onFire(brandId, entry).catch((err) => {
+        onFire(entry).catch((err) => {
           // eslint-disable-next-line no-console
-          console.error(`[scheduler] fire failed for ${brandId}:`, err);
+          console.error(`[scheduler] fire failed for ${entry.id}:`, err);
         });
       },
       { timezone: process.env.TZ || undefined },
     );
-    tasks.set(brandId, task);
+    tasks.set(entry.id, task);
     // eslint-disable-next-line no-console
-    console.log(`[scheduler] armed ${brandId} cron="${entry.cron}"`);
+    console.log(
+      `[scheduler] armed ${entry.id} brand=${entry.brandId} cron="${entry.cron}" type=${entry.laneType ?? "any"} lane=${entry.lane ?? "any"}`,
+    );
   }
 
-  // Re-attach watcher if the file just appeared.
   if (!watcher) attachWatcher();
 }
 
-async function onFire(brandId: string, entry: ScheduleEntry): Promise<void> {
-  // Re-read so a just-flipped globalPaused is honored even if the
-  // watcher hasn't fired the reload yet.
+async function onFire(entry: ScheduleEntry): Promise<void> {
+  // Re-read so a just-flipped globalPaused or just-disabled entry is
+  // honored even if the watcher hasn't fired the reload yet.
   const fresh = readSchedules();
   if (fresh.globalPaused) {
     // eslint-disable-next-line no-console
-    console.log(`[scheduler] skip ${brandId}: globally paused`);
+    console.log(`[scheduler] skip ${entry.id}: globally paused`);
     return;
   }
-  const live = fresh.schedules[brandId];
+  const live = fresh.schedules.find((s) => s.id === entry.id);
   if (!live || !live.enabled) return;
 
-  if (live.skipIfRunning && hasActiveJobForBrand(brandId)) {
+  if (live.skipIfRunning && hasActiveJobForBrand(live.brandId)) {
     const blocking = listActiveJobs()
-      .filter((j) => j.brandId === brandId)
+      .filter((j) => j.brandId === live.brandId)
       .map((j) => `${j.jobId}(${j.status})`)
       .join(", ");
     // eslint-disable-next-line no-console
-    console.log(`[scheduler] skip ${brandId}: active job already running [${blocking}]`);
+    console.log(`[scheduler] skip ${live.id}: active job already running for ${live.brandId} [${blocking}]`);
     return;
   }
 
-  const schedulerId = `${brandId}@${live.cron}`;
+  const schedulerId = `${live.id}@${live.cron}`;
   let result;
   try {
     result = startRun({
-      brandId,
+      brandId: live.brandId,
       lane: live.lane,
+      laneType: live.laneType ?? undefined,
       dryRun: live.dryRun,
       upload: live.platforms.length > 0,
       platforms: live.platforms,
@@ -174,13 +178,13 @@ async function onFire(brandId: string, entry: ScheduleEntry): Promise<void> {
     });
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error(`[scheduler] startRun failed for ${brandId}:`, err);
+    console.error(`[scheduler] startRun failed for ${live.id}:`, err);
     return;
   }
-  upsertSchedule(brandId, {
+  updateSchedule(live.id, {
     lastRunAt: new Date().toISOString(),
     lastJobId: result.jobId,
   });
   // eslint-disable-next-line no-console
-  console.log(`[scheduler] fired ${brandId} -> ${result.jobId}`);
+  console.log(`[scheduler] fired ${live.id} (${live.brandId}) -> ${result.jobId}`);
 }

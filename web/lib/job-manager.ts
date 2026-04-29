@@ -41,6 +41,8 @@ import {
 export interface StartRunInput {
   brandId: string;
   lane?: string | null;
+  /** When set with lane=null, restrict the random pick to lanes of this type. */
+  laneType?: "pexels-api" | "reddit-story";
   dryRun?: boolean;
   upload?: boolean;
   /** Subset of platforms to upload to. Empty array = no upload. */
@@ -108,6 +110,7 @@ function newJobId(): string {
 function buildArgs(input: StartRunInput): string[] {
   const args: string[] = ["src/generate.ts", `--brand=${input.brandId}`];
   if (input.lane) args.push(`--lane=${input.lane}`);
+  if (input.laneType && !input.lane) args.push(`--lane-type=${input.laneType}`);
   if (input.dryRun) args.push("--dry-run");
   if (input.upload && input.platforms && input.platforms.length > 0) {
     args.push("--upload");

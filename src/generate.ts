@@ -25,25 +25,36 @@ import { log, logError } from "./utils/logger.js";
 import fs from "node:fs";
 import path from "node:path";
 
-function parseArgs(): { brand?: string; lane?: string; dryRun: boolean; upload: boolean } {
+function parseArgs(): {
+  brand?: string;
+  lane?: string;
+  laneType?: "pexels-api" | "reddit-story";
+  dryRun: boolean;
+  upload: boolean;
+} {
   const args = process.argv.slice(2);
   let brand: string | undefined;
   let lane: string | undefined;
+  let laneType: "pexels-api" | "reddit-story" | undefined;
   let dryRun = false;
   let upload = false;
 
   for (const arg of args) {
     if (arg.startsWith("--brand=")) brand = arg.split("=")[1];
     else if (arg.startsWith("--lane=")) lane = arg.split("=")[1];
+    else if (arg.startsWith("--lane-type=")) {
+      const v = arg.split("=")[1];
+      if (v === "pexels-api" || v === "reddit-story") laneType = v;
+    }
     else if (arg === "--dry-run") dryRun = true;
     else if (arg === "--upload") upload = true;
   }
 
-  return { brand, lane, dryRun, upload };
+  return { brand, lane, laneType, dryRun, upload };
 }
 
 async function main(): Promise<void> {
-  const { brand: brandArg, lane: laneArg, dryRun, upload } = parseArgs();
+  const { brand: brandArg, lane: laneArg, laneType: laneTypeArg, dryRun, upload } = parseArgs();
 
   // --- Resolve brand and overlay brand-specific .env ---
   const brand = resolveBrand(brandArg);
@@ -72,7 +83,18 @@ async function main(): Promise<void> {
     if (!found) throw new Error(`Unknown lane: ${laneArg}. Available: ${lanes.map((l) => l.id).join(", ")}`);
     lane = found;
   } else {
-    lane = lanes[Math.floor(Math.random() * lanes.length)];
+    let pool = lanes;
+    if (laneTypeArg) {
+      pool = lanes.filter((l) => (l.type ?? "pexels-api") === laneTypeArg);
+      if (pool.length === 0) {
+        throw new Error(
+          `No lanes of type "${laneTypeArg}". Available types: ` +
+            [...new Set(lanes.map((l) => l.type ?? "pexels-api"))].join(", "),
+        );
+      }
+      log("pipeline", `Filtered ${lanes.length} → ${pool.length} lane(s) of type ${laneTypeArg}`);
+    }
+    lane = pool[Math.floor(Math.random() * pool.length)];
   }
   log("pipeline", `Lane: ${lane.id}`);
 

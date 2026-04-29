@@ -1,13 +1,19 @@
 /**
- * GET /api/schedule — schedules.json filtered to the session's owned brands.
+ * GET /api/schedule — schedules visible to the session, with the brand
+ * lane catalog bundled in so the editor can populate type/lane dropdowns.
  *
- * The UI uses the brand list to render rows for brands that have no
- * entry yet, so the operator can enable scheduling without hand-editing JSON.
+ * Returns:
+ *   {
+ *     version: 2,
+ *     globalPaused: boolean,
+ *     schedules: ScheduleEntry[],
+ *     brands: Array<{ id, displayName, lanes: { id, type }[] }>
+ *   }
  */
 
 import { requireAuth, filterBrands } from "@/lib/auth";
 import { readSchedules } from "@/lib/schedule-fs";
-import { listBrandIds } from "@/lib/brand-io";
+import { listBrandIds, readBrandProfile } from "@/lib/brand-io";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,14 +25,33 @@ export async function GET(request: Request) {
   const data = readSchedules();
   const allIds = listBrandIds();
   const brandIds = filterBrands(allIds, auth);
+  const owned = new Set(brandIds);
 
-  // Also filter the schedules map to only owned brands.
-  const schedules = Object.fromEntries(
-    Object.entries(data.schedules).filter(([id]) => brandIds.includes(id)),
-  );
+  const schedules = data.schedules.filter((s) => owned.has(s.brandId));
 
-  return new Response(JSON.stringify({ ...data, schedules, brandIds }), {
-    status: 200,
-    headers: { "content-type": "application/json" },
+  const brands = brandIds.map((id) => {
+    try {
+      const profile = readBrandProfile(id);
+      return {
+        id: profile.id,
+        displayName: profile.displayName,
+        lanes: profile.contentLanes.map((l) => ({
+          id: l.id,
+          type: (l.type ?? "pexels-api") as "pexels-api" | "reddit-story",
+        })),
+      };
+    } catch {
+      return { id, displayName: id, lanes: [] as { id: string; type: "pexels-api" | "reddit-story" }[] };
+    }
   });
+
+  return new Response(
+    JSON.stringify({
+      version: 2,
+      globalPaused: data.globalPaused,
+      schedules,
+      brands,
+    }),
+    { status: 200, headers: { "content-type": "application/json" } },
+  );
 }
