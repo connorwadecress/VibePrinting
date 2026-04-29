@@ -3,8 +3,10 @@ import type { WordTiming } from "../domain/models.js";
 
 export type { TikTokPage, TikTokToken } from "@remotion/captions";
 
-const SENTENCE_END = /[.!?;]$/;
-const CLAUSE_BREAK = /[,:\u2014\u2013\u2026]$/;  // comma, colon, em-dash, en-dash, ellipsis
+// Allow trailing closing punctuation/quotes after the break char so tokens
+// like `world."` or `(laughing).` still trigger a page break.
+const SENTENCE_END = /[.!?;][)\]'"\u201d\u2019]*$/;
+const CLAUSE_BREAK = /[,:\u2014\u2013\u2026][)\]'"\u201d\u2019]*$/;
 
 function buildPage(tokens: TikTokToken[]): TikTokPage {
   const first = tokens[0];

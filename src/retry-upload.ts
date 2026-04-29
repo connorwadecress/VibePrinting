@@ -17,7 +17,13 @@ import path from "node:path";
 import { loadConfig } from "./config.js";
 import { loadProfile } from "./domain/channel-profile.js";
 import type { UploadMetadata } from "./domain/interfaces/uploader.js";
-import type { ShortScript, TopicCandidate, ResearchPack } from "./domain/models.js";
+import type {
+  ShortScript,
+  TopicCandidate,
+  ResearchPack,
+  RedditPost,
+  RedditStoryScript,
+} from "./domain/models.js";
 import type { UploadLogEntry } from "./domain/upload-log.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
@@ -25,7 +31,13 @@ import { resolveBrand, loadBrandEnv } from "./utils/brand-resolver.js";
 import { log, logError } from "./utils/logger.js";
 import { appendUploadLog, readTriggerFromEnv } from "./utils/upload-log.js";
 
-type ScriptFile = { topic?: TopicCandidate; research?: ResearchPack; script: ShortScript };
+type ScriptFile = {
+  topic?: TopicCandidate;
+  research?: ResearchPack;
+  script?: ShortScript;
+  redditPost?: RedditPost;
+  redditScript?: RedditStoryScript;
+};
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -85,11 +97,46 @@ function findRunDir(outputDir: string, runId?: string): string {
 // Build upload metadata (same logic as UploadStage.buildMetadata)
 // ---------------------------------------------------------------------------
 
-function buildMetadata(script: ShortScript, profile: ReturnType<typeof loadProfile>): UploadMetadata {
+function buildMetadata(
+  data: ScriptFile,
+  profile: ReturnType<typeof loadProfile>,
+): UploadMetadata {
   const { branding, genSecDefaults } = profile;
-  const pub = script.publishMeta;
 
-  const rawTitle = (pub?.youtubeTitle || script.hook).replace(/[<>]/g, "").trim();
+  let pub = data.script?.publishMeta ?? data.redditScript?.publishMeta;
+  let fallbackTitle = "";
+  let fallbackDescription = "";
+
+  if (data.script) {
+    const s = data.script;
+    fallbackTitle = s.hook;
+    fallbackDescription = [
+      s.hook,
+      "",
+      s.beats.map((b) => b.narration).join(" "),
+      "",
+      s.payoff,
+      "",
+      "---",
+      s.callToAction,
+    ].join("\n");
+  } else if (data.redditScript) {
+    const rs = data.redditScript;
+    const commentLines = rs.segments
+      .filter((s) => s.kind === "comment")
+      .slice(0, 3)
+      .map((s) => `• ${s.text.slice(0, 200)}${s.text.length > 200 ? "…" : ""}`);
+    fallbackTitle = rs.post.title;
+    fallbackDescription = [
+      `From r/${rs.post.subreddit}: ${rs.post.title}`,
+      "",
+      ...commentLines,
+    ].join("\n");
+  } else {
+    throw new Error("script.json has neither `script` nor `redditScript`");
+  }
+
+  const rawTitle = (pub?.youtubeTitle || fallbackTitle).replace(/[<>]/g, "").trim();
   const title = rawTitle.length > 100 ? rawTitle.substring(0, 97) + "..." : rawTitle;
 
   const description = pub?.youtubeDescription
@@ -101,15 +148,9 @@ function buildMetadata(script: ShortScript, profile: ReturnType<typeof loadProfi
         ...(pub.topicHashtags ?? []).filter((h) => !branding.hashtags.includes(h)),
       ].join("\n")
     : [
-        script.hook,
-        "",
-        script.beats.map((b) => b.narration).join(" "),
-        "",
-        script.payoff,
+        fallbackDescription,
         "",
         "---",
-        script.callToAction,
-        "",
         branding.hashtags.join(" "),
       ].join("\n");
 
@@ -148,7 +189,7 @@ async function uploadRun(
   }
 
   const scriptData = JSON.parse(fs.readFileSync(scriptPath, "utf-8")) as ScriptFile;
-  const metadata = buildMetadata(scriptData.script, profile);
+  const metadata = buildMetadata(scriptData, profile);
 
   log("retry", `Title: ${metadata.title}`);
   log("retry", `Video: ${videoPath}`);

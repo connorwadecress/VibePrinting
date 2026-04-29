@@ -3,7 +3,10 @@ import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import path from "node:path";
 import fs from "node:fs";
-import type { VideoAssembler } from "../../domain/interfaces/video-assembler.js";
+import type {
+  VideoAssembler,
+  RedditStoryAssemblyInput,
+} from "../../domain/interfaces/video-assembler.js";
 import type { VideoSpec, CaptionStyle } from "../../domain/video-specs.js";
 import type { SubtitleEntry } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
@@ -161,6 +164,121 @@ export class FfmpegAssembler implements VideoAssembler {
           "-b:a", audioBitrate,
           "-r", String(fps),
           "-vf", vf,
+        ])
+        .output(outputPath)
+        .on("end", () => resolve())
+        .on("error", (e) => reject(e))
+        .run();
+    });
+  }
+
+  async concatenateAudio(paths: string[], outputPath: string): Promise<void> {
+    if (paths.length === 0) throw new Error("concatenateAudio called with no inputs");
+    if (paths.length === 1) {
+      // Re-encode the single file to the spec's audio codec/bitrate so the
+      // output matches what a multi-input concat would produce.
+      return new Promise((resolve, reject) => {
+        ffmpeg()
+          .input(paths[0])
+          .outputOptions(["-c:a", this.spec.audioCodec, "-b:a", this.spec.audioBitrate])
+          .output(outputPath)
+          .on("end", () => resolve())
+          .on("error", (e) => reject(e))
+          .run();
+      });
+    }
+    // The concat audio filter is more robust than the concat demuxer when
+    // input mp3 files have varying stream params (which edge-tts produces).
+    const inputLabels = paths.map((_, i) => `[${i}:a]`).join("");
+    const filter = `${inputLabels}concat=n=${paths.length}:v=0:a=1[out]`;
+
+    return new Promise((resolve, reject) => {
+      const cmd = ffmpeg();
+      for (const p of paths) cmd.input(p);
+      cmd
+        .complexFilter(filter)
+        .outputOptions([
+          "-map", "[out]",
+          "-c:a", this.spec.audioCodec,
+          "-b:a", this.spec.audioBitrate,
+        ])
+        .output(outputPath)
+        .on("end", () => resolve())
+        .on("error", (e) => reject(e))
+        .run();
+    });
+  }
+
+  async assembleRedditStory(input: RedditStoryAssemblyInput): Promise<void> {
+    const {
+      gameplayPath,
+      sliceStartSeconds,
+      sliceDurationSeconds,
+      voiceoverPath,
+      musicPath,
+      outputPath,
+      musicVolumeDb = -22,
+      duckThresholdDb = -20,
+    } = input;
+
+    const { width, height, fps, codec, preset, crf, audioCodec, audioBitrate } = this.spec;
+
+    log(
+      "ffmpeg",
+      `Assembling reddit-story: ${path.basename(gameplayPath)} ` +
+        `[${sliceStartSeconds.toFixed(1)}-${(sliceStartSeconds + sliceDurationSeconds).toFixed(1)}s] ` +
+        `+ voiceover${musicPath ? ` + music (${path.basename(musicPath)})` : ""}`,
+    );
+
+    const cmd = ffmpeg();
+
+    // Input 0: gameplay video, sliced. -ss before -i is fast (seek-on-input).
+    cmd.input(gameplayPath).inputOptions([
+      "-ss", String(sliceStartSeconds),
+      "-t", String(sliceDurationSeconds),
+    ]);
+
+    // Input 1: voiceover audio.
+    cmd.input(voiceoverPath);
+
+    // Input 2 (optional): music, looped to cover full duration.
+    if (musicPath) {
+      cmd.input(musicPath).inputOptions(["-stream_loop", "-1", "-t", String(sliceDurationSeconds)]);
+    }
+
+    const videoChain =
+      `[0:v]scale=${width}:${height}:force_original_aspect_ratio=increase,` +
+      `crop=${width}:${height},setsar=1,fps=${fps}[vout]`;
+
+    let audioChain: string;
+    let audioMap: string;
+    if (musicPath) {
+      // Sidechain-compress music against voiceover, then mix down to a single track.
+      audioChain =
+        `[2:a]volume=${musicVolumeDb}dB[mraw];` +
+        `[mraw][1:a]sidechaincompress=threshold=${duckThresholdDb}dB:ratio=8:attack=20:release=300[mducked];` +
+        `[1:a][mducked]amix=inputs=2:duration=first:weights=1.0 0.6[aout]`;
+      audioMap = "[aout]";
+    } else {
+      audioChain = `[1:a]anull[aout]`;
+      audioMap = "[aout]";
+    }
+
+    const filterGraph = `${videoChain};${audioChain}`;
+
+    return new Promise((resolve, reject) => {
+      cmd
+        .complexFilter(filterGraph)
+        .outputOptions([
+          "-map", "[vout]",
+          "-map", audioMap,
+          "-c:v", codec,
+          "-preset", preset,
+          "-crf", String(crf),
+          "-c:a", audioCodec,
+          "-b:a", audioBitrate,
+          "-r", String(fps),
+          "-shortest",
         ])
         .output(outputPath)
         .on("end", () => resolve())

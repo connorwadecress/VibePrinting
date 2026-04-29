@@ -47,16 +47,19 @@ FROM node:20-bookworm-slim AS runtime
 # tini for proper signal handling, ffmpeg for the video assembler,
 # ca-certificates for outbound HTTPS to LLM/upload APIs.
 # Chrome/Remotion headless browser dependencies.
+# python3 + yt-dlp for the reddit-story gameplay fallback provider.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    ffmpeg ca-certificates tini wget \
+    ffmpeg ca-certificates tini wget python3 \
     fonts-liberation fonts-dejavu-core \
     libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
     libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
     libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 \
     libpango-1.0-0 libpangocairo-1.0-0 libcairo2 \
     libx11-6 libx11-xcb1 libxcb1 libxext6 \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && wget -q -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+ && chmod a+x /usr/local/bin/yt-dlp
 
 WORKDIR /app
 
@@ -68,6 +71,7 @@ ENV VP_DATA_DIR=/app/data
 ENV VP_LOGS_DIR=/app/logs
 ENV VP_BRANDS_DIR=/app/brands
 ENV VP_OUTPUT_DIR=/app/output
+ENV VP_SHARED_DIR=/app/shared
 ENV OUTPUT_DIR=/app/output
 ENV VP_TRIGGER=cli
 
@@ -79,7 +83,7 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/web ./web
 
 # Volume-mount targets — created so an empty host bind mount works.
-RUN mkdir -p /app/brands /app/output /app/data /app/logs
+RUN mkdir -p /app/brands /app/output /app/data /app/logs /app/shared/gameplay /app/shared/music
 
 EXPOSE 3000
 

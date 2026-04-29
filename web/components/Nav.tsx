@@ -20,6 +20,7 @@ const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/runs", label: "Runs" },
   { href: "/schedule", label: "Schedule" },
   { href: "/uploads", label: "Uploads" },
+  { href: "/library", label: "Library" },
 ];
 
 interface NavProps {
@@ -59,7 +60,7 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
                   <Link
                     href={item.href}
                     className={
-                      "relative block rounded-lg px-3 py-1.5 text-sm transition-colors " +
+                      "relative block rounded-lg px-3 py-2 text-sm transition-colors " +
                       (active
                         ? "bg-accent/15 text-accent"
                         : "text-fg-muted hover:bg-surface-2 hover:text-fg")
@@ -75,15 +76,12 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
 
         <div className="ml-auto flex items-center gap-2">
           <BrandSwitcher brandIds={brandIds} activeBrandId={activeBrandId} />
-          <span className="hidden text-[10px] font-medium uppercase tracking-widest text-fg-subtle lg:inline">
-            v0.2
-          </span>
           <button
             type="button"
             aria-label="Toggle navigation"
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg md:hidden"
+            className="grid size-11 place-items-center rounded-lg border border-border bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg md:hidden"
           >
             <svg
               width="16"
@@ -122,7 +120,7 @@ export function Nav({ brandIds, activeBrandId }: NavProps) {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className={
-                      "block rounded-lg px-3 py-2 text-sm transition-colors " +
+                      "block rounded-lg px-3 py-3 text-base font-medium transition-colors " +
                       (active
                         ? "bg-accent/15 text-accent"
                         : "text-fg-muted hover:bg-surface-2 hover:text-fg")

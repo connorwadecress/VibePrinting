@@ -45,12 +45,29 @@ export interface CleanupConfig {
 }
 
 /**
+ * One file in a brand-wide asset library (gameplay clips or music tracks).
+ * The actual file lives on disk under `gameplayLibraryDir` / `musicLibraryDir`;
+ * this entry just records the filename and whether it should be eligible
+ * for selection. Order in the array is the display/priority order.
+ */
+export interface AssetEntry {
+  filename: string;
+  enabled?: boolean;
+}
+
+/**
  * A complete channel identity — loaded from a user-created JSON file.
  * This is never hardcoded in source. Users create their own `channel.json`
  * from `channel.example.json` to define their brand.
  *
  * `ttsProvider`, `ttsProviderSettings`, and `cleanup` are optional for
  * backward compatibility; existing profiles continue to work unchanged.
+ *
+ * The `gameplayLibraryDir`, `musicLibraryDir`, and `ytDlpFallbackUrls`
+ * fields are consumed only by reddit-story lanes. When omitted, the
+ * pipeline reads from the cross-brand shared library at
+ * `<repo>/shared/{gameplay,music}` (overridable via VP_SHARED_DIR).
+ * Set these fields explicitly only if a brand needs a private pool.
  */
 export interface ChannelProfile {
   id: string;
@@ -66,6 +83,16 @@ export interface ChannelProfile {
   ttsProvider?: TtsProviderKind;
   ttsProviderSettings?: TtsProviderSettings;
   cleanup?: CleanupConfig;
+  /** Absolute or brand-relative path to a directory of gameplay .mp4/.mov files. */
+  gameplayLibraryDir?: string;
+  /** Absolute or brand-relative path to a directory of music .mp3/.m4a/.wav files. */
+  musicLibraryDir?: string;
+  /** Optional yt-dlp fallback URLs used when the gameplay library is empty/short. */
+  ytDlpFallbackUrls?: string[];
+  /** Per-file enable/order for gameplay clips. When present, only enabled entries are eligible. */
+  gameplayLibrary?: AssetEntry[];
+  /** Per-file enable/order for music tracks. When present, only enabled entries are eligible. */
+  musicLibrary?: AssetEntry[];
 }
 
 /**

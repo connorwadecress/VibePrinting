@@ -29,6 +29,7 @@ export default async function RunsPage() {
         lanes: profile.contentLanes.map((l) => ({
           id: l.id,
           description: l.description,
+          type: l.type ?? "pexels-api",
         })),
       });
     } catch {
@@ -53,6 +54,9 @@ export default async function RunsPage() {
         <div className="flex items-center gap-2 text-xs">
           <span className="pill-info">{active.length} active</span>
           <span className="pill-muted">{recent.length} recent</span>
+          <Link href="/runs/history" className="btn-secondary btn-sm">
+            Content history
+          </Link>
         </div>
       </header>
 
@@ -89,7 +93,6 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
         <thead>
           <tr>
             <th>Started</th>
-            <th>Brand</th>
             <th>Lane</th>
             <th>Trigger</th>
             <th>Status</th>
@@ -102,8 +105,9 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td data-label="Started" className="whitespace-nowrap font-mono text-xs text-fg-muted">
                 {formatTime(j.startedAt)}
               </td>
-              <td data-label="Brand" className="font-medium text-fg">{j.brandId}</td>
-              <td data-label="Lane" className="text-fg-muted">{j.lane ?? <span className="text-fg-subtle">(any)</span>}</td>
+              <td data-label="Lane" className="font-mono text-xs text-fg">
+                {j.lane ?? <span className="text-fg-subtle">(any)</span>}
+              </td>
               <td data-label="Trigger" className="text-xs text-fg-muted">{j.trigger}</td>
               <td data-label="Status">
                 <StatusPill status={j.status} queuePosition={j.queuePosition} />
@@ -111,7 +115,7 @@ function JobTable({ jobs }: { jobs: JobRecord[] }) {
               <td className="text-right">
                 <Link
                   href={`/runs/${j.jobId}`}
-                  className="text-xs font-medium text-accent hover:text-accent-hover"
+                  className="inline-flex min-h-[36px] items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-accent hover:bg-accent/10 hover:text-accent-hover sm:min-h-0 sm:px-1 sm:text-xs"
                 >
                   view →
                 </Link>

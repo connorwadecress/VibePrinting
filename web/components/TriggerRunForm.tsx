@@ -4,31 +4,69 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Manual trigger form for /runs. Renders a brand dropdown, lane
- * dropdown (filtered to the selected brand's lanes), dry-run toggle,
- * and per-platform upload checkboxes. POSTs to /api/runs and on
+ * Manual trigger form for /runs.
+ *
+ * Flow: pick lane type → pick lane (filtered by type) → optional topic
+ * seed → upload toggles (on by default). POSTs to /api/runs and on
  * success navigates to /runs/[jobId] where the SSE stream takes over.
  */
+
+type LaneType = "pexels-api" | "reddit-story";
+
+export interface TriggerLaneOption {
+  id: string;
+  description: string;
+  type: LaneType;
+}
 
 export interface TriggerBrandOption {
   id: string;
   displayName: string;
-  lanes: { id: string; description: string }[];
+  lanes: TriggerLaneOption[];
 }
+
+const TYPE_LABEL: Record<LaneType, string> = {
+  "pexels-api": "Topic-driven",
+  "reddit-story": "Reddit story",
+};
+
+const TYPE_HELP: Record<LaneType, string> = {
+  "pexels-api":
+    "AI picks a topic from the lane and assembles stock footage from Pexels.",
+  "reddit-story":
+    "Picks a top post from your subreddits and plays it over your gameplay library.",
+};
+
+const SEED_PLACEHOLDER: Record<LaneType, string> = {
+  "pexels-api": "Optional — a topic phrase to skip topic discovery",
+  "reddit-story": "Optional — a Reddit post URL to skip subreddit picking",
+};
+
+const SEED_HELP: Record<LaneType, string> = {
+  "pexels-api": "Sets VP_TOPIC_SEED. The lane's research stage uses this verbatim instead of the LLM-picked topic.",
+  "reddit-story": "Sets VP_REDDIT_POST_URL. Must be a full Reddit permalink to a post.",
+};
 
 export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
   const router = useRouter();
   const [brandId, setBrandId] = useState(brands[0]?.id ?? "");
+  const [laneType, setLaneType] = useState<LaneType>("pexels-api");
   const [lane, setLane] = useState<string>("");
+  const [topicSeed, setTopicSeed] = useState("");
   const [dryRun, setDryRun] = useState(false);
-  const [youtube, setYoutube] = useState(false);
-  const [tiktok, setTiktok] = useState(false);
+  const [youtube, setYoutube] = useState(true);
+  const [tiktok, setTiktok] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const selectedBrand = useMemo(
     () => brands.find((b) => b.id === brandId),
     [brands, brandId],
+  );
+
+  const filteredLanes = useMemo(
+    () => (selectedBrand?.lanes ?? []).filter((l) => l.type === laneType),
+    [selectedBrand, laneType],
   );
 
   async function onSubmit(e: React.FormEvent) {
@@ -38,9 +76,16 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
       setError("Pick a brand");
       return;
     }
+    const trimmedSeed = topicSeed.trim();
+    if (trimmedSeed && !lane) {
+      setError("Topic seed requires a specific lane (not 'any')");
+      return;
+    }
     const platforms: string[] = [];
-    if (youtube) platforms.push("youtube");
-    if (tiktok) platforms.push("tiktok");
+    if (!dryRun) {
+      if (youtube) platforms.push("youtube");
+      if (tiktok) platforms.push("tiktok");
+    }
 
     const res = await fetch("/api/runs", {
       method: "POST",
@@ -50,6 +95,7 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
         lane: lane || null,
         dryRun,
         platforms,
+        topicSeed: trimmedSeed || null,
       }),
     });
     if (!res.ok) {
@@ -74,7 +120,7 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
 
   return (
     <form onSubmit={onSubmit} className="card space-y-5 p-5">
-      <div className="grid gap-4 sm:grid-cols-2">
+      {brands.length > 1 && (
         <label className="block">
           <span className="label">Brand</span>
           <select
@@ -92,28 +138,82 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
             ))}
           </select>
         </label>
+      )}
 
-        <label className="block">
-          <span className="label">Lane</span>
-          <select
-            className="input input-sm mt-1.5"
-            value={lane}
-            onChange={(e) => setLane(e.target.value)}
-          >
-            <option value="">(any — pipeline picks one)</option>
-            {selectedBrand?.lanes.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.id}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div>
+        <span className="label">Lane type</span>
+        <div
+          role="radiogroup"
+          aria-label="Lane type"
+          className="mt-1.5 inline-flex rounded-md border border-border bg-surface-2/40 p-0.5"
+        >
+          {(["pexels-api", "reddit-story"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={laneType === t}
+              onClick={() => {
+                setLaneType(t);
+                setLane("");
+                setTopicSeed("");
+              }}
+              className={
+                "cursor-pointer rounded px-3 py-1.5 text-xs font-medium transition-colors " +
+                (laneType === t
+                  ? "bg-surface-3 text-fg"
+                  : "text-fg-muted hover:text-fg")
+              }
+            >
+              {TYPE_LABEL[t]}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-fg-subtle">{TYPE_HELP[laneType]}</p>
       </div>
 
-      <fieldset className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <Check label="Dry run (script only)" checked={dryRun} onChange={setDryRun} />
-        <Check label="Upload to YouTube" checked={youtube} onChange={setYoutube} disabled={dryRun} />
-        <Check label="Upload to TikTok" checked={tiktok} onChange={setTiktok} disabled={dryRun} />
+      <label className="block">
+        <span className="label">Lane</span>
+        <select
+          className="input input-sm mt-1.5"
+          value={lane}
+          onChange={(e) => setLane(e.target.value)}
+        >
+          <option value="">(any — pipeline picks one)</option>
+          {filteredLanes.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.id}
+            </option>
+          ))}
+        </select>
+        {filteredLanes.length === 0 && (
+          <p className="mt-1.5 text-xs text-fg-subtle">
+            This brand has no {TYPE_LABEL[laneType].toLowerCase()} lanes — switch type or add one in the brand editor.
+          </p>
+        )}
+      </label>
+
+      <label className="block">
+        <span className="label">Topic seed</span>
+        <input
+          type="text"
+          className="input input-sm mt-1.5"
+          value={topicSeed}
+          onChange={(e) => setTopicSeed(e.target.value)}
+          placeholder={SEED_PLACEHOLDER[laneType]}
+        />
+        <p className="mt-1.5 text-xs text-fg-subtle">{SEED_HELP[laneType]}</p>
+      </label>
+
+      <fieldset className="space-y-2 border-t border-border/60 pt-4">
+        <legend className="label mb-1">Output</legend>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <Check label="Upload to YouTube" checked={youtube} onChange={setYoutube} disabled={dryRun} />
+          <Check label="Upload to TikTok" checked={tiktok} onChange={setTiktok} disabled={dryRun} />
+        </div>
+        <div>
+          <Check label="Dry run (script only — no video, no upload)" checked={dryRun} onChange={setDryRun} />
+        </div>
       </fieldset>
 
       {error && <div className="alert-error">{error}</div>}
@@ -141,7 +241,7 @@ function Check({
   return (
     <label
       className={
-        "flex items-center gap-2 text-sm " +
+        "flex cursor-pointer items-center gap-2 text-sm " +
         (disabled ? "cursor-not-allowed text-fg-subtle" : "text-fg-muted hover:text-fg")
       }
     >

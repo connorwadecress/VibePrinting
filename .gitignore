@@ -24,6 +24,11 @@ data/*
 logs/*
 !logs/.gitkeep
 
+# Cross-brand shared asset library (gameplay clips + music). Binary content
+# managed via the admin UI's /library page, never committed to git.
+shared/*
+!shared/.gitkeep
+
 # Next.js build output
 web/.next/
 web/next-env.d.ts

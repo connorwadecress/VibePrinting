@@ -13,11 +13,60 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ChannelProfileSchema, type ChannelProfileInput } from "@/lib/zod-schemas";
-import { brandProfilePath, brandTopicHistoryPath, BRANDS_DIR, ALLOWED_BRANDS } from "@/lib/paths";
+import {
+  brandDir,
+  brandProfilePath,
+  brandTopicHistoryPath,
+  BRANDS_DIR,
+  ALLOWED_BRANDS,
+  SHARED_GAMEPLAY_DIR,
+  SHARED_MUSIC_DIR,
+} from "@/lib/paths";
 import { listBrands } from "@pipeline/utils/brand-resolver";
 import { loadProfile } from "@pipeline/domain/channel-profile";
 import type { ChannelProfile } from "@pipeline/domain/channel-profile";
 import type { TopicHistoryEntry } from "@pipeline/domain/models";
+
+export const GAMEPLAY_EXTS = [".mp4", ".mov", ".mkv", ".webm"];
+export const MUSIC_EXTS = [".mp3", ".m4a", ".wav", ".aac", ".ogg"];
+
+export interface BrandAssetLists {
+  gameplay: string[];
+  music: string[];
+}
+
+/**
+ * Return the filenames eligible for this brand's reddit-story lanes.
+ *
+ * Default is the cross-brand shared library at <repo>/shared/{gameplay,music}
+ * — both buddies on a multi-tenant instance pick from the same pool. Per-brand
+ * customization happens via the AssetEntry[] allowlists in channel.json.
+ *
+ * If a brand sets gameplayLibraryDir / musicLibraryDir on its profile we honor
+ * that as an override (resolved relative to the brand folder). That escape
+ * hatch lets a brand keep a private asset pool when they need to.
+ */
+export function listBrandAssets(brandId: string, profile?: ChannelProfile | null): BrandAssetLists {
+  const root = brandDir(brandId);
+  const gameplayDir = profile?.gameplayLibraryDir
+    ? path.resolve(root, profile.gameplayLibraryDir)
+    : SHARED_GAMEPLAY_DIR;
+  const musicDir = profile?.musicLibraryDir
+    ? path.resolve(root, profile.musicLibraryDir)
+    : SHARED_MUSIC_DIR;
+  return {
+    gameplay: scan(gameplayDir, GAMEPLAY_EXTS),
+    music: scan(musicDir, MUSIC_EXTS),
+  };
+}
+
+function scan(dir: string, exts: string[]): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => exts.includes(path.extname(name).toLowerCase()))
+    .sort();
+}
 
 export interface BrandSummary {
   id: string;

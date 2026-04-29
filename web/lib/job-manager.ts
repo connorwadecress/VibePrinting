@@ -41,12 +41,16 @@ import {
 export interface StartRunInput {
   brandId: string;
   lane?: string | null;
+  /** When set with lane=null, restrict the random pick to lanes of this type. */
+  laneType?: "pexels-api" | "reddit-story";
   dryRun?: boolean;
   upload?: boolean;
   /** Subset of platforms to upload to. Empty array = no upload. */
   platforms?: string[];
   trigger?: JobTrigger;
   schedulerId?: string | null;
+  /** Extra env vars to pass to the child (e.g. VP_TOPIC_SEED, VP_REDDIT_POST_URL). */
+  envOverrides?: Record<string, string>;
 }
 
 export interface StartRunResult {
@@ -106,6 +110,7 @@ function newJobId(): string {
 function buildArgs(input: StartRunInput): string[] {
   const args: string[] = ["src/generate.ts", `--brand=${input.brandId}`];
   if (input.lane) args.push(`--lane=${input.lane}`);
+  if (input.laneType && !input.lane) args.push(`--lane-type=${input.laneType}`);
   if (input.dryRun) args.push("--dry-run");
   if (input.upload && input.platforms && input.platforms.length > 0) {
     args.push("--upload");
@@ -165,7 +170,7 @@ export function startRun(input: StartRunInput): StartRunResult {
   }
 
   // Slot available — spawn immediately.
-  spawnJob(jobId, input, args, trigger, platforms);
+  spawnJob(jobId, input, args, trigger, platforms, input.envOverrides);
   return { jobId, job: getJob(jobId)! };
 }
 
@@ -218,6 +223,7 @@ function spawnJob(
   args: string[],
   trigger: JobTrigger,
   platforms: string[],
+  envOverrides?: Record<string, string>,
 ): void {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
@@ -225,6 +231,11 @@ function spawnJob(
   };
   if (platforms.length > 0) env.VP_PLATFORMS = platforms.join(",");
   if (input.schedulerId) env.VP_SCHEDULER_ID = input.schedulerId;
+  if (envOverrides) {
+    for (const [k, v] of Object.entries(envOverrides)) {
+      if (v) env[k] = v;
+    }
+  }
 
   let child: ChildProcessWithoutNullStreams;
   try {
@@ -279,7 +290,7 @@ function drainQueue(): void {
   const args = buildArgs(input);
   const platforms = input.upload ? input.platforms ?? [] : [];
   const trigger = input.trigger ?? "manual";
-  spawnJob(jobId, input, args, trigger, platforms);
+  spawnJob(jobId, input, args, trigger, platforms, input.envOverrides);
 }
 
 function attachStream(jobId: string, child: ChildProcessWithoutNullStreams): void {

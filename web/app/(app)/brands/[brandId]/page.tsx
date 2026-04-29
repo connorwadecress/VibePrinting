@@ -1,10 +1,11 @@
-import Link from "next/link";
-import { readBrandProfile } from "@/lib/brand-io";
+import { readBrandProfile, listBrandAssets, type BrandAssetLists } from "@/lib/brand-io";
 import { readBrandEnv } from "@/lib/brand-env-io";
 import { BrandForm } from "@/components/BrandForm";
 import { BrandEnvEditor } from "@/components/BrandEnvEditor";
 import { BrandJsonEditor } from "@/components/BrandJsonEditor";
 import { BrandTabs } from "@/components/BrandTabs";
+import { BackLink } from "@/components/BackLink";
+import { resolveActiveBrand } from "@/lib/active-brand";
 
 /**
  * Brand editor. Server component reads channel.json and the brand's
@@ -31,6 +32,10 @@ export default async function BrandEditorPage({ params }: PageProps) {
     profileError = (err as Error).message ?? String(err);
   }
 
+  const assets: BrandAssetLists = listBrandAssets(brandId, profile);
+  const { brandIds } = await resolveActiveBrand();
+  const showBackLink = brandIds.length > 1;
+
   let envVars;
   try {
     envVars = readBrandEnv(brandId);
@@ -41,21 +46,13 @@ export default async function BrandEditorPage({ params }: PageProps) {
   return (
     <section>
       <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Link
-            href="/brands"
-            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
-          >
-            <span aria-hidden>←</span> Brands
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">
+        <div className="space-y-2">
+          {showBackLink && <BackLink href="/brands">Brands</BackLink>}
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
             {profile?.displayName ?? brandId}
           </h1>
-          <p className="mt-0.5 font-mono text-xs text-fg-subtle">{brandId}</p>
+          <p className="font-mono text-xs text-fg-subtle">{brandId}</p>
         </div>
-        <Link href={`/brands/${brandId}/history`} className="btn-secondary btn-sm">
-          Topic history
-        </Link>
       </header>
 
       {profileError && <div className="mb-4 alert-error">{profileError}</div>}
@@ -65,7 +62,7 @@ export default async function BrandEditorPage({ params }: PageProps) {
           {
             id: "channel",
             label: "Channel",
-            content: profile ? <BrandForm initial={profile} /> : null,
+            content: profile ? <BrandForm initial={profile} assets={assets} /> : null,
           },
           {
             id: "configuration",

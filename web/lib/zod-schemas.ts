@@ -10,7 +10,28 @@
 
 import { z } from "zod";
 
-export const LaneTypeSchema = z.enum(["seven-api", "reddit-story"]);
+export const LaneTypeSchema = z.enum(["pexels-api", "reddit-story"]);
+
+export const CommentToneSchema = z.enum(["funny", "sincere", "blend"]);
+
+export const TrimPrioritySchema = z.enum(["comments", "body", "balanced"]);
+
+export const RedditLaneConfigSchema = z
+  .object({
+    subreddit: z.string().min(1),
+    showDescription: z.boolean().optional(),
+    commentTone: CommentToneSchema.optional(),
+    timeRange: z.enum(["day", "week", "month", "year", "all"]).optional(),
+    commentCount: z.number().int().positive().optional(),
+    minCommentLength: z.number().int().nonnegative().optional(),
+    maxCommentLength: z.number().int().positive().optional(),
+    trimPriority: TrimPrioritySchema.optional(),
+    maxSpeedupPercent: z.number().nonnegative().max(50).optional(),
+    segmentGapSeconds: z.number().nonnegative().optional(),
+    cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
+    cardMaxHeightPx: z.number().int().positive().optional(),
+  })
+  .partial();
 
 export const ContentLaneSchema = z.object({
   id: z.string().min(1),
@@ -18,6 +39,7 @@ export const ContentLaneSchema = z.object({
   targetDurationSeconds: z.number().int().positive(),
   exampleHooks: z.array(z.string()).default([]),
   type: LaneTypeSchema.optional(),
+  redditConfig: RedditLaneConfigSchema.optional(),
 });
 
 export const ChannelBrandingSchema = z.object({
@@ -50,6 +72,11 @@ export const TtsProviderSettingsSchema = z
 export const CleanupConfigSchema = z.object({
   enabled: z.boolean(),
   delayMinutes: z.number().int().nonnegative(),
+});
+
+export const AssetEntrySchema = z.object({
+  filename: z.string().min(1),
+  enabled: z.boolean().optional(),
 });
 
 /**
@@ -90,6 +117,11 @@ export const ChannelProfileSchema = z.object({
   ttsProvider: z.enum(["edge", "elevenlabs"]).optional(),
   ttsProviderSettings: TtsProviderSettingsSchema.optional(),
   cleanup: CleanupConfigSchema.optional(),
+  gameplayLibraryDir: z.string().optional(),
+  musicLibraryDir: z.string().optional(),
+  ytDlpFallbackUrls: z.array(z.string()).optional(),
+  gameplayLibrary: z.array(AssetEntrySchema).optional(),
+  musicLibrary: z.array(AssetEntrySchema).optional(),
 });
 
 export type ChannelProfileInput = z.infer<typeof ChannelProfileSchema>;

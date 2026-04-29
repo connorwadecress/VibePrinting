@@ -34,6 +34,20 @@ export class TopicDiscoveryStage implements PipelineStage {
     const lane = state.lane;
     if (!lane) throw new Error("No lane set in pipeline state");
 
+    const seed = process.env.VP_TOPIC_SEED?.trim();
+    if (seed) {
+      const topic: TopicCandidate = {
+        laneId: lane.id,
+        titleAngle: seed,
+        seedQuestion: seed,
+        noveltyScore: 1,
+        riskLevel: "low",
+      };
+      log(this.name, `Using VP_TOPIC_SEED override: "${seed}" — skipping LLM topic discovery`);
+      state.topic = topic;
+      return;
+    }
+
     log(this.name, `Finding topic for lane: ${lane.id}`);
 
     let userPrompt = `Content lane: "${lane.id}"

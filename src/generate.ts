@@ -8,6 +8,10 @@ import { createLlmClient } from "./providers/llm/index.js";
 import { EdgeTtsProvider } from "./providers/tts/edge-tts.js";
 import { ElevenLabsProvider } from "./providers/tts/elevenlabs.js";
 import { PexelsProvider } from "./providers/footage/pexels.js";
+import { LibraryGameplayProvider } from "./providers/gameplay/library.js";
+import { YtDlpGameplayProvider } from "./providers/gameplay/yt-dlp.js";
+import { CompositeGameplayProvider } from "./providers/gameplay/composite.js";
+import { LibraryMusicProvider } from "./providers/music/library.js";
 import { FfmpegAssembler } from "./providers/video/ffmpeg-assembler.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
@@ -21,25 +25,36 @@ import { log, logError } from "./utils/logger.js";
 import fs from "node:fs";
 import path from "node:path";
 
-function parseArgs(): { brand?: string; lane?: string; dryRun: boolean; upload: boolean } {
+function parseArgs(): {
+  brand?: string;
+  lane?: string;
+  laneType?: "pexels-api" | "reddit-story";
+  dryRun: boolean;
+  upload: boolean;
+} {
   const args = process.argv.slice(2);
   let brand: string | undefined;
   let lane: string | undefined;
+  let laneType: "pexels-api" | "reddit-story" | undefined;
   let dryRun = false;
   let upload = false;
 
   for (const arg of args) {
     if (arg.startsWith("--brand=")) brand = arg.split("=")[1];
     else if (arg.startsWith("--lane=")) lane = arg.split("=")[1];
+    else if (arg.startsWith("--lane-type=")) {
+      const v = arg.split("=")[1];
+      if (v === "pexels-api" || v === "reddit-story") laneType = v;
+    }
     else if (arg === "--dry-run") dryRun = true;
     else if (arg === "--upload") upload = true;
   }
 
-  return { brand, lane, dryRun, upload };
+  return { brand, lane, laneType, dryRun, upload };
 }
 
 async function main(): Promise<void> {
-  const { brand: brandArg, lane: laneArg, dryRun, upload } = parseArgs();
+  const { brand: brandArg, lane: laneArg, laneType: laneTypeArg, dryRun, upload } = parseArgs();
 
   // --- Resolve brand and overlay brand-specific .env ---
   const brand = resolveBrand(brandArg);
@@ -68,7 +83,18 @@ async function main(): Promise<void> {
     if (!found) throw new Error(`Unknown lane: ${laneArg}. Available: ${lanes.map((l) => l.id).join(", ")}`);
     lane = found;
   } else {
-    lane = lanes[Math.floor(Math.random() * lanes.length)];
+    let pool = lanes;
+    if (laneTypeArg) {
+      pool = lanes.filter((l) => (l.type ?? "pexels-api") === laneTypeArg);
+      if (pool.length === 0) {
+        throw new Error(
+          `No lanes of type "${laneTypeArg}". Available types: ` +
+            [...new Set(lanes.map((l) => l.type ?? "pexels-api"))].join(", "),
+        );
+      }
+      log("pipeline", `Filtered ${lanes.length} → ${pool.length} lane(s) of type ${laneTypeArg}`);
+    }
+    lane = pool[Math.floor(Math.random() * pool.length)];
   }
   log("pipeline", `Lane: ${lane.id}`);
 
@@ -99,6 +125,33 @@ async function main(): Promise<void> {
     log("pipeline", `VP_PLATFORMS=${process.env.VP_PLATFORMS} -> ${filteredUploaders.map((u) => u.platform).join(",") || "none"}`);
   }
 
+  // --- Resolve reddit-story support paths (only used by reddit-story lanes) ---
+  // Default to a cross-brand shared library at <repo>/shared/{gameplay,music}.
+  // Brands can still override via channel.json (gameplayLibraryDir / musicLibraryDir)
+  // if they want a private/brand-local pool. Path is relative to brand dir when
+  // overridden, repo root otherwise.
+  const brandRoot = brand?.brandDir;
+  const sharedDir = process.env.VP_SHARED_DIR ?? path.resolve("shared");
+  const gameplayLibraryDir = profile.gameplayLibraryDir
+    ? (brandRoot ? path.resolve(brandRoot, profile.gameplayLibraryDir) : path.resolve(profile.gameplayLibraryDir))
+    : path.join(sharedDir, "gameplay");
+  const musicLibraryDir = profile.musicLibraryDir
+    ? (brandRoot ? path.resolve(brandRoot, profile.musicLibraryDir) : path.resolve(profile.musicLibraryDir))
+    : path.join(sharedDir, "music");
+  const ytDlpFallbackUrls = profile.ytDlpFallbackUrls ?? [];
+
+  const ytDlpProvider = ytDlpFallbackUrls.length > 0
+    ? new YtDlpGameplayProvider(
+        ytDlpFallbackUrls,
+        path.join(config.outputDir, ".gameplay-cache"),
+      )
+    : null;
+  const gameplayProvider = new CompositeGameplayProvider(
+    new LibraryGameplayProvider(gameplayLibraryDir, profile.gameplayLibrary),
+    ytDlpProvider,
+  );
+  const musicProvider = new LibraryMusicProvider(musicLibraryDir, profile.musicLibrary);
+
   // --- Wire providers (composition root) ---
   const context: StageContext = {
     llm: createLlmClient(config),
@@ -111,6 +164,8 @@ async function main(): Promise<void> {
         )
       : new EdgeTtsProvider(profile.ttsVoice, profile.ttsRate),
     footage: new PexelsProvider(config.pexelsApiKey ?? ""),
+    gameplay: gameplayProvider,
+    music: musicProvider,
     assembler: new FfmpegAssembler(videoSpec),
     uploaders: filteredUploaders,
     profile,
@@ -122,14 +177,14 @@ async function main(): Promise<void> {
   };
 
   // --- Build and run pipeline (dispatch by lane type) ---
-  const laneType = lane.type ?? "seven-api";
+  const laneType = lane.type ?? "pexels-api";
   log("pipeline", `Lane type: ${laneType}`);
   let stages;
   switch (laneType) {
     case "reddit-story":
       stages = buildRedditStoryPipeline({ dryRun, upload });
       break;
-    case "seven-api":
+    case "pexels-api":
     default:
       stages = buildShortsPipeline({ dryRun, upload });
       break;
@@ -138,22 +193,42 @@ async function main(): Promise<void> {
   const result = await runPipeline(stages, context, state);
 
   // --- Save script for review ---
-  if (result.script) {
+  if (result.script || result.redditScript) {
     fs.writeFileSync(
       path.join(workDir, "script.json"),
-      JSON.stringify({ topic: result.topic, research: result.research, script: result.script }, null, 2),
+      JSON.stringify(
+        {
+          topic: result.topic,
+          research: result.research,
+          script: result.script,
+          redditPost: result.redditPost,
+          redditScript: result.redditScript,
+        },
+        null,
+        2,
+      ),
     );
   }
 
   // --- Append to topic history ---
+  const today = new Date().toISOString().slice(0, 10);
   if (result.topic) {
-    const today = new Date().toISOString().slice(0, 10);
     appendTopicHistory(historyPath, {
       laneId: result.topic.laneId,
       titleAngle: result.topic.titleAngle,
       seedQuestion: result.topic.seedQuestion,
       runId,
       date: today,
+    });
+  } else if (result.redditScript) {
+    const post = result.redditScript.post;
+    appendTopicHistory(historyPath, {
+      laneId: lane.id,
+      titleAngle: post.title,
+      seedQuestion: `r/${post.subreddit}`,
+      runId,
+      date: today,
+      redditPostId: post.id,
     });
   }
 
