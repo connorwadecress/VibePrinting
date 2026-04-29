@@ -162,7 +162,7 @@
     {
       "id": "askreddit",
       "description": "Personal-experience question threads where the comments carry the story.",
-      "targetDurationSeconds": 60,
+      "targetDurationSeconds": 90,
       "exampleHooks": [],
       "type": "reddit-story",
       "redditConfig": {
@@ -172,7 +172,9 @@
         "timeRange": "all",
         "commentCount": 5,
         "minCommentLength": 80,
-        "maxCommentLength": 600,
+        "maxCommentLength": 350,
+        "trimPriority": "balanced",
+        "maxSpeedupPercent": 15,
         "segmentGapSeconds": 0.3,
         "cardInitialReveal": "empty",
         "cardMaxHeightPx": 1100
@@ -244,6 +246,24 @@
   },
   "ttsVoice": "en-US-GuyNeural",
   "ttsRate": "+10%",
+  "ttsProvider": "elevenlabs",
+  "ttsProviderSettings": {
+    "elevenLabs": {
+      "voiceId": "8IbUB2LiiCZ85IJAHNnZ",
+      "modelId": "eleven_flash_v2_5",
+      "speed": 1.15
+    }
+  },
+  "commentVoiceMode": "by-author",
+  "commentVoicePool": [
+    "EST9Ui6982FZPSi7gCHi",
+    "ljX1ZrXuDIIRVcmiVSyR",
+    "8DzKSPdgEQPaK5vKG0Rs",
+    "tnSpp4vdxKPjI9w0GnoV",
+    "kPzsL2i3teMYv0FxEYQ6",
+    "15CVCzDByBinCIoCblXo",
+    "lnieQLGTodpbhjpZtg1k"
+  ],
   "genSecDefaults": {
     "blockedReasons": [],
     "disclosureRequired": true,

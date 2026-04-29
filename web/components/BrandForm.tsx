@@ -2,7 +2,11 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { AssetEntry, ChannelProfile } from "@pipeline/domain/channel-profile";
+import type {
+  AssetEntry,
+  ChannelProfile,
+  CommentVoiceMode,
+} from "@pipeline/domain/channel-profile";
 import type { ContentLane, LaneType } from "@pipeline/domain/models";
 import { TagInput } from "@/components/TagInput";
 import { ContentLanesEditor } from "@/components/ContentLanesEditor";
@@ -298,6 +302,14 @@ export function BrandForm({ initial, assets }: BrandFormProps) {
             </p>
           </div>
         )}
+
+        <CommentVoicePanel
+          provider={profile.ttsProvider ?? "edge"}
+          pool={profile.commentVoicePool}
+          mode={profile.commentVoiceMode}
+          onPoolChange={(next) => update("commentVoicePool", next)}
+          onModeChange={(next) => update("commentVoiceMode", next)}
+        />
       </Card>
 
       <Card title="Compliance">
@@ -386,6 +398,79 @@ export function BrandForm({ initial, assets }: BrandFormProps) {
         </div>
       )}
     </form>
+  );
+}
+
+interface CommentVoicePanelProps {
+  provider: "edge" | "elevenlabs";
+  pool: string[] | undefined;
+  mode: CommentVoiceMode | undefined;
+  onPoolChange: (next: string[] | undefined) => void;
+  onModeChange: (next: CommentVoiceMode | undefined) => void;
+}
+
+/**
+ * Per-comment voice rotation for reddit-story lanes. Pool entries must
+ * match the active provider's voice format — ElevenLabs takes voice IDs,
+ * Edge takes voice names. The narrator (intro/question/outro) keeps the
+ * configured default voice; only `comment` segments rotate.
+ */
+function CommentVoicePanel({
+  provider,
+  pool,
+  mode,
+  onPoolChange,
+  onModeChange,
+}: CommentVoicePanelProps) {
+  const effectivePool = pool ?? [];
+  const effectiveMode: CommentVoiceMode = mode ?? "by-author";
+
+  const placeholder =
+    provider === "elevenlabs"
+      ? "ElevenLabs voice ID (e.g. 8IbUB2LiiCZ85IJAHNnZ)"
+      : "Edge voice name (e.g. en-US-AriaNeural)";
+
+  const formatHint =
+    provider === "elevenlabs"
+      ? "Paste ElevenLabs voice IDs from your library."
+      : "Use Microsoft neural voice names like en-US-AriaNeural.";
+
+  return (
+    <div className="rounded-lg border border-border bg-surface-2/60 p-4">
+      <p className="mb-1 text-xs font-medium text-fg">Comment voice rotation</p>
+      <p className="mb-3 text-xs text-fg-subtle">
+        Reddit-story lanes only. Each <em>comment</em> segment picks a voice from this pool —
+        narrator segments (intro / question / outro) keep using the default voice above.
+        Leave the pool empty to disable rotation.
+      </p>
+
+      <div className="space-y-3">
+        <Field label="Mode">
+          <select
+            value={effectiveMode}
+            onChange={(e) => onModeChange(e.target.value as CommentVoiceMode)}
+            className="input input-sm mt-1.5"
+            disabled={effectivePool.length === 0}
+          >
+            <option value="by-author">By author — same commenter = same voice</option>
+            <option value="random">Random — fresh roll each comment</option>
+            <option value="round-robin">Round-robin — cycle through pool in order</option>
+          </select>
+        </Field>
+
+        <Field label={`Voice pool (${effectivePool.length})`}>
+          <div className="mt-1.5">
+            <TagInput
+              value={effectivePool}
+              onChange={(next) => onPoolChange(next.length === 0 ? undefined : next)}
+              placeholder={placeholder}
+              ariaLabel="Comment voice pool"
+            />
+            <p className="mt-1.5 text-[11px] text-fg-subtle">{formatHint}</p>
+          </div>
+        </Field>
+      </div>
+    </div>
   );
 }
 

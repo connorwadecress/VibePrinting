@@ -104,14 +104,15 @@ export class ElevenLabsProvider implements TtsProvider {
     // ElevenLabs caps speed at ~1.5; 1.0–1.5 is the safe range. Combine
     // base speed with the multiplier and clamp.
     const effectiveSpeed = Math.max(0.7, Math.min(1.5, this.speed * multiplier));
+    const effectiveVoiceId = options?.voiceOverride ?? this.voiceId;
     log(
       "tts",
-      `Generating voiceover with ElevenLabs voice ${this.voiceId} at speed ${effectiveSpeed.toFixed(2)}` +
+      `Generating voiceover with ElevenLabs voice ${effectiveVoiceId} at speed ${effectiveSpeed.toFixed(2)}` +
         (multiplier !== 1 ? ` (×${multiplier.toFixed(2)} fit-to-target)` : ""),
     );
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${this.voiceId}/with-timestamps`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${effectiveVoiceId}/with-timestamps`,
       {
         method: "POST",
         headers: {

@@ -26,6 +26,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { ALLOWED_BRANDS } from "@/lib/paths";
 import {
   insertJob,
@@ -84,13 +85,29 @@ function getMaxConcurrent(): number {
 /**
  * Repo root — the directory that contains `src/generate.ts`.
  *
- * In Docker the Next server runs with cwd=`/app` so cwd already is the
- * repo root. In local dev `npm run web:dev` invokes the workspace
- * script, which sets cwd to `web/`, so we walk up until we find
- * `src/generate.ts`. Fall back to cwd so the spawn still produces a
- * recognizable error rather than silently misbehaving.
+ * Anchored on this file's location, NOT on process.cwd(). This file
+ * lives at `<repo>/web/lib/job-manager.ts`, so the repo root is two
+ * directories up. Resolving from a known anchor avoids the silent-
+ * fallback bug where a misbehaving cwd would land OUTPUT_DIR=./output
+ * outside the repo (e.g. one level up in the user's source tree).
+ *
+ * Fallback: walk up from cwd looking for src/generate.ts. Last resort:
+ * cwd itself, with a loud warning. Both fallbacks only trigger if the
+ * anchor calculation fails (Next bundling weirdness, missing import.meta).
  */
 const REPO_ROOT = (() => {
+  // Primary: resolve from this source file.
+  try {
+    const here = fileURLToPath(import.meta.url);
+    const candidate = path.resolve(path.dirname(here), "..", "..");
+    if (fs.existsSync(path.join(candidate, "src", "generate.ts"))) {
+      return candidate;
+    }
+  } catch {
+    // import.meta.url not available — fall through to cwd walk.
+  }
+
+  // Fallback: walk up from cwd until we find src/generate.ts.
   let dir = path.resolve(process.cwd());
   for (let i = 0; i < 5; i++) {
     if (fs.existsSync(path.join(dir, "src", "generate.ts"))) return dir;
@@ -98,6 +115,12 @@ const REPO_ROOT = (() => {
     if (parent === dir) break;
     dir = parent;
   }
+
+  console.warn(
+    `[job-manager] WARNING: could not locate repo root (no src/generate.ts found near ` +
+      `${path.resolve(process.cwd())}). Falling back to cwd — relative paths in spawned ` +
+      `pipeline runs may resolve to unexpected locations.`,
+  );
   return path.resolve(process.cwd());
 })();
 

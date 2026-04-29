@@ -122,6 +122,8 @@ export const ChannelProfileSchema = z.object({
   ytDlpFallbackUrls: z.array(z.string()).optional(),
   gameplayLibrary: z.array(AssetEntrySchema).optional(),
   musicLibrary: z.array(AssetEntrySchema).optional(),
+  commentVoicePool: z.array(z.string()).optional(),
+  commentVoiceMode: z.enum(["random", "by-author", "round-robin"]).optional(),
 });
 
 export type ChannelProfileInput = z.infer<typeof ChannelProfileSchema>;

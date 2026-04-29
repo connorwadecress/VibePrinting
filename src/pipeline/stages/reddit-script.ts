@@ -1,4 +1,5 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
+import type { ChannelProfile } from "../../domain/channel-profile.js";
 import type {
   PipelineState,
   PublishMeta,
@@ -39,14 +40,34 @@ interface LlmReply {
   publishMeta: PublishMeta;
 }
 
-function estimateDurationSeconds(text: string): number {
-  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
-  // Edge TTS at +10% rate ≈ 2.6 wps. Use a slightly conservative 2.4 wps.
-  return wordCount / 2.4;
+/**
+ * Words-per-second estimate for the active TTS provider. Used to decide
+ * how many segments will fit before assembly. Over-estimating wps trims
+ * too few comments → audio overruns target. Under-estimating trims too
+ * many → final video is short and sparse.
+ *
+ * Calibrated against real ElevenLabs (speed 1.15) and Edge TTS (+10%) runs.
+ * If the operator reports drift, tune here, NOT by changing target.
+ */
+function wordsPerSecondFor(profile: ChannelProfile): number {
+  const provider = profile.ttsProvider ?? "edge";
+  if (provider === "elevenlabs") {
+    const speed = profile.ttsProviderSettings?.elevenLabs?.speed ?? 1;
+    // ElevenLabs base voice ≈ 2.7 wps; speed multiplier scales linearly.
+    // Slight conservative cushion (×0.95) so we under-trim rather than over.
+    return 2.7 * speed * 0.95;
+  }
+  // Edge TTS at +10% rate ≈ 2.6 wps measured. Conservative 2.4 wps.
+  return 2.4;
 }
 
-function totalEstimate(segments: RedditStorySegment[]): number {
-  return segments.reduce((sum, s) => sum + estimateDurationSeconds(s.text), 0);
+function estimateDurationSeconds(text: string, wps: number): number {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  return wordCount / wps;
+}
+
+function totalEstimate(segments: RedditStorySegment[], wps: number): number {
+  return segments.reduce((sum, s) => sum + estimateDurationSeconds(s.text, wps), 0);
 }
 
 function dropLastComment(segments: RedditStorySegment[]): string | null {
@@ -91,6 +112,7 @@ function trimSegmentsToTarget(
   segments: RedditStorySegment[],
   targetSeconds: number,
   priority: TrimPriority,
+  wps: number,
 ): { segments: RedditStorySegment[]; drops: string[] } {
   const drops: string[] = [];
   const out = segments.slice();
@@ -101,17 +123,17 @@ function trimSegmentsToTarget(
     // anything still over after that is the speed-up fallback's problem,
     // and the assembly hard-cap is the last line of defense. Producing a
     // body-cutoff video is always better than producing an empty one.
-    while (totalEstimate(out) > targetSeconds && commentCount(out) > 0) {
+    while (totalEstimate(out, wps) > targetSeconds && commentCount(out) > 0) {
       const dropped = dropLastComment(out);
       if (!dropped) break;
       drops.push(dropped);
     }
   } else if (priority === "body") {
-    if (totalEstimate(out) > targetSeconds) {
+    if (totalEstimate(out, wps) > targetSeconds) {
       const dropped = dropBody(out);
       if (dropped) drops.push(dropped);
     }
-    while (totalEstimate(out) > targetSeconds && commentCount(out) > 1) {
+    while (totalEstimate(out, wps) > targetSeconds && commentCount(out) > 1) {
       const dropped = dropLastComment(out);
       if (!dropped) break;
       drops.push(dropped);
@@ -119,16 +141,16 @@ function trimSegmentsToTarget(
   } else {
     // balanced: trim trailing comments down to 1, then drop body, then
     // trim further comments to 0 if somehow still over.
-    while (totalEstimate(out) > targetSeconds && commentCount(out) > 1) {
+    while (totalEstimate(out, wps) > targetSeconds && commentCount(out) > 1) {
       const dropped = dropLastComment(out);
       if (!dropped) break;
       drops.push(dropped);
     }
-    if (totalEstimate(out) > targetSeconds) {
+    if (totalEstimate(out, wps) > targetSeconds) {
       const dropped = dropBody(out);
       if (dropped) drops.push(dropped);
     }
-    while (totalEstimate(out) > targetSeconds && commentCount(out) > 0) {
+    while (totalEstimate(out, wps) > targetSeconds && commentCount(out) > 0) {
       const dropped = dropLastComment(out);
       if (!dropped) break;
       drops.push(dropped);
@@ -195,14 +217,17 @@ Generate the opener, closer, and publishing metadata.`;
     }
     segments.push({ index: idx++, kind: "outro", text: reply.closer.trim() });
 
-    const rawEstimate = totalEstimate(segments);
+    const wps = wordsPerSecondFor(context.profile);
+    log(this.name, `Estimator wps=${wps.toFixed(2)} (provider=${context.profile.ttsProvider ?? "edge"})`);
+
+    const rawEstimate = totalEstimate(segments, wps);
     // Aim slightly below the lane target so estimator drift doesn't push
     // us over the hard cap enforced in reddit-assembly.
     const trimTarget = lane.targetDurationSeconds * 0.92;
     const priority: TrimPriority = lane.redditConfig?.trimPriority ?? "balanced";
-    const { segments: trimmed, drops } = trimSegmentsToTarget(segments, trimTarget, priority);
+    const { segments: trimmed, drops } = trimSegmentsToTarget(segments, trimTarget, priority, wps);
     trimmed.forEach((s, i) => (s.index = i));
-    const trimmedEstimate = totalEstimate(trimmed);
+    const trimmedEstimate = totalEstimate(trimmed, wps);
     if (drops.length > 0) {
       log(
         this.name,

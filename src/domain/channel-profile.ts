@@ -35,6 +35,16 @@ export interface TtsProviderSettings {
 }
 
 /**
+ * How a comment voice is picked from `commentVoicePool`:
+ * - `random`: fresh random pick each comment.
+ * - `by-author`: deterministic hash of the commenter's username, so the
+ *   same author always gets the same voice within a video. Best for
+ *   coherence in AskReddit-style threads.
+ * - `round-robin`: cycles through the pool in order.
+ */
+export type CommentVoiceMode = "random" | "by-author" | "round-robin";
+
+/**
  * Auto-cleanup policy for a brand. When enabled, the run directory is
  * deleted `delayMinutes` after a successful upload. topic-history.json
  * lives outside the run dir so it is never touched by cleanup.
@@ -93,6 +103,18 @@ export interface ChannelProfile {
   gameplayLibrary?: AssetEntry[];
   /** Per-file enable/order for music tracks. When present, only enabled entries are eligible. */
   musicLibrary?: AssetEntry[];
+  /**
+   * Voices to rotate through for `comment` segments in reddit-story lanes.
+   * Format must match the active TTS provider:
+   *   - elevenlabs: voice IDs (e.g. "8IbUB2LiiCZ85IJAHNnZ")
+   *   - edge: voice names (e.g. "en-US-AriaNeural")
+   * Narrator segments (intro/question/description/outro) keep using the
+   * configured default voice — only `comment` segments rotate. When empty
+   * or omitted, all segments use the default voice (legacy behavior).
+   */
+  commentVoicePool?: string[];
+  /** How to pick a voice from `commentVoicePool`. Default: "by-author". */
+  commentVoiceMode?: CommentVoiceMode;
 }
 
 /**

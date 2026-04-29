@@ -85,16 +85,17 @@ export class EdgeTtsProvider implements TtsProvider {
     options?: TtsSynthesizeOptions,
   ): Promise<VoiceoverResult> {
     const effectiveRate = applyRateMultiplier(this.rate, options?.rateMultiplier);
+    const effectiveVoice = options?.voiceOverride ?? this.voice;
     log(
       "tts",
-      `Generating voiceover with ${this.voice} at ${effectiveRate}` +
+      `Generating voiceover with ${effectiveVoice} at ${effectiveRate}` +
         (options?.rateMultiplier && options.rateMultiplier !== 1
           ? ` (×${options.rateMultiplier.toFixed(2)} fit-to-target)`
           : ""),
     );
 
     const tts = new EdgeTTS();
-    await tts.synthesize(text, this.voice, { rate: effectiveRate });
+    await tts.synthesize(text, effectiveVoice, { rate: effectiveRate });
 
     const basePath = outputDir.replace(/\.[^.]+$/, "");
     const savedPath = await tts.toFile(basePath);
