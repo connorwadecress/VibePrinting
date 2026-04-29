@@ -44,6 +44,48 @@ function estimateDurationSeconds(text: string): number {
   return wordCount / 2.4;
 }
 
+function totalEstimate(segments: RedditStorySegment[]): number {
+  return segments.reduce((sum, s) => sum + estimateDurationSeconds(s.text), 0);
+}
+
+/**
+ * Bring the segment list under `targetSeconds` by progressively shedding
+ * content the user is most willing to lose:
+ *   1. Drop trailing comments (keep at least one — the punchline).
+ *   2. Drop the description segment if still over.
+ * Always preserves intro / question / outro since they're the frame.
+ *
+ * Returns the trimmed segments plus a list of human-readable drop reasons
+ * for logging. Re-indexing is the caller's job.
+ */
+function trimSegmentsToTarget(
+  segments: RedditStorySegment[],
+  targetSeconds: number,
+): { segments: RedditStorySegment[]; drops: string[] } {
+  const drops: string[] = [];
+  const out = segments.slice();
+
+  while (totalEstimate(out) > targetSeconds) {
+    const commentIdxs = out
+      .map((s, i) => (s.kind === "comment" ? i : -1))
+      .filter((i) => i !== -1);
+    if (commentIdxs.length <= 1) break;
+    const lastIdx = commentIdxs[commentIdxs.length - 1];
+    drops.push(`comment by u/${out[lastIdx].author ?? "?"} (${out[lastIdx].text.length} chars)`);
+    out.splice(lastIdx, 1);
+  }
+
+  if (totalEstimate(out) > targetSeconds) {
+    const descIdx = out.findIndex((s) => s.kind === "description");
+    if (descIdx !== -1) {
+      drops.push(`post body (${out[descIdx].text.length} chars)`);
+      out.splice(descIdx, 1);
+    }
+  }
+
+  return { segments: out, drops };
+}
+
 export class RedditScriptStage implements PipelineStage {
   readonly name = "reddit-script";
 
@@ -101,22 +143,39 @@ Generate the opener, closer, and publishing metadata.`;
     }
     segments.push({ index: idx++, kind: "outro", text: reply.closer.trim() });
 
-    const totalDurationEstimateSeconds = segments.reduce(
-      (sum, s) => sum + estimateDurationSeconds(s.text),
-      0,
-    );
+    const rawEstimate = totalEstimate(segments);
+    // Aim slightly below the lane target so estimator drift doesn't push
+    // us over the hard cap enforced in reddit-assembly.
+    const trimTarget = lane.targetDurationSeconds * 0.92;
+    const { segments: trimmed, drops } = trimSegmentsToTarget(segments, trimTarget);
+    trimmed.forEach((s, i) => (s.index = i));
+    const trimmedEstimate = totalEstimate(trimmed);
+    if (drops.length > 0) {
+      log(
+        this.name,
+        `Trimmed ${drops.length} segment(s) to fit ${lane.targetDurationSeconds}s target ` +
+          `(estimate ${rawEstimate.toFixed(1)}s → ${trimmedEstimate.toFixed(1)}s): dropped ${drops.join(", ")}`,
+      );
+    }
+    if (trimmedEstimate > lane.targetDurationSeconds) {
+      log(
+        this.name,
+        `WARNING: estimate ${trimmedEstimate.toFixed(1)}s still over target ${lane.targetDurationSeconds}s ` +
+          `with intro/question/1 comment/outro intact — assembly will hard-cap the final video`,
+      );
+    }
 
     const script: RedditStoryScript = {
       post,
-      segments,
-      totalDurationEstimateSeconds,
+      segments: trimmed,
+      totalDurationEstimateSeconds: trimmedEstimate,
       publishMeta: reply.publishMeta,
     };
 
     state.redditScript = script;
     log(
       this.name,
-      `Script: ${segments.length} segments, ~${totalDurationEstimateSeconds.toFixed(1)}s estimated`,
+      `Script: ${trimmed.length} segments, ~${trimmedEstimate.toFixed(1)}s estimated (target ${lane.targetDurationSeconds}s)`,
     );
   }
 }

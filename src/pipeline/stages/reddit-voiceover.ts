@@ -76,5 +76,13 @@ export class RedditVoiceoverStage implements PipelineStage {
       this.name,
       `Stitched ${segmentAudioPaths.length} segments -> ${stitchedPath} (${totalSeconds.toFixed(1)}s)`,
     );
+
+    const target = state.lane?.targetDurationSeconds;
+    if (target && totalSeconds > target) {
+      log(
+        this.name,
+        `WARNING: actual TTS ${totalSeconds.toFixed(1)}s exceeds target ${target}s — assembly will hard-cap, audio may cut off mid-sentence`,
+      );
+    }
   }
 }

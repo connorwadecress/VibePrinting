@@ -22,14 +22,22 @@ export class RedditAssemblyStage implements PipelineStage {
     const start = Date.now();
     const outputPath = path.join(context.workDir, "assembled.mp4");
     // Cut the video right when the speaking ends — voiceover length + a small
-    // tail so the final word's audio fades cleanly. Capped at the gameplay
-    // clip's available duration so we never request more footage than we have.
+    // tail so the final word's audio fades cleanly. Capped at:
+    //   - the gameplay clip's available duration (never request more footage), and
+    //   - the lane's targetDurationSeconds + tail (Shorts must stay under cap;
+    //     better to truncate audio than to ship as a long-form video).
     const voiceoverSeconds = await context.assembler.getAudioDuration(voiceoverPath);
     const TAIL_SECONDS = 0.3;
-    const sliceDuration = Math.min(
-      voiceoverSeconds + TAIL_SECONDS,
-      gameplayClip.durationSeconds,
-    );
+    const target = state.lane?.targetDurationSeconds;
+    const naturalEnd = voiceoverSeconds + TAIL_SECONDS;
+    const hardCap = target ? target + TAIL_SECONDS : Infinity;
+    const sliceDuration = Math.min(naturalEnd, hardCap, gameplayClip.durationSeconds);
+    if (target && naturalEnd > hardCap) {
+      log(
+        this.name,
+        `Truncating: voiceover ${voiceoverSeconds.toFixed(1)}s + tail exceeds target ${target}s — cutting at ${sliceDuration.toFixed(1)}s`,
+      );
+    }
 
     await context.assembler.assembleRedditStory!({
       gameplayPath: gameplayClip.sourcePath,
