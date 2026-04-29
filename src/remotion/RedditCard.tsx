@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { RedditStorySegment } from "../domain/models.js";
+import { EMOJI_FONT_FALLBACK } from "./fonts.js";
 
 export interface RedditCardProps {
   segment: RedditStorySegment;
@@ -101,7 +102,7 @@ const cardBase: CSSProperties = {
   borderRadius: 24,
   padding: "28px 32px",
   boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
-  fontFamily: "Inter, -apple-system, system-ui, sans-serif",
+  fontFamily: `Inter, -apple-system, system-ui, sans-serif${EMOJI_FONT_FALLBACK}`,
   color: "#1a1a1b",
   width: "calc(100% - 80px)",
   maxWidth: 980,
@@ -139,7 +140,7 @@ const introSplash: CSSProperties = {
   right: 0,
   textAlign: "center",
   color: "white",
-  fontFamily: "Inter, -apple-system, system-ui, sans-serif",
+  fontFamily: `Inter, -apple-system, system-ui, sans-serif${EMOJI_FONT_FALLBACK}`,
   fontSize: 96,
   fontWeight: 800,
   letterSpacing: -1,

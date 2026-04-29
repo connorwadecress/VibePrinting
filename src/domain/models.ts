@@ -59,6 +59,10 @@ export interface RedditLaneConfig {
   cardInitialReveal?: "empty" | "first-sentence";
   /** When the revealed text would exceed this height, the body auto-scrolls. */
   cardMaxHeightPx?: number;
+  /** Whether to rotate comment voices using the channel-level commentVoicePool.
+   *  When omitted, defaults to ON (rotation kicks in if the channel has a pool).
+   *  Set to false to force a single-narrator read for this lane only. */
+  commentVoiceRotation?: boolean;
 }
 
 export interface TopicCandidate {

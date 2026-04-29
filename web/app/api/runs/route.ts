@@ -9,6 +9,7 @@
  *   {
  *     brandId: string,
  *     lane?: string | null,
+ *     laneType?: "pexels-api" | "reddit-story" | null,  // when lane is null, restrict random pick to this type
  *     dryRun?: boolean,
  *     platforms?: ("youtube"|"tiktok")[]   // omit/empty = no upload
  *   }
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
   let body: {
     brandId?: string;
     lane?: string | null;
+    laneType?: string | null;
     dryRun?: boolean;
     platforms?: string[];
     topicSeed?: string | null;
@@ -68,6 +70,14 @@ export async function POST(request: Request) {
   // into VP_PLATFORMS.
   const allowedPlatforms = new Set(["youtube", "tiktok"]);
   const platforms = (body.platforms ?? []).filter((p) => allowedPlatforms.has(p));
+
+  // Validate laneType — only honored when lane is null/empty (otherwise
+  // the specific lane wins and laneType is moot).
+  const allowedLaneTypes = new Set(["pexels-api", "reddit-story"]);
+  const laneType =
+    typeof body.laneType === "string" && allowedLaneTypes.has(body.laneType)
+      ? (body.laneType as "pexels-api" | "reddit-story")
+      : undefined;
 
   // Map an optional topic seed to the env var the relevant pipeline
   // stage knows how to read. Reddit-story uses VP_REDDIT_POST_URL;
@@ -106,6 +116,7 @@ export async function POST(request: Request) {
     const result = startRun({
       brandId: body.brandId,
       lane: body.lane ?? null,
+      laneType: !body.lane ? laneType : undefined,
       dryRun: !!body.dryRun,
       upload: platforms.length > 0,
       platforms,

@@ -69,8 +69,7 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
     [selectedBrand, laneType],
   );
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(opts: { surpriseMe?: boolean } = {}) {
     setError(null);
     if (!brandId) {
       setError("Pick a brand");
@@ -81,11 +80,21 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
       setError("Topic seed requires a specific lane (not 'any')");
       return;
     }
+    if (opts.surpriseMe && (lane || trimmedSeed)) {
+      setError("Surprise me ignores lane + seed — clear them first");
+      return;
+    }
     const platforms: string[] = [];
     if (!dryRun) {
       if (youtube) platforms.push("youtube");
       if (tiktok) platforms.push("tiktok");
     }
+
+    // When the user picks "any" within a lane-type tab, we still want
+    // the pipeline to pick from THAT type only. Send laneType so the
+    // child gets --lane-type=<t>. "Surprise me" omits laneType so the
+    // pipeline picks randomly across all lane types on the brand.
+    const sendLaneType = !opts.surpriseMe && !lane;
 
     const res = await fetch("/api/runs", {
       method: "POST",
@@ -93,6 +102,7 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
       body: JSON.stringify({
         brandId,
         lane: lane || null,
+        laneType: sendLaneType ? laneType : null,
         dryRun,
         platforms,
         topicSeed: trimmedSeed || null,
@@ -108,6 +118,11 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
       router.push(`/runs/${data.jobId}`);
       router.refresh();
     });
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void submit();
   }
 
   if (brands.length === 0) {
@@ -179,16 +194,23 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
           value={lane}
           onChange={(e) => setLane(e.target.value)}
         >
-          <option value="">(any — pipeline picks one)</option>
+          <option value="">
+            (any {TYPE_LABEL[laneType].toLowerCase()} lane — pipeline picks one)
+          </option>
           {filteredLanes.map((l) => (
             <option key={l.id} value={l.id}>
               {l.id}
             </option>
           ))}
         </select>
-        {filteredLanes.length === 0 && (
+        {filteredLanes.length === 0 ? (
           <p className="mt-1.5 text-xs text-fg-subtle">
             This brand has no {TYPE_LABEL[laneType].toLowerCase()} lanes — switch type or add one in the brand editor.
+          </p>
+        ) : (
+          <p className="mt-1.5 text-xs text-fg-subtle">
+            &quot;Any&quot; restricts to {TYPE_LABEL[laneType].toLowerCase()} lanes only. Use{" "}
+            <em>Surprise me</em> below to pick across all lane types.
           </p>
         )}
       </label>
@@ -218,9 +240,22 @@ export function TriggerRunForm({ brands }: { brands: TriggerBrandOption[] }) {
 
       {error && <div className="alert-error">{error}</div>}
 
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col-reverse items-stretch justify-end gap-2 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          disabled={pending || !!lane || !!topicSeed.trim()}
+          onClick={() => void submit({ surpriseMe: true })}
+          title={
+            lane || topicSeed.trim()
+              ? "Clear the lane + topic seed to use Surprise me"
+              : "Pick a random lane across ALL lane types on this brand"
+          }
+          className="btn-secondary"
+        >
+          🎲 Surprise me (any lane)
+        </button>
         <button type="submit" disabled={pending} className="btn-primary">
-          {pending ? "Starting…" : "Start run"}
+          {pending ? "Starting…" : `Start ${TYPE_LABEL[laneType].toLowerCase()} run`}
         </button>
       </div>
     </form>

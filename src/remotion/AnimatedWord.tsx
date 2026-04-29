@@ -1,5 +1,6 @@
 import React from "react";
 import type { AnimatedCaptionConfig } from "./styles.js";
+import { EMOJI_FONT_FALLBACK } from "./fonts.js";
 
 interface AnimatedWordProps {
   text: string;
@@ -20,7 +21,7 @@ export const AnimatedWord: React.FC<AnimatedWordProps> = ({
         display: "inline-block",
         position: "relative",
         color,
-        fontFamily: config.fontFamily,
+        fontFamily: `${config.fontFamily}${EMOJI_FONT_FALLBACK}`,
         fontWeight: config.fontWeight,
         fontSize: config.fontSize,
         WebkitTextStroke: `${config.strokeWidth}px ${config.strokeColor}`,

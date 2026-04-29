@@ -30,6 +30,7 @@ export const RedditLaneConfigSchema = z
     segmentGapSeconds: z.number().nonnegative().optional(),
     cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
     cardMaxHeightPx: z.number().int().positive().optional(),
+    commentVoiceRotation: z.boolean().optional(),
   })
   .partial();
 

@@ -68,13 +68,20 @@ export class RedditVoiceoverStage implements PipelineStage {
     let cumulativeMs = 0;
 
     const rateMultiplier = script.rateMultiplier ?? 1;
-    const commentPool = (context.profile.commentVoicePool ?? []).filter((v) => v && v.trim().length > 0);
+    const laneRotationOptIn = state.lane?.redditConfig?.commentVoiceRotation;
+    // Lane override wins over channel-level pool. undefined = inherit (on by default).
+    const rotationEnabled = laneRotationOptIn !== false;
+    const commentPool = rotationEnabled
+      ? (context.profile.commentVoicePool ?? []).filter((v) => v && v.trim().length > 0)
+      : [];
     const commentMode: CommentVoiceMode = context.profile.commentVoiceMode ?? "by-author";
     if (commentPool.length > 0) {
       log(
         this.name,
         `Comment voice rotation enabled — pool size ${commentPool.length}, mode "${commentMode}"`,
       );
+    } else if (laneRotationOptIn === false) {
+      log(this.name, `Comment voice rotation disabled for this lane (lane override)`);
     }
     let commentIndex = 0;
 

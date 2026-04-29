@@ -9,6 +9,7 @@ import type {
   TrimPriority,
 } from "@pipeline/domain/models";
 import { TagInput } from "@/components/TagInput";
+import { NumberInput } from "@/components/NumberInput";
 
 /**
  * Editor for one slice of the contentLanes[] array on a ChannelProfile,
@@ -214,16 +215,13 @@ function LaneCard({
         </button>
 
         <label className="flex shrink-0 items-center gap-1.5">
-          <input
-            type="number"
+          <NumberInput
             min={5}
             max={120}
             value={lane.targetDurationSeconds}
-            onChange={(e) =>
-              onUpdate({ targetDurationSeconds: Number(e.target.value) || 0 })
-            }
+            onChange={(v) => onUpdate({ targetDurationSeconds: v ?? 0 })}
             className="input input-sm w-16"
-            aria-label="Target duration in seconds"
+            ariaLabel="Target duration in seconds"
             onClick={(e) => e.stopPropagation()}
           />
           <span className="text-xs text-fg-subtle">sec</span>
@@ -340,33 +338,33 @@ function RedditConfigBody({
         </label>
         <label className="block">
           <span className="label">Comments</span>
-          <input
-            type="number"
+          <NumberInput
             min={1}
             max={20}
-            value={cfg?.commentCount ?? 5}
-            onChange={(e) => onUpdate({ commentCount: Number(e.target.value) || 5 })}
+            value={cfg?.commentCount}
+            onChange={(v) => onUpdate({ commentCount: v })}
             className="input input-sm mt-1.5"
+            placeholder="5"
           />
         </label>
         <label className="block">
           <span className="label">Min len</span>
-          <input
-            type="number"
+          <NumberInput
             min={0}
-            value={cfg?.minCommentLength ?? 80}
-            onChange={(e) => onUpdate({ minCommentLength: Number(e.target.value) || 0 })}
+            value={cfg?.minCommentLength}
+            onChange={(v) => onUpdate({ minCommentLength: v })}
             className="input input-sm mt-1.5"
+            placeholder="80"
           />
         </label>
         <label className="block">
           <span className="label">Max len</span>
-          <input
-            type="number"
+          <NumberInput
             min={1}
-            value={cfg?.maxCommentLength ?? 600}
-            onChange={(e) => onUpdate({ maxCommentLength: Number(e.target.value) || 600 })}
+            value={cfg?.maxCommentLength}
+            onChange={(v) => onUpdate({ maxCommentLength: v })}
             className="input input-sm mt-1.5"
+            placeholder="600"
           />
         </label>
       </div>
@@ -390,14 +388,14 @@ function RedditConfigBody({
           </label>
           <label className="block">
             <span className="label">Max speed-up % (last resort)</span>
-            <input
-              type="number"
+            <NumberInput
               min={0}
               max={50}
               step={5}
-              value={cfg?.maxSpeedupPercent ?? 0}
-              onChange={(e) => onUpdate({ maxSpeedupPercent: Number(e.target.value) || 0 })}
+              value={cfg?.maxSpeedupPercent}
+              onChange={(v) => onUpdate({ maxSpeedupPercent: v })}
               className="input input-sm mt-1.5"
+              placeholder="0"
             />
           </label>
         </div>
@@ -424,16 +422,35 @@ function RedditConfigBody({
         </label>
         <label className="block">
           <span className="label">Card max height (px)</span>
-          <input
-            type="number"
+          <NumberInput
             min={400}
             max={1700}
-            value={cfg?.cardMaxHeightPx ?? 1100}
-            onChange={(e) => onUpdate({ cardMaxHeightPx: Number(e.target.value) || 1100 })}
+            value={cfg?.cardMaxHeightPx}
+            onChange={(v) => onUpdate({ cardMaxHeightPx: v })}
             className="input input-sm mt-1.5"
+            placeholder="1100"
           />
         </label>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border/60 bg-surface/30 px-3 py-2.5 text-sm text-fg-muted">
+        <input
+          type="checkbox"
+          checked={cfg?.commentVoiceRotation !== false}
+          onChange={(e) =>
+            onUpdate({ commentVoiceRotation: e.target.checked ? undefined : false })
+          }
+          className="mt-0.5 h-4 w-4 rounded border-border bg-surface"
+        />
+        <span className="space-y-1">
+          <span className="block">Rotate voices on comments for this lane</span>
+          <span className="block text-[11px] text-fg-subtle">
+            Uses the channel-level voice pool + mode (configured under{" "}
+            <em>Voiceover &rarr; Comment voice rotation</em>). Uncheck to force a single
+            narrator voice for this subreddit, even if the channel has a pool.
+          </span>
+        </span>
+      </label>
     </>
   );
 }

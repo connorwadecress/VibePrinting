@@ -190,9 +190,9 @@
         "subreddit": "tifu",
         "showDescription": true,
         "commentTone": "funny",
-        "timeRange": "week",
-        "commentCount": 3,
-        "minCommentLength": 80,
+        "timeRange": "all",
+        "commentCount": 5,
+        "minCommentLength": 70,
         "maxCommentLength": 400,
         "trimPriority": "comments",
         "maxSpeedupPercent": 15,
@@ -246,6 +246,12 @@
   },
   "ttsVoice": "en-US-GuyNeural",
   "ttsRate": "+10%",
+  "genSecDefaults": {
+    "blockedReasons": [],
+    "disclosureRequired": true,
+    "riskLevel": "medium",
+    "safeToAutoPublish": false
+  },
   "ttsProvider": "elevenlabs",
   "ttsProviderSettings": {
     "elevenLabs": {
@@ -254,7 +260,6 @@
       "speed": 1.15
     }
   },
-  "commentVoiceMode": "by-author",
   "commentVoicePool": [
     "EST9Ui6982FZPSi7gCHi",
     "ljX1ZrXuDIIRVcmiVSyR",
@@ -262,12 +267,11 @@
     "tnSpp4vdxKPjI9w0GnoV",
     "kPzsL2i3teMYv0FxEYQ6",
     "15CVCzDByBinCIoCblXo",
-    "lnieQLGTodpbhjpZtg1k"
+    "lnieQLGTodpbhjpZtg1k",
+    "2zRM7PkgwBPiau2jvVXc",
+    "jqcCZkN6Knx8BJ5TBdYR",
+    "19STyYD15bswVz51nqLf",
+    "6OzrBCQf8cjERkYgzSg8"
   ],
-  "genSecDefaults": {
-    "blockedReasons": [],
-    "disclosureRequired": true,
-    "riskLevel": "medium",
-    "safeToAutoPublish": false
-  }
+  "commentVoiceMode": "by-author"
 }
