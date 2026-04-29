@@ -96,14 +96,15 @@ function trimSegmentsToTarget(
   const out = segments.slice();
 
   if (priority === "comments") {
+    // Body is the story for this lane — never drop it, even if the body
+    // alone exceeds the target. Drop trailing comments down to zero;
+    // anything still over after that is the speed-up fallback's problem,
+    // and the assembly hard-cap is the last line of defense. Producing a
+    // body-cutoff video is always better than producing an empty one.
     while (totalEstimate(out) > targetSeconds && commentCount(out) > 0) {
       const dropped = dropLastComment(out);
       if (!dropped) break;
       drops.push(dropped);
-    }
-    if (totalEstimate(out) > targetSeconds) {
-      const dropped = dropBody(out);
-      if (dropped) drops.push(dropped);
     }
   } else if (priority === "body") {
     if (totalEstimate(out) > targetSeconds) {

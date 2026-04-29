@@ -181,7 +181,7 @@
     {
       "id": "tifu",
       "description": "Today I Fucked Up — funny self-deprecating fail stories. Title plus body is the story; comments are reactions.",
-      "targetDurationSeconds": 90,
+      "targetDurationSeconds": 120,
       "exampleHooks": [],
       "type": "reddit-story",
       "redditConfig": {
@@ -189,7 +189,7 @@
         "showDescription": true,
         "commentTone": "funny",
         "timeRange": "week",
-        "commentCount": 2,
+        "commentCount": 3,
         "minCommentLength": 80,
         "maxCommentLength": 400,
         "trimPriority": "comments",
@@ -202,7 +202,7 @@
     {
       "id": "aita",
       "description": "Am I The Asshole — moral-dilemma stories. The post body is the story; comments deliver the judgment.",
-      "targetDurationSeconds": 90,
+      "targetDurationSeconds": 120,
       "exampleHooks": [],
       "type": "reddit-story",
       "redditConfig": {
@@ -210,7 +210,7 @@
         "showDescription": true,
         "commentTone": "blend",
         "timeRange": "week",
-        "commentCount": 2,
+        "commentCount": 3,
         "minCommentLength": 80,
         "maxCommentLength": 400,
         "trimPriority": "comments",
