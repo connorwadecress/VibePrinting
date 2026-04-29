@@ -8,6 +8,10 @@ import { createLlmClient } from "./providers/llm/index.js";
 import { EdgeTtsProvider } from "./providers/tts/edge-tts.js";
 import { ElevenLabsProvider } from "./providers/tts/elevenlabs.js";
 import { PexelsProvider } from "./providers/footage/pexels.js";
+import { LibraryGameplayProvider } from "./providers/gameplay/library.js";
+import { YtDlpGameplayProvider } from "./providers/gameplay/yt-dlp.js";
+import { CompositeGameplayProvider } from "./providers/gameplay/composite.js";
+import { LibraryMusicProvider } from "./providers/music/library.js";
 import { FfmpegAssembler } from "./providers/video/ffmpeg-assembler.js";
 import { YouTubeUploader } from "./providers/upload/youtube.js";
 import { TikTokUploader } from "./providers/upload/tiktok.js";
@@ -99,6 +103,26 @@ async function main(): Promise<void> {
     log("pipeline", `VP_PLATFORMS=${process.env.VP_PLATFORMS} -> ${filteredUploaders.map((u) => u.platform).join(",") || "none"}`);
   }
 
+  // --- Resolve reddit-story support paths (only used by reddit-story lanes) ---
+  const brandRoot = brand?.brandDir;
+  const gameplayLibraryDir = profile.gameplayLibraryDir
+    ?? (brandRoot ? path.join(brandRoot, "gameplay") : path.resolve("gameplay"));
+  const musicLibraryDir = profile.musicLibraryDir
+    ?? (brandRoot ? path.join(brandRoot, "music") : path.resolve("music"));
+  const ytDlpFallbackUrls = profile.ytDlpFallbackUrls ?? [];
+
+  const ytDlpProvider = ytDlpFallbackUrls.length > 0
+    ? new YtDlpGameplayProvider(
+        ytDlpFallbackUrls,
+        path.join(config.outputDir, ".gameplay-cache"),
+      )
+    : null;
+  const gameplayProvider = new CompositeGameplayProvider(
+    new LibraryGameplayProvider(gameplayLibraryDir),
+    ytDlpProvider,
+  );
+  const musicProvider = new LibraryMusicProvider(musicLibraryDir);
+
   // --- Wire providers (composition root) ---
   const context: StageContext = {
     llm: createLlmClient(config),
@@ -111,6 +135,8 @@ async function main(): Promise<void> {
         )
       : new EdgeTtsProvider(profile.ttsVoice, profile.ttsRate),
     footage: new PexelsProvider(config.pexelsApiKey ?? ""),
+    gameplay: gameplayProvider,
+    music: musicProvider,
     assembler: new FfmpegAssembler(videoSpec),
     uploaders: filteredUploaders,
     profile,
@@ -122,14 +148,14 @@ async function main(): Promise<void> {
   };
 
   // --- Build and run pipeline (dispatch by lane type) ---
-  const laneType = lane.type ?? "seven-api";
+  const laneType = lane.type ?? "pexels-api";
   log("pipeline", `Lane type: ${laneType}`);
   let stages;
   switch (laneType) {
     case "reddit-story":
       stages = buildRedditStoryPipeline({ dryRun, upload });
       break;
-    case "seven-api":
+    case "pexels-api":
     default:
       stages = buildShortsPipeline({ dryRun, upload });
       break;
@@ -138,22 +164,42 @@ async function main(): Promise<void> {
   const result = await runPipeline(stages, context, state);
 
   // --- Save script for review ---
-  if (result.script) {
+  if (result.script || result.redditScript) {
     fs.writeFileSync(
       path.join(workDir, "script.json"),
-      JSON.stringify({ topic: result.topic, research: result.research, script: result.script }, null, 2),
+      JSON.stringify(
+        {
+          topic: result.topic,
+          research: result.research,
+          script: result.script,
+          redditPost: result.redditPost,
+          redditScript: result.redditScript,
+        },
+        null,
+        2,
+      ),
     );
   }
 
   // --- Append to topic history ---
+  const today = new Date().toISOString().slice(0, 10);
   if (result.topic) {
-    const today = new Date().toISOString().slice(0, 10);
     appendTopicHistory(historyPath, {
       laneId: result.topic.laneId,
       titleAngle: result.topic.titleAngle,
       seedQuestion: result.topic.seedQuestion,
       runId,
       date: today,
+    });
+  } else if (result.redditScript) {
+    const post = result.redditScript.post;
+    appendTopicHistory(historyPath, {
+      laneId: lane.id,
+      titleAngle: post.title,
+      seedQuestion: `r/${post.subreddit}`,
+      runId,
+      date: today,
+      redditPostId: post.id,
     });
   }
 

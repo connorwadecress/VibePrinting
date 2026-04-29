@@ -10,7 +10,20 @@
 
 import { z } from "zod";
 
-export const LaneTypeSchema = z.enum(["seven-api", "reddit-story"]);
+export const LaneTypeSchema = z.enum(["pexels-api", "reddit-story"]);
+
+export const RedditLaneConfigSchema = z
+  .object({
+    subreddits: z.array(z.string().min(1)).default([]),
+    timeRange: z.enum(["day", "week", "month", "year", "all"]).optional(),
+    commentCount: z.number().int().positive().optional(),
+    minCommentLength: z.number().int().nonnegative().optional(),
+    maxCommentLength: z.number().int().positive().optional(),
+    segmentGapSeconds: z.number().nonnegative().optional(),
+    cardInitialReveal: z.enum(["empty", "first-sentence"]).optional(),
+    cardMaxHeightPx: z.number().int().positive().optional(),
+  })
+  .partial();
 
 export const ContentLaneSchema = z.object({
   id: z.string().min(1),
@@ -18,6 +31,7 @@ export const ContentLaneSchema = z.object({
   targetDurationSeconds: z.number().int().positive(),
   exampleHooks: z.array(z.string()).default([]),
   type: LaneTypeSchema.optional(),
+  redditConfig: RedditLaneConfigSchema.optional(),
 });
 
 export const ChannelBrandingSchema = z.object({
@@ -90,6 +104,9 @@ export const ChannelProfileSchema = z.object({
   ttsProvider: z.enum(["edge", "elevenlabs"]).optional(),
   ttsProviderSettings: TtsProviderSettingsSchema.optional(),
   cleanup: CleanupConfigSchema.optional(),
+  gameplayLibraryDir: z.string().optional(),
+  musicLibraryDir: z.string().optional(),
+  ytDlpFallbackUrls: z.array(z.string()).optional(),
 });
 
 export type ChannelProfileInput = z.infer<typeof ChannelProfileSchema>;

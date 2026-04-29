@@ -28,8 +28,15 @@ export class YouTubeUploader implements Uploader {
     const youtube = google.youtube({ version: "v3", auth });
 
     const fileSize = fs.statSync(videoPath).size;
+    // VP_YT_PRIVACY = "public" | "unlisted" | "private". Defaults to public
+    // to match prior behavior. Operators set "unlisted" for previews.
+    const requestedPrivacy = (process.env.VP_YT_PRIVACY || "public").toLowerCase();
+    const privacyStatus = ["public", "unlisted", "private"].includes(requestedPrivacy)
+      ? (requestedPrivacy as "public" | "unlisted" | "private")
+      : "public";
     log("youtube", `Title: ${metadata.title}`);
     log("youtube", `File size: ${(fileSize / 1024 / 1024).toFixed(1)} MB`);
+    log("youtube", `Privacy: ${privacyStatus}`);
 
     const response = await youtube.videos.insert(
       {
@@ -43,7 +50,7 @@ export class YouTubeUploader implements Uploader {
             defaultLanguage: "en",
           },
           status: {
-            privacyStatus: "public",
+            privacyStatus,
             selfDeclaredMadeForKids: false,
           },
         },

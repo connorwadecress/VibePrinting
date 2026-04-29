@@ -51,6 +51,10 @@ export interface CleanupConfig {
  *
  * `ttsProvider`, `ttsProviderSettings`, and `cleanup` are optional for
  * backward compatibility; existing profiles continue to work unchanged.
+ *
+ * The `gameplayLibraryDir`, `musicLibraryDir`, and `ytDlpFallbackUrls`
+ * fields are consumed only by reddit-story lanes. Defaults to
+ * `<brandDir>/gameplay` and `<brandDir>/music` when omitted.
  */
 export interface ChannelProfile {
   id: string;
@@ -66,6 +70,12 @@ export interface ChannelProfile {
   ttsProvider?: TtsProviderKind;
   ttsProviderSettings?: TtsProviderSettings;
   cleanup?: CleanupConfig;
+  /** Absolute or brand-relative path to a directory of gameplay .mp4/.mov files. */
+  gameplayLibraryDir?: string;
+  /** Absolute or brand-relative path to a directory of music .mp3/.m4a/.wav files. */
+  musicLibraryDir?: string;
+  /** Optional yt-dlp fallback URLs used when the gameplay library is empty/short. */
+  ytDlpFallbackUrls?: string[];
 }
 
 /**

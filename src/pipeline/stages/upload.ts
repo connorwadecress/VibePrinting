@@ -1,20 +1,36 @@
 import type { PipelineStage, StageContext } from "../../domain/interfaces/pipeline-stage.js";
 import type { UploadMetadata, UploadResult } from "../../domain/interfaces/uploader.js";
-import type { PipelineState, ShortScript } from "../../domain/models.js";
+import type {
+  PipelineState,
+  PublishMeta,
+  RedditStoryScript,
+  ShortScript,
+} from "../../domain/models.js";
 import type { UploadLogEntry } from "../../domain/upload-log.js";
 import { log, logError } from "../../utils/logger.js";
 import { appendUploadLog, readTriggerFromEnv } from "../../utils/upload-log.js";
 import { enqueueDeletion } from "../../utils/deletion-queue.js";
 import fs from "node:fs";
 
+interface PublishInputs {
+  publishMeta?: PublishMeta;
+  fallbackTitle: string;
+  fallbackDescription: string;
+}
+
 export class UploadStage implements PipelineStage {
   readonly name = "upload";
 
   async execute(state: PipelineState, context: StageContext): Promise<void> {
     const videoPath = state.outputVideoPath;
-    const script = state.script;
     if (!videoPath) throw new Error("No output video path in pipeline state");
-    if (!script) throw new Error("No script in pipeline state");
+
+    const inputs = state.script
+      ? this.fromShortScript(state.script)
+      : state.redditScript
+        ? this.fromRedditStoryScript(state.redditScript)
+        : null;
+    if (!inputs) throw new Error("No script or redditScript in pipeline state");
 
     const configuredUploaders = context.uploaders.filter((u) => u.isConfigured());
 
@@ -23,7 +39,7 @@ export class UploadStage implements PipelineStage {
       return;
     }
 
-    const metadata = this.buildMetadata(script, context);
+    const metadata = this.buildMetadata(inputs, context);
     const results: UploadResult[] = [];
 
     // Cache values that are identical for every parallel upload attempt.
@@ -107,15 +123,48 @@ export class UploadStage implements PipelineStage {
     }
   }
 
-  private buildMetadata(script: ShortScript, context: StageContext): UploadMetadata {
-    const { branding, genSecDefaults } = context.profile;
-    const pub = script.publishMeta;
+  private fromShortScript(script: ShortScript): PublishInputs {
+    return {
+      publishMeta: script.publishMeta,
+      fallbackTitle: script.hook,
+      fallbackDescription: [
+        script.hook,
+        "",
+        script.beats.map((b) => b.narration).join(" "),
+        "",
+        script.payoff,
+        "",
+        "---",
+        script.callToAction,
+      ].join("\n"),
+    };
+  }
 
-    // Title: prefer LLM-generated YouTube title, fall back to hook
-    const rawTitle = (pub?.youtubeTitle || script.hook).replace(/[<>]/g, "").trim();
+  private fromRedditStoryScript(script: RedditStoryScript): PublishInputs {
+    const commentLines = script.segments
+      .filter((s) => s.kind === "comment")
+      .slice(0, 3)
+      .map((s) => `• ${s.text.slice(0, 200)}${s.text.length > 200 ? "…" : ""}`);
+    return {
+      publishMeta: script.publishMeta,
+      fallbackTitle: script.post.title,
+      fallbackDescription: [
+        `From r/${script.post.subreddit}: ${script.post.title}`,
+        "",
+        ...commentLines,
+      ].join("\n"),
+    };
+  }
+
+  private buildMetadata(inputs: PublishInputs, context: StageContext): UploadMetadata {
+    const { branding, genSecDefaults } = context.profile;
+    const pub = inputs.publishMeta;
+
+    // Title: prefer LLM-generated YouTube title, fall back to provided fallback
+    const rawTitle = (pub?.youtubeTitle || inputs.fallbackTitle).replace(/[<>]/g, "").trim();
     const title = rawTitle.length > 100 ? rawTitle.substring(0, 97) + "..." : rawTitle;
 
-    // Description: prefer LLM-generated description, fall back to narration dump
+    // Description: prefer LLM-generated description, fall back to narrative dump
     const description = pub?.youtubeDescription
       ? [
           pub.youtubeDescription,
@@ -125,15 +174,9 @@ export class UploadStage implements PipelineStage {
           ...(pub.topicHashtags ?? []).filter((h) => !branding.hashtags.includes(h)),
         ].join("\n")
       : [
-          script.hook,
-          "",
-          script.beats.map((b) => b.narration).join(" "),
-          "",
-          script.payoff,
+          inputs.fallbackDescription,
           "",
           "---",
-          script.callToAction,
-          "",
           branding.hashtags.join(" "),
         ].join("\n");
 

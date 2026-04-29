@@ -768,5 +768,208 @@
     "seedQuestion": "How do penguins stay warm in water colder than freezing when they have no blubber layer — just feathers?",
     "runId": "20260407-215723",
     "date": "2026-04-07"
+  },
+  {
+    "laneId": "why-that-rule",
+    "titleAngle": "Why America's Date Format Is Backwards (And It Costs Billions)",
+    "seedQuestion": "Why do we write the date month-first in the US when literally every other country does day-first — and it actually costs money?",
+    "runId": "20260412-135927",
+    "date": "2026-04-12"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "Medieval Knights Ruined Their Swords On Purpose (Here's Why)",
+    "seedQuestion": "Why did medieval knights deliberately DULL their swords before tournaments — when a sharp blade would be faster?",
+    "runId": "20260412-140529",
+    "date": "2026-04-12"
+  },
+  {
+    "laneId": "scale-check",
+    "titleAngle": "One Tree Produces Enough Oxygen for This Many People (The Answer Surprises Everyone)",
+    "seedQuestion": "How much oxygen does a single tree produce in a year compared to what one person breathes?",
+    "runId": "20260412-141359",
+    "date": "2026-04-12"
+  },
+  {
+    "laneId": "food-science",
+    "titleAngle": "Low Heat Wins: Why Slow-Cooking Steak at 130°F Beats 160°F (The Collagen Conspiracy)",
+    "seedQuestion": "Why does cooking the same piece of meat at 130°F for 24 hours make it more tender than cooking it at 160°F for 30 minutes — when the higher temperature is 'hotter'?",
+    "runId": "20260412-142135",
+    "date": "2026-04-12"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The 50% Improvement Lie: Why Drug Companies' Success Rates Are Way Smaller Than They Sound",
+    "seedQuestion": "Why does a study showing '50% improvement' often mean something completely different than what the headlines claim?",
+    "runId": "20260424-213000",
+    "date": "2026-04-24"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "anyone who used a computer between 1985 & 2010, what’s the one game you still think about?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260428-180537",
+    "date": "2026-04-28",
+    "redditPostId": "1swue3d"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s a game you were completely obsessed with as a kid that nobody else seems to remember?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260428-205053",
+    "date": "2026-04-28",
+    "redditPostId": "1ss6ctd"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s a \"lost\" website from the early 2000s that you still think about today?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260428-210028",
+    "date": "2026-04-28",
+    "redditPostId": "1stdtnv"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What's the most unwritten rule of adult life that nobody warns you about?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260428-210518",
+    "date": "2026-04-28",
+    "redditPostId": "1sskauy"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s something that quietly made your life 10× easier, but you didn’t realize it until much later?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-081758",
+    "date": "2026-04-29",
+    "redditPostId": "1ssh03u"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "It's 1999. You have your current smartphone in your pocket, but obviously no Wi-Fi or 5G exists. What's the most useful thing you can do with it?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-083154",
+    "date": "2026-04-29",
+    "redditPostId": "1sv4t9y"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "AITA for being upset that my husband throws away dishes I forget to put away",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-084102",
+    "date": "2026-04-29",
+    "redditPostId": "1ssniqk"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Who’s a celebrity everyone finds attractive but you don’t?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-084814",
+    "date": "2026-04-29",
+    "redditPostId": "1sxm7tn"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "AITA for throwing away my wife’s memory jars?",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-085207",
+    "date": "2026-04-29",
+    "redditPostId": "1sx3m4o"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Who is a singer that is incredibly famous, but honestly doesn't have a good voice?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-085945",
+    "date": "2026-04-29",
+    "redditPostId": "1sxo00w"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Who is the worst person you will admit being attracted to?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-090747",
+    "date": "2026-04-29",
+    "redditPostId": "1suvxm1"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Women, if you could be a man for 24 hours, what are you just dying to know?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-091407",
+    "date": "2026-04-29",
+    "redditPostId": "1svsl55"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What are some telltale signs you notice in couples that make you think their relationship won’t last?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-094006",
+    "date": "2026-04-29",
+    "redditPostId": "1sx9wn1"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s the most disturbing sound you’ve ever heard in real life?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-094933",
+    "date": "2026-04-29",
+    "redditPostId": "1sx57vy"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "TIFU by asking my friend's mum out",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-100424",
+    "date": "2026-04-29",
+    "redditPostId": "1swo5j7"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What TV show was quality all the way through, knew when to end and went out with an amazing last episode?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-101626",
+    "date": "2026-04-29",
+    "redditPostId": "1swlz9p"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s something people who are in their 20s won’t learn until in their 40s?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-105043",
+    "date": "2026-04-29",
+    "redditPostId": "1syd71o"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "Military members and veterans, what \"Military Grade\" item is actually great instead of \"barely good enough to meet spec\"?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-105933",
+    "date": "2026-04-29",
+    "redditPostId": "1svv734"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "AITA for using my dad’s underwear to make a point about the toilet seat?",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-125949",
+    "date": "2026-04-29",
+    "redditPostId": "1sw51v2"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "What’s the coolest “restricted access” place you’ve ever gotten to see?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-132033",
+    "date": "2026-04-29",
+    "redditPostId": "1svr06x"
+  },
+  {
+    "laneId": "askreddit-stories",
+    "titleAngle": "TIFU when I joked with my cat and got the cops called",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-132727",
+    "date": "2026-04-29",
+    "redditPostId": "1su5sig"
   }
 ]

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ContentLane } from "@pipeline/domain/models";
+import type { ContentLane, RedditLaneConfig } from "@pipeline/domain/models";
 import { TagInput } from "@/components/TagInput";
 
 /**
@@ -24,6 +24,12 @@ export interface ContentLanesEditorProps {
 export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps) {
   function update(idx: number, patch: Partial<ContentLane>) {
     onChange(value.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
+  }
+
+  function updateRedditConfig(idx: number, patch: Partial<RedditLaneConfig>) {
+    const lane = value[idx];
+    const next: RedditLaneConfig = { subreddits: [], ...(lane.redditConfig ?? {}), ...patch };
+    update(idx, { redditConfig: next });
   }
 
   function move(idx: number, delta: -1 | 1) {
@@ -89,13 +95,13 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
                 <label className="block">
                   <span className="label">Type</span>
                   <select
-                    value={lane.type ?? "seven-api"}
+                    value={lane.type ?? "pexels-api"}
                     onChange={(e) =>
                       update(idx, { type: e.target.value as ContentLane["type"] })
                     }
                     className="input input-sm mt-1.5"
                   >
-                    <option value="seven-api">seven-api</option>
+                    <option value="pexels-api">pexels-api</option>
                     <option value="reddit-story">reddit-story</option>
                   </select>
                 </label>
@@ -132,6 +138,116 @@ export function ContentLanesEditor({ value, onChange }: ContentLanesEditorProps)
                   />
                 </div>
               </div>
+              {lane.type === "reddit-story" && (
+                <div className="rounded-md border border-border/70 bg-surface/30 p-3 space-y-3">
+                  <div className="text-xs font-semibold text-fg-subtle">Reddit story config</div>
+                  <div>
+                    <span className="label">Subreddits</span>
+                    <div className="mt-1.5">
+                      <TagInput
+                        value={lane.redditConfig?.subreddits ?? []}
+                        onChange={(subs) => updateRedditConfig(idx, { subreddits: subs })}
+                        placeholder="AskReddit, tifu, AmItheAsshole…"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    <label className="block">
+                      <span className="label">Time range</span>
+                      <select
+                        value={lane.redditConfig?.timeRange ?? "week"}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            timeRange: e.target.value as RedditLaneConfig["timeRange"],
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      >
+                        <option value="day">day</option>
+                        <option value="week">week</option>
+                        <option value="month">month</option>
+                        <option value="year">year</option>
+                        <option value="all">all</option>
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="label">Comments</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={lane.redditConfig?.commentCount ?? 5}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            commentCount: Number(e.target.value) || 5,
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="label">Min len</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={lane.redditConfig?.minCommentLength ?? 80}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            minCommentLength: Number(e.target.value) || 0,
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="label">Max len</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={lane.redditConfig?.maxCommentLength ?? 600}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            maxCommentLength: Number(e.target.value) || 600,
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="label">Card reveal</span>
+                      <select
+                        value={lane.redditConfig?.cardInitialReveal ?? "empty"}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            cardInitialReveal: e.target.value as RedditLaneConfig["cardInitialReveal"],
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      >
+                        <option value="empty">empty (fills word-by-word)</option>
+                        <option value="first-sentence">first sentence pre-rendered</option>
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="label">Card max height (px)</span>
+                      <input
+                        type="number"
+                        min={400}
+                        max={1700}
+                        value={lane.redditConfig?.cardMaxHeightPx ?? 1100}
+                        onChange={(e) =>
+                          updateRedditConfig(idx, {
+                            cardMaxHeightPx: Number(e.target.value) || 1100,
+                          })
+                        }
+                        className="input input-sm mt-1.5"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               type="button"

@@ -5,15 +5,36 @@ export type RiskLevel = "low" | "medium" | "high";
  * Add a new value here, then add a matching preset in src/pipeline/presets/
  * and a dispatch case in src/generate.ts.
  */
-export type LaneType = "seven-api" | "reddit-story";
+export type LaneType = "pexels-api" | "reddit-story";
 
 export interface ContentLane {
   description: string;
   exampleHooks: string[];
   id: string;
   targetDurationSeconds: number;
-  /** Pipeline preset to run. Defaults to "seven-api" when omitted. */
+  /** Pipeline preset to run. Defaults to "pexels-api" when omitted. */
   type?: LaneType;
+  /** Reddit-story specific config. Only consumed when type === "reddit-story". */
+  redditConfig?: RedditLaneConfig;
+}
+
+export interface RedditLaneConfig {
+  /** Subreddits to pull AskReddit-style posts from, in priority order. */
+  subreddits: string[];
+  /** Reddit time range for /top listings. */
+  timeRange?: "day" | "week" | "month" | "year" | "all";
+  /** Number of top comments to feature in the video. */
+  commentCount?: number;
+  /** Min/max comment body length (in characters) used to filter candidates. */
+  minCommentLength?: number;
+  maxCommentLength?: number;
+  /** Silent pause inserted between segments (intro/question/comments/outro). */
+  segmentGapSeconds?: number;
+  /** "empty" = card body starts blank and reveals word-by-word.
+   *  "first-sentence" = first sentence is pre-rendered, the rest fills in. */
+  cardInitialReveal?: "empty" | "first-sentence";
+  /** When the revealed text would exceed this height, the body auto-scrolls. */
+  cardMaxHeightPx?: number;
 }
 
 export interface TopicCandidate {
@@ -30,6 +51,8 @@ export interface TopicHistoryEntry {
   seedQuestion: string;
   runId: string;
   date: string;
+  /** Reddit post id for reddit-story lanes — used to dedup against previously-used posts. */
+  redditPostId?: string;
 }
 
 export interface ResearchClaim {
@@ -141,18 +164,111 @@ export interface ScoredCandidate extends ClipCandidate {
   score: number;
 }
 
+// ============================================================================
+// Reddit-story types
+// ============================================================================
+
+export interface RedditPost {
+  id: string;
+  subreddit: string;
+  /** Post title — for AskReddit-style subs this is the question. */
+  title: string;
+  url: string;
+  author: string;
+  score: number;
+  numComments: number;
+  /** /r/<sub>/comments/<id>/<slug>/ — relative path. */
+  permalink: string;
+  fetchedAt: string;
+  /**
+   * OP's body text (markdown stripped, edits/links cleaned). Empty for
+   * link posts and most AskReddit-style subs; populated for TIFU/AITA-style
+   * subs where the story lives in the post body, not the title.
+   */
+  selftext?: string;
+}
+
+export interface RedditComment {
+  id: string;
+  author: string;
+  /** Cleaned comment body (markdown stripped, links removed, edits/AutoMod filtered). */
+  body: string;
+  score: number;
+  /** Comment depth in the tree. 0 = top-level reply to the post. */
+  depth: number;
+}
+
+export type RedditSegmentKind = "intro" | "question" | "description" | "comment" | "outro";
+
+export interface RedditStorySegment {
+  index: number;
+  kind: RedditSegmentKind;
+  /** Narration text. The same string is shown on the card and read by TTS. */
+  text: string;
+  /** Reddit comment author for `comment` segments (drives the card byline). */
+  author?: string;
+  /** Comment upvote score for `comment` segments (drives the card score chip). */
+  score?: number;
+  /** Per-segment audio file path written by RedditVoiceoverStage. */
+  audioPath?: string;
+  /** Cumulative timeline start, populated after stitching. */
+  startSeconds?: number;
+  /** Cumulative timeline end, populated after stitching. */
+  endSeconds?: number;
+  /** Per-segment word-level timings, offset to the global timeline. */
+  wordTimings?: WordTiming[];
+}
+
+export interface RedditStoryScript {
+  post: RedditPost;
+  segments: RedditStorySegment[];
+  totalDurationEstimateSeconds: number;
+  /** Reuses the same publish-metadata shape as ShortScript so UploadStage works unchanged. */
+  publishMeta?: PublishMeta;
+}
+
+export interface GameplayClip {
+  /** Source video on local disk. */
+  sourcePath: string;
+  /** Slice start within the source. */
+  startSeconds: number;
+  /** Slice duration. */
+  durationSeconds: number;
+  /** Optional pre-prepared (scaled/cropped) version, populated by assembly. */
+  preparedPath?: string;
+}
+
+export interface MusicTrack {
+  path: string;
+  durationSeconds: number;
+  title?: string;
+}
+
 /**
  * Mutable accumulator passed through pipeline stages.
  * Each stage reads what it needs and writes its output here.
+ *
+ * Pexels-api lanes use the topic/research/script/scenes/voiceover/clips fields.
+ * Reddit-story lanes use the redditPost/redditComments/redditScript/gameplayClip/musicTrack fields.
+ * The two sets are independent — a single run only populates one half.
  */
 export interface PipelineState {
   lane?: ContentLane;
+  // pexels-api fields
   topic?: TopicCandidate;
   research?: ResearchPack;
   script?: ShortScript;
   scenes?: ScenePlanWithKeywords[];
   voiceover?: VoiceoverResult;
   clips?: StockClip[];
+  // reddit-story fields
+  redditPost?: RedditPost;
+  redditComments?: RedditComment[];
+  redditScript?: RedditStoryScript;
+  gameplayClip?: GameplayClip;
+  musicTrack?: MusicTrack;
+  redditVoiceoverPath?: string;
+  // shared output fields
   rawVideoPath?: string;
   outputVideoPath?: string;
   uploadResults?: import("./interfaces/uploader.js").UploadResult[];

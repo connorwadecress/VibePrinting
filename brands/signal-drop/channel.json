@@ -158,6 +158,23 @@
 				"Why your phone's battery percentage is a rough guess",
 				"The misleading stat behind 'you eat 8 spiders a year in your sleep'"
 			]
+		},
+		{
+			"id": "askreddit-stories",
+			"type": "reddit-story",
+			"description": "AskReddit-style comment compilations on gameplay footage. Picks a viral post and reads the top comments while a Reddit-styled card fills in word-by-word.",
+			"targetDurationSeconds": 60,
+			"exampleHooks": [],
+			"redditConfig": {
+				"subreddits": ["AskReddit", "tifu", "AmItheAsshole"],
+				"timeRange": "week",
+				"commentCount": 5,
+				"minCommentLength": 80,
+				"maxCommentLength": 600,
+				"segmentGapSeconds": 0.3,
+				"cardInitialReveal": "empty",
+				"cardMaxHeightPx": 1100
+			}
 		}
 	],
 	"publishSlots": ["11:00", "15:00", "19:00"],

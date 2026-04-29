@@ -47,16 +47,19 @@ FROM node:20-bookworm-slim AS runtime
 # tini for proper signal handling, ffmpeg for the video assembler,
 # ca-certificates for outbound HTTPS to LLM/upload APIs.
 # Chrome/Remotion headless browser dependencies.
+# python3 + yt-dlp for the reddit-story gameplay fallback provider.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    ffmpeg ca-certificates tini wget \
+    ffmpeg ca-certificates tini wget python3 \
     fonts-liberation fonts-dejavu-core \
     libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
     libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
     libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 \
     libpango-1.0-0 libpangocairo-1.0-0 libcairo2 \
     libx11-6 libx11-xcb1 libxcb1 libxext6 \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && wget -q -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+ && chmod a+x /usr/local/bin/yt-dlp
 
 WORKDIR /app
 
