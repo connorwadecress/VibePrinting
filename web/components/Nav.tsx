@@ -20,6 +20,7 @@ const ITEMS: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/runs", label: "Runs" },
   { href: "/schedule", label: "Schedule" },
   { href: "/uploads", label: "Uploads" },
+  { href: "/library", label: "Library" },
 ];
 
 interface NavProps {

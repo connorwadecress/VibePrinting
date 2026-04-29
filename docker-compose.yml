@@ -21,6 +21,11 @@ services:
       - ./output:/app/output
       - ./data:/app/data
       - ./logs:/app/logs
+      # Cross-brand shared asset library (gameplay clips + music). Both
+      # buddies on the instance read from the same pool; per-brand
+      # customization happens via the AssetEntry[] allowlists in
+      # each channel.json. Managed via the admin UI's /library page.
+      - ./shared:/app/shared
     ports:
       - "3000:3000"
     healthcheck:

@@ -994,5 +994,69 @@
     "runId": "20260429-143913",
     "date": "2026-04-29",
     "redditPostId": "dcxylq"
+  },
+  {
+    "laneId": "tifu",
+    "titleAngle": "TIFU by pretending to recognise someone who waved at me and now I'm going to their wedding",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-150103",
+    "date": "2026-04-29",
+    "redditPostId": "1sv7n11"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "Without saying what the category is, what are your top five?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-151801",
+    "date": "2026-04-29",
+    "redditPostId": "99eh6b"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA for telling my wife my mother is correct and she needed to be a parent today and she fucked it up",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-152746",
+    "date": "2026-04-29",
+    "redditPostId": "1sukl3u"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA for ruining my daughter in laws birth plan",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-152916",
+    "date": "2026-04-29",
+    "redditPostId": "1syg19o"
+  },
+  {
+    "laneId": "tifu",
+    "titleAngle": "TIFU I matched with a guy on Tinder and drunk messaged him. Turns out it’s a guy from work. He now winks at me and calls me trouble. I want to die!",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-153959",
+    "date": "2026-04-29",
+    "redditPostId": "1sv95x0"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA for backing out the morning we were supposed to commit to a house after seeing my room setup?",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-154810",
+    "date": "2026-04-29",
+    "redditPostId": "1sx51dd"
+  },
+  {
+    "laneId": "tifu",
+    "titleAngle": "TIFU by using body wash as moisturizer for weeks and thinking my skin was “detoxing”",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-160953",
+    "date": "2026-04-29",
+    "redditPostId": "1svgrki"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA for joining my dil outside when they smoke but with one of those bubble cigeratees. My DIL claims I am mocking them.",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260429-174640",
+    "date": "2026-04-29",
+    "redditPostId": "1stna2p"
   }
 ]

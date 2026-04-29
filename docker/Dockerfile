@@ -71,6 +71,7 @@ ENV VP_DATA_DIR=/app/data
 ENV VP_LOGS_DIR=/app/logs
 ENV VP_BRANDS_DIR=/app/brands
 ENV VP_OUTPUT_DIR=/app/output
+ENV VP_SHARED_DIR=/app/shared
 ENV OUTPUT_DIR=/app/output
 ENV VP_TRIGGER=cli
 
@@ -82,7 +83,7 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/web ./web
 
 # Volume-mount targets — created so an empty host bind mount works.
-RUN mkdir -p /app/brands /app/output /app/data /app/logs
+RUN mkdir -p /app/brands /app/output /app/data /app/logs /app/shared/gameplay /app/shared/music
 
 EXPOSE 3000
 

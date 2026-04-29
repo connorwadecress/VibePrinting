@@ -114,6 +114,10 @@ data/                                — runtime state (gitignored, volume-mount
 logs/                                — runtime logs (gitignored, volume-mounted in Docker)
   upload-log.jsonl                   — one JSON line per upload attempt
 
+shared/                              — cross-brand asset library (gitignored, volume-mounted in Docker)
+  gameplay/                          — gameplay clips (.mp4/.mov/.mkv/.webm) shared by every brand
+  music/                             — background music tracks (.mp3/.m4a/.wav/.aac/.ogg)
+
 docker/                              — container build
   Dockerfile                         — multi-stage, node:20 + ffmpeg
 docker-compose.yml                   — snippet to merge into Hostinger n8n compose
@@ -261,6 +265,26 @@ cp -r brands/_template brands/my-brand
 .\generate.ps1 -Brand my-brand -DryRun
 ```
 
+### Shared asset library (reddit-story lanes)
+
+Long-form gameplay clips (.mp4/.mov) and background music tracks (.mp3/.m4a)
+live at `<repo>/shared/gameplay/` and `<repo>/shared/music/`. The pool is
+**cross-brand by design** — every brand on the instance reads from the
+same files. Sharing is fine because the pipeline crops each clip to a
+random slice equal to the narration length, so duplicates between brands
+naturally produce different outputs.
+
+| Concern | Where it lives |
+|---|---|
+| The actual files on disk | `<repo>/shared/{gameplay,music}/` (override via `VP_SHARED_DIR`) |
+| Drag-and-drop upload, list, delete | Admin UI's `/library` page |
+| Per-brand allowlist (which files this brand may use, in what order) | `gameplayLibrary` / `musicLibrary` arrays in `brands/<id>/channel.json`, edited via the brand editor's "Asset library" panel |
+| Per-brand private pool (escape hatch) | Set `gameplayLibraryDir` / `musicLibraryDir` on the channel profile to a brand-relative path; the engine then reads from that dir instead of `shared/` |
+
+When a brand's allowlist is empty/omitted, every file in the shared pool
+is eligible. As soon as the operator toggles even one entry, only enabled
+entries become eligible.
+
 ---
 
 ## Channel configuration (channel.json)
@@ -305,6 +329,7 @@ All channel identity lives in `brands/<id>/channel.json` (gitignored). Copy from
 | `VP_DATA_DIR` | No | `./data` | Persistent state dir (jobs/schedules/deletion queue) |
 | `VP_LOGS_DIR` | No | `./logs` | Logs dir (upload-log.jsonl) |
 | `VP_BRANDS_DIR` | No | `./brands` | Brands dir (override for tests/containers) |
+| `VP_SHARED_DIR` | No | `./shared` | Cross-brand asset library dir (gameplay + music) |
 
 ### Brand `.env` (`brands/<id>/.env`, per-brand credentials)
 
@@ -464,6 +489,9 @@ Next.js 15 App Router app that runs alongside the engine. It does **not** import
 | `PUT /api/schedule/[brandId]` | Upsert ScheduleEntry |
 | `POST /api/schedule/pause` | `{paused: bool}` |
 | `GET /api/upload-log` | Upload history (reverse-read of `logs/upload-log.jsonl`) |
+| `GET /api/library/[kind]` | List shared library entries (`gameplay` \| `music`) |
+| `POST /api/library/[kind]` | Multipart upload one file to the shared library |
+| `DELETE /api/library/[kind]/[filename]` | Remove a file from the shared library |
 
 ### Path overrides
 
@@ -475,6 +503,7 @@ Next.js 15 App Router app that runs alongside the engine. It does **not** import
 | `VP_OUTPUT_DIR` / `OUTPUT_DIR` | `<cwd>/output` | Run dirs |
 | `VP_DATA_DIR` | `<cwd>/data` | Persistent state |
 | `VP_LOGS_DIR` | `<cwd>/logs` | Logs |
+| `VP_SHARED_DIR` | `<cwd>/shared` | Cross-brand gameplay + music pool |
 | `UPLOAD_LOG_PATH` | `<LOGS_DIR>/upload-log.jsonl` | Upload audit log |
 | `DELETION_QUEUE_PATH` | `<DATA_DIR>/deletion-queue.json` | Deletion queue |
 | `VP_SCHEDULES_PATH` | `<DATA_DIR>/schedules.json` | Schedule entries |
@@ -598,6 +627,7 @@ Multi-stage build, `node:20-bookworm-slim` base.
   - `./output:/app/output` — run dirs (auto-cleaned by deletion worker)
   - `./data:/app/data` — `jobs.json`, `schedules.json`, `deletion-queue.json`
   - `./logs:/app/logs` — `upload-log.jsonl`
+  - `./shared:/app/shared` — cross-brand gameplay + music pool (managed via `/library`)
 - **Port:** `127.0.0.1:3000:3000` — loopback only, sit behind a reverse proxy (matches the n8n pattern on the box).
 - **Networks:** external `n8n-net` so it joins the existing n8n compose.
 - **Healthcheck:** `wget --spider http://localhost:3000/api/health` every 30s.

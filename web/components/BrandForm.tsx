@@ -131,20 +131,22 @@ export function BrandForm({ initial, assets }: BrandFormProps) {
 
       <Card title="Asset library">
         <p className="-mt-1 mb-3 text-xs text-fg-subtle">
-          Reddit story lanes pull background gameplay clips and music from these libraries. Drop files into{" "}
-          <code className="font-mono">brands/{profile.id}/gameplay/</code> and{" "}
-          <code className="font-mono">brands/{profile.id}/music/</code>; toggle which ones are eligible here.
+          Reddit story lanes pick from the cross-brand{" "}
+          <a href="/library" className="text-accent hover:underline">
+            shared library
+          </a>
+          . Add or remove files there; toggle which ones <em>this brand</em> is allowed to use below.
         </p>
         <AssetLibraryPanel
           label="Gameplay clips"
-          emptyHint="Drop .mp4 / .mov files into the gameplay folder."
+          emptyHint="No gameplay clips uploaded yet — add some on the shared library page."
           diskFiles={assets.gameplay}
           entries={profile.gameplayLibrary}
           onChange={(next) => update("gameplayLibrary", next)}
         />
         <AssetLibraryPanel
           label="Music tracks"
-          emptyHint="Drop .mp3 / .m4a files into the music folder."
+          emptyHint="No music tracks uploaded yet — add some on the shared library page."
           diskFiles={assets.music}
           entries={profile.musicLibrary}
           onChange={(next) => update("musicLibrary", next)}

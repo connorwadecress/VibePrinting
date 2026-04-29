@@ -126,11 +126,18 @@ async function main(): Promise<void> {
   }
 
   // --- Resolve reddit-story support paths (only used by reddit-story lanes) ---
+  // Default to a cross-brand shared library at <repo>/shared/{gameplay,music}.
+  // Brands can still override via channel.json (gameplayLibraryDir / musicLibraryDir)
+  // if they want a private/brand-local pool. Path is relative to brand dir when
+  // overridden, repo root otherwise.
   const brandRoot = brand?.brandDir;
+  const sharedDir = process.env.VP_SHARED_DIR ?? path.resolve("shared");
   const gameplayLibraryDir = profile.gameplayLibraryDir
-    ?? (brandRoot ? path.join(brandRoot, "gameplay") : path.resolve("gameplay"));
+    ? (brandRoot ? path.resolve(brandRoot, profile.gameplayLibraryDir) : path.resolve(profile.gameplayLibraryDir))
+    : path.join(sharedDir, "gameplay");
   const musicLibraryDir = profile.musicLibraryDir
-    ?? (brandRoot ? path.join(brandRoot, "music") : path.resolve("music"));
+    ? (brandRoot ? path.resolve(brandRoot, profile.musicLibraryDir) : path.resolve(profile.musicLibraryDir))
+    : path.join(sharedDir, "music");
   const ytDlpFallbackUrls = profile.ytDlpFallbackUrls ?? [];
 
   const ytDlpProvider = ytDlpFallbackUrls.length > 0

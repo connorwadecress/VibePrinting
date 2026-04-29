@@ -31,6 +31,17 @@ export const OUTPUT_DIR = process.env.VP_OUTPUT_DIR ?? process.env.OUTPUT_DIR ??
 export const DATA_DIR = process.env.VP_DATA_DIR ?? path.join(REPO_ROOT, "data");
 export const LOGS_DIR = process.env.VP_LOGS_DIR ?? path.join(REPO_ROOT, "logs");
 
+/**
+ * Cross-brand shared asset library — gameplay clips and music tracks used
+ * by reddit-story lanes. Lives outside brands/ because every brand on the
+ * instance reads from the same pool; per-brand customization happens via
+ * the AssetEntry[] allowlists in each channel.json (gameplayLibrary,
+ * musicLibrary). Override with VP_SHARED_DIR for tests/containers.
+ */
+export const SHARED_DIR = process.env.VP_SHARED_DIR ?? path.join(REPO_ROOT, "shared");
+export const SHARED_GAMEPLAY_DIR = path.join(SHARED_DIR, "gameplay");
+export const SHARED_MUSIC_DIR = path.join(SHARED_DIR, "music");
+
 export const UPLOAD_LOG_PATH = process.env.UPLOAD_LOG_PATH ?? path.join(LOGS_DIR, "upload-log.jsonl");
 export const DELETION_QUEUE_PATH = process.env.DELETION_QUEUE_PATH ?? path.join(DATA_DIR, "deletion-queue.json");
 export const SCHEDULES_PATH = process.env.VP_SCHEDULES_PATH ?? path.join(DATA_DIR, "schedules.json");
