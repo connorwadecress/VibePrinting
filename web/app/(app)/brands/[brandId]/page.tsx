@@ -5,6 +5,7 @@ import { BrandForm } from "@/components/BrandForm";
 import { BrandEnvEditor } from "@/components/BrandEnvEditor";
 import { BrandJsonEditor } from "@/components/BrandJsonEditor";
 import { BrandTabs } from "@/components/BrandTabs";
+import { resolveActiveBrand } from "@/lib/active-brand";
 
 /**
  * Brand editor. Server component reads channel.json and the brand's
@@ -32,6 +33,8 @@ export default async function BrandEditorPage({ params }: PageProps) {
   }
 
   const assets: BrandAssetLists = listBrandAssets(brandId, profile);
+  const { brandIds } = await resolveActiveBrand();
+  const showBackLink = brandIds.length > 1;
 
   let envVars;
   try {
@@ -44,20 +47,19 @@ export default async function BrandEditorPage({ params }: PageProps) {
     <section>
       <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link
-            href="/brands"
-            className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
-          >
-            <span aria-hidden>←</span> Brands
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-fg">
+          {showBackLink && (
+            <Link
+              href="/brands"
+              className="inline-flex items-center gap-1 text-xs font-medium text-fg-muted hover:text-fg"
+            >
+              <span aria-hidden>←</span> Brands
+            </Link>
+          )}
+          <h1 className={"text-2xl font-semibold tracking-tight text-fg " + (showBackLink ? "mt-2" : "")}>
             {profile?.displayName ?? brandId}
           </h1>
           <p className="mt-0.5 font-mono text-xs text-fg-subtle">{brandId}</p>
         </div>
-        <Link href={`/brands/${brandId}/history`} className="btn-secondary btn-sm">
-          Topic history
-        </Link>
       </header>
 
       {profileError && <div className="mb-4 alert-error">{profileError}</div>}

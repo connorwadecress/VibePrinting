@@ -54,6 +54,9 @@ export default async function RunsPage() {
         <div className="flex items-center gap-2 text-xs">
           <span className="pill-info">{active.length} active</span>
           <span className="pill-muted">{recent.length} recent</span>
+          <Link href="/runs/history" className="btn-secondary btn-sm">
+            Content history
+          </Link>
         </div>
       </header>
 

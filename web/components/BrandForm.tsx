@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { AssetEntry, ChannelProfile } from "@pipeline/domain/channel-profile";
 import type { ContentLane, LaneType } from "@pipeline/domain/models";
@@ -51,6 +51,11 @@ export function BrandForm({ initial, assets }: BrandFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [profile, setProfile] = useState<ChannelProfile>(initial);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(profile) !== JSON.stringify(initial),
+    [profile, initial],
+  );
 
   function update<K extends keyof ChannelProfile>(key: K, val: ChannelProfile[K]) {
     setProfile((p) => ({ ...p, [key]: val }));
@@ -359,20 +364,25 @@ export function BrandForm({ initial, assets }: BrandFormProps) {
       {error && <div className="alert-error">{error}</div>}
       {savedAt && !error && <div className="alert-success">Saved at {savedAt}</div>}
 
-      <div className="sticky bottom-0 -mx-4 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => setProfile(initial)}
-            className="btn-secondary btn-sm"
-          >
-            Reset
-          </button>
-          <button type="submit" disabled={pending} className="btn-primary btn-sm">
-            {pending ? "Saving…" : "Save changes"}
-          </button>
+      {isDirty && (
+        <div className="sticky bottom-0 -mx-4 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-fg-muted">Unsaved changes</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setProfile(initial)}
+                className="btn-secondary btn-sm"
+              >
+                Discard
+              </button>
+              <button type="submit" disabled={pending} className="btn-primary btn-sm">
+                {pending ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }
