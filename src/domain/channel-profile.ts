@@ -64,8 +64,10 @@ export interface AssetEntry {
  * backward compatibility; existing profiles continue to work unchanged.
  *
  * The `gameplayLibraryDir`, `musicLibraryDir`, and `ytDlpFallbackUrls`
- * fields are consumed only by reddit-story lanes. Defaults to
- * `<brandDir>/gameplay` and `<brandDir>/music` when omitted.
+ * fields are consumed only by reddit-story lanes. When omitted, the
+ * pipeline reads from the cross-brand shared library at
+ * `<repo>/shared/{gameplay,music}` (overridable via VP_SHARED_DIR).
+ * Set these fields explicitly only if a brand needs a private pool.
  */
 export interface ChannelProfile {
   id: string;

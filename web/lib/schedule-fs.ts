@@ -84,11 +84,43 @@ interface LegacyV1File {
 function migrate(raw: unknown): SchedulesFile {
   if (!raw || typeof raw !== "object") return structuredClone(EMPTY);
   const data = raw as { version?: number; globalPaused?: boolean; schedules?: unknown };
-  if (data.version === 2 && Array.isArray(data.schedules)) {
-    return data as SchedulesFile;
+
+  // Array-shaped schedules are always treated as v2-recovery, regardless of
+  // the version label. Without this guard, a file with `schedules: [...]`
+  // labeled v1 would fall through to Object.entries(array), producing
+  // garbage brandIds like "0" and "1" (the array indices). Recover what
+  // we can: keep valid ids, mint new ones for missing ids, drop entries
+  // without a brandId or cron.
+  if (Array.isArray(data.schedules)) {
+    const recovered: ScheduleEntry[] = [];
+    for (const item of data.schedules as Array<Partial<ScheduleEntry>>) {
+      if (!item || typeof item !== "object") continue;
+      if (typeof item.brandId !== "string" || !item.brandId) continue;
+      if (typeof item.cron !== "string" || !item.cron) continue;
+      recovered.push({
+        id: typeof item.id === "string" && item.id ? item.id : newScheduleId(),
+        brandId: item.brandId,
+        name: typeof item.name === "string" ? item.name : item.brandId,
+        enabled: item.enabled !== false,
+        cron: item.cron,
+        laneType: item.laneType ?? null,
+        lane: item.lane ?? null,
+        platforms: Array.isArray(item.platforms) ? item.platforms : [],
+        dryRun: !!item.dryRun,
+        skipIfRunning: item.skipIfRunning !== false,
+        lastRunAt: item.lastRunAt ?? null,
+        lastJobId: item.lastJobId ?? null,
+      });
+    }
+    return {
+      version: 2,
+      globalPaused: !!data.globalPaused,
+      schedules: recovered,
+    };
   }
-  // v1 shape: schedules is { brandId: entry }. Convert each entry to a
-  // v2 array element with a generated id.
+
+  // True v1 shape: schedules is a Record<brandId, entry>. Convert each
+  // entry to a v2 array element with a generated id.
   const legacy = raw as LegacyV1File;
   const out: ScheduleEntry[] = [];
   for (const [brandId, entry] of Object.entries(legacy.schedules ?? {})) {
