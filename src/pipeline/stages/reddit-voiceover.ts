@@ -7,6 +7,7 @@ import type {
   WordTiming,
 } from "../../domain/models.js";
 import { log } from "../../utils/logger.js";
+import { alignTimingsToOriginal, prepareTextForTts } from "../../utils/text-prep.js";
 
 function offsetTimings(timings: WordTiming[] | undefined, offsetMs: number): WordTiming[] {
   if (!timings) return [];
@@ -39,7 +40,8 @@ export class RedditVoiceoverStage implements PipelineStage {
     for (const seg of script.segments) {
       const outPath = path.join(context.workDir, safeSegmentName(seg));
       log(this.name, `TTS segment ${seg.index} (${seg.kind}, ${seg.text.length} chars)`);
-      const result = await context.tts.synthesize(seg.text, outPath);
+      const ttsText = prepareTextForTts(seg.text);
+      const result = await context.tts.synthesize(ttsText, outPath);
 
       // Edge TTS strips the input extension and writes its own filename suffix —
       // capture the path the provider actually produced.
@@ -53,7 +55,10 @@ export class RedditVoiceoverStage implements PipelineStage {
       seg.audioPath = actualPath;
       seg.startSeconds = cumulativeMs / 1000;
       seg.endSeconds = (cumulativeMs + realDurationSeconds * 1000) / 1000;
-      seg.wordTimings = offsetTimings(result.wordTimings, cumulativeMs);
+      // Align tokens to the ORIGINAL segment text so cards/captions render
+      // with full grammar even though the TTS dropped non-alphanumeric chars.
+      const aligned = alignTimingsToOriginal(result.wordTimings ?? [], seg.text);
+      seg.wordTimings = offsetTimings(aligned, cumulativeMs);
 
       segmentAudioPaths.push(actualPath);
       cumulativeMs += realDurationSeconds * 1000;

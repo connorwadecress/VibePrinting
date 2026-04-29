@@ -75,6 +75,27 @@ const scoreChip: CSSProperties = {
   fontSize: 24,
 };
 
+const postChip: CSSProperties = {
+  marginLeft: "auto",
+  background: "#ff4500",
+  color: "white",
+  borderRadius: 6,
+  padding: "4px 12px",
+  fontWeight: 800,
+  fontSize: 22,
+  letterSpacing: 1.5,
+};
+
+const opTag: CSSProperties = {
+  background: "#0079d3",
+  color: "white",
+  borderRadius: 4,
+  padding: "2px 8px",
+  fontWeight: 700,
+  fontSize: 22,
+  letterSpacing: 0.5,
+};
+
 const cardBase: CSSProperties = {
   background: "#ffffff",
   borderRadius: 24,
@@ -90,6 +111,12 @@ const cardBase: CSSProperties = {
   right: 0,
   top: "12%",
   overflow: "hidden",
+};
+
+const descriptionCardStyle: CSSProperties = {
+  ...cardBase,
+  background: "#fff8f0",
+  borderLeft: "8px solid #ff4500",
 };
 
 const titleStyle: CSSProperties = {
@@ -130,6 +157,7 @@ export function RedditCard(props: RedditCardProps) {
   }
 
   const isQuestion = segment.kind === "question";
+  const isDescription = segment.kind === "description";
   const n = visibleWordCount(segment, currentMs, cardInitialReveal);
   const text = visibleText(segment, n);
 
@@ -139,13 +167,16 @@ export function RedditCard(props: RedditCardProps) {
   // same effect as auto-scroll without needing useEffect/useState in the
   // headless render context.
   return (
-    <div style={cardBase}>
+    <div style={isDescription ? descriptionCardStyle : cardBase}>
       <div style={headerRow}>
         <span style={subPill}>r/{subreddit}</span>
         {!isQuestion && segment.author && <span style={author}>· u/{segment.author}</span>}
-        {!isQuestion && typeof segment.score === "number" && (
+        {isDescription && <span style={opTag}>OP</span>}
+        {isDescription ? (
+          <span style={postChip}>POST</span>
+        ) : !isQuestion && typeof segment.score === "number" ? (
           <span style={scoreChip}>▲ {segment.score.toLocaleString()}</span>
-        )}
+        ) : null}
       </div>
       {isQuestion ? (
         <div style={titleStyle}>{segment.text}</div>
