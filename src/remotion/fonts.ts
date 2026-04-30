@@ -20,7 +20,10 @@ loadBebasNeue("normal", { weights: ["400"], subsets: LATIN });
 // emoji codepoints in Reddit titles/bodies/comments + captions render
 // instead of falling through to a missing-glyph box. The headless
 // Chromium that Remotion uses does not ship system emoji fonts.
-loadNotoColorEmoji("normal", { weights: ["400"], subsets: ["emoji"] });
+// NOTE: subsets intentionally omitted — @remotion/google-fonts/NotoColorEmoji
+// types declare subsets: 'emoji' but the runtime keys are '[0]'..'[9]', so
+// passing subsets: ['emoji'] throws "weight: 400 subset: emoji is not available".
+loadNotoColorEmoji("normal", { weights: ["400"] });
 
 /**
  * Append to every fontFamily stack used in the rendered video so emoji

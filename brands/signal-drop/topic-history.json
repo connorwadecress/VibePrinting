@@ -1058,5 +1058,113 @@
     "runId": "20260429-174640",
     "date": "2026-04-29",
     "redditPostId": "1stna2p"
+  },
+  {
+    "laneId": "human-limits",
+    "titleAngle": "Why a Short Fall Can Break Your Bones But a Long Fall Might Not (The Angle Nobody Talks About)",
+    "seedQuestion": "How much force does it actually take to break a human bone — and why does a fall from 3 feet sometimes do it while a 30-foot fall sometimes doesn't?",
+    "runId": "20260429-195356",
+    "date": "2026-04-29"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The 5-Star Rating Trap: Why Perfect Scores Are Suspicious (Here's What They Hide)",
+    "seedQuestion": "Why does a '5-star rating' on Amazon actually mean the product is probably worse than a '4.8-star' product — and what the algorithm is hiding from you?",
+    "runId": "20260429-195358",
+    "date": "2026-04-29"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "Which legendary Reddit post / comment can you still not get over?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-200004",
+    "date": "2026-04-29",
+    "redditPostId": "hvsxty"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "You go to sleep on the 31st of December 2020 and wake up the next day but when you check your phone, it says January 1st 2020, after the first couple of days you realize it's just like groundhog day, what do you do with the information you have about 2020?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-203003",
+    "date": "2026-04-29",
+    "redditPostId": "jpfqtc"
+  },
+  {
+    "laneId": "numbers-that-lie",
+    "titleAngle": "The 95% Lie: Why Drug Studies Hide Their Dropout Rates (And What That Number Really Means)",
+    "seedQuestion": "Why does a study showing '95% of people improved' often hide that only 5% of people were actually in the study — and how pharmaceutical companies legally manipulate participant selection to inflate their numbers?",
+    "runId": "20260429-210727",
+    "date": "2026-04-29"
+  },
+  {
+    "laneId": "tifu",
+    "titleAngle": "TIFU by making myself obsolete at work",
+    "seedQuestion": "r/tifu",
+    "runId": "20260429-211049",
+    "date": "2026-04-29",
+    "redditPostId": "1sweyxs"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "Steve Irwin has you pinned down in a headlock, what cool facts does he tell the audience about you and your habitat?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-212110",
+    "date": "2026-04-29",
+    "redditPostId": "ilcknh"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "With all of the negative headlines dominating the news these days, it can be difficult to spot signs of progress. What makes you optimistic about the future?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-213204",
+    "date": "2026-04-29",
+    "redditPostId": "80phz7"
+  },
+  {
+    "laneId": "history-flash",
+    "titleAngle": "The Titanic's Lifeboats Were Half-Empty (And The Crew Did It On Purpose)",
+    "seedQuestion": "Why did the Titanic's lifeboats launch half-full when hundreds of people were drowning around them?",
+    "runId": "20260429-213640",
+    "date": "2026-04-29"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "What free things online should everyone take advantage of?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-214245",
+    "date": "2026-04-29",
+    "redditPostId": "ecscwk"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "How is everyone enjoying Reddit while Instagram Facebook and whatsapp are all down?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260429-215207",
+    "date": "2026-04-29",
+    "redditPostId": "q18zrj"
+  },
+  {
+    "laneId": "askreddit",
+    "titleAngle": "People who haven't pooped in 2019 yet, why are you still holding on to last years shit?",
+    "seedQuestion": "r/AskReddit",
+    "runId": "20260430-081827",
+    "date": "2026-04-30",
+    "redditPostId": "ablzuq"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA because I didn’t wake my friend up when she had an important meeting?",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260430-082137",
+    "date": "2026-04-30",
+    "redditPostId": "1sxz40e"
+  },
+  {
+    "laneId": "aita",
+    "titleAngle": "AITA for making my sister's gender reveal cake grey because she wouldn't tell me the gender?",
+    "seedQuestion": "r/AmItheAsshole",
+    "runId": "20260430-082911",
+    "date": "2026-04-30",
+    "redditPostId": "1ki8455"
   }
 ]
