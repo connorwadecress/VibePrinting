@@ -54,7 +54,9 @@
       "Bash(echo \"exit=$?\")",
       "Bash(npx next:*)",
       "Bash(echo \"tsc exit=$?\")",
-      "Bash(echo \"tsc=$?\")"
+      "Bash(echo \"tsc=$?\")",
+      "Bash(node -e \"try { JSON.parse\\(require\\('fs'\\).readFileSync\\('channel.json','utf8'\\)\\); console.log\\('root channel.json: OK, size=' + require\\('fs'\\).statSync\\('channel.json'\\).size\\); } catch\\(e\\) { console.log\\('root: ' + e.message\\); }\")",
+      "Bash(node -e \"try { JSON.parse\\(require\\('fs'\\).readFileSync\\('brands/signal-drop/channel.json','utf8'\\)\\); console.log\\('brand: OK, size=' + require\\('fs'\\).statSync\\('brands/signal-drop/channel.json'\\).size\\); } catch\\(e\\) { console.log\\('brand: ' + e.message\\); }\")"
     ]
   }
 }

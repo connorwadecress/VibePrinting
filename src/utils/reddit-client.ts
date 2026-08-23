@@ -1,7 +1,40 @@
+import { ProxyAgent, type Dispatcher } from "undici";
 import type { RedditPost, RedditComment } from "../domain/models.js";
 import { log } from "./logger.js";
 
 const STAGE = "reddit";
+
+let cachedDispatcher: Dispatcher | undefined;
+let lastProxyUrl: string | undefined;
+
+/**
+ * Returns an undici ProxyAgent if REDDIT_HTTP_PROXY is set, else undefined.
+ * Cached across calls; re-created if the env var changes (rare, but cheap).
+ *
+ * Hostinger and most other datacenter ASNs are 403'd by Reddit unauthenticated.
+ * If app-only OAuth is also closed off (Reddit's new "Responsible Builder"
+ * registration gate), routing through a residential proxy is the escape hatch.
+ *
+ * Supported via undici's ProxyAgent: http:// and https:// CONNECT proxies.
+ * For SOCKS5 (e.g. ssh -D), front-end it with microsocks/gost on the home
+ * machine and point REDDIT_HTTP_PROXY at the http bridge.
+ */
+function getProxyDispatcher(): Dispatcher | undefined {
+  const proxy = process.env.REDDIT_HTTP_PROXY?.trim();
+  if (!proxy) {
+    cachedDispatcher = undefined;
+    lastProxyUrl = undefined;
+    return undefined;
+  }
+  if (!cachedDispatcher || lastProxyUrl !== proxy) {
+    cachedDispatcher = new ProxyAgent(proxy);
+    lastProxyUrl = proxy;
+    log(STAGE, `Routing Reddit traffic through proxy ${proxy}`);
+  }
+  return cachedDispatcher;
+}
+
+type FetchInitWithDispatcher = RequestInit & { dispatcher?: Dispatcher };
 
 export interface FetchTopOpts {
   time: "day" | "week" | "month" | "year" | "all";
@@ -54,19 +87,97 @@ const REMOVED_MARKERS = new Set([
 ]);
 
 function userAgent(brandHint?: string): string {
+  // Reddit's API rules ask for: <platform>:<app id>:<version> (by /u/<username>).
+  // Anonymous requests from datacenter IPs (Hostinger, AWS, etc.) get 403'd
+  // when the UA looks generic, so we let operators override with a real
+  // Reddit-compliant string via REDDIT_USER_AGENT.
+  const override = process.env.REDDIT_USER_AGENT?.trim();
+  if (override) return override;
   const tag = brandHint ? brandHint.replace(/[^a-zA-Z0-9_-]/g, "") : "default";
-  return `vibeprinting/0.1 (brand=${tag})`;
+  return `node:vibeprinting:0.1 (brand=${tag})`;
+}
+
+interface OAuthToken {
+  accessToken: string;
+  expiresAtMs: number;
+}
+
+let cachedToken: OAuthToken | null = null;
+
+/**
+ * Fetch (or reuse) an application-only OAuth token. Reddit calls this
+ * "Application Only OAuth" — works for both web/script and installed app
+ * types. Caches with a 60s safety margin so we don't fly off the cliff.
+ *
+ * Returns null when REDDIT_CLIENT_ID/SECRET aren't configured, signalling
+ * the caller to fall back to anonymous www.reddit.com.
+ */
+async function getOAuthToken(brandHint?: string): Promise<string | null> {
+  const clientId = process.env.REDDIT_CLIENT_ID?.trim();
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) return null;
+
+  const now = Date.now();
+  if (cachedToken && cachedToken.expiresAtMs > now + 60_000) {
+    return cachedToken.accessToken;
+  }
+
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const body = new URLSearchParams({ grant_type: "client_credentials" });
+  const dispatcher = getProxyDispatcher();
+  const tokenInit: FetchInitWithDispatcher = {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": userAgent(brandHint),
+    },
+    body,
+  };
+  if (dispatcher) tokenInit.dispatcher = dispatcher;
+  const res = await fetch("https://www.reddit.com/api/v1/access_token", tokenInit);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`reddit oauth token request failed: ${res.status} ${res.statusText} ${text}`);
+  }
+  const json = (await res.json()) as { access_token?: string; expires_in?: number };
+  if (!json.access_token) {
+    throw new Error("reddit oauth response missing access_token");
+  }
+  const lifetimeMs = (json.expires_in ?? 3600) * 1000;
+  cachedToken = {
+    accessToken: json.access_token,
+    expiresAtMs: now + lifetimeMs,
+  };
+  log(STAGE, `Acquired OAuth token (expires in ${Math.floor(lifetimeMs / 1000)}s)`);
+  return cachedToken.accessToken;
+}
+
+/**
+ * If OAuth is configured, swap www.reddit.com for oauth.reddit.com so the
+ * bearer token is honored. Leaves any other host untouched.
+ */
+function rewriteHostForOAuth(url: string): string {
+  return url
+    .replace(/^https:\/\/www\.reddit\.com/, "https://oauth.reddit.com")
+    .replace(/^https:\/\/old\.reddit\.com/, "https://oauth.reddit.com");
 }
 
 async function fetchJson<T>(url: string, brandHint?: string): Promise<T> {
+  const token = await getOAuthToken(brandHint);
+  const finalUrl = token ? rewriteHostForOAuth(url) : url;
   const headers: Record<string, string> = {
     "User-Agent": userAgent(brandHint),
     Accept: "application/json",
   };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const dispatcher = getProxyDispatcher();
 
   let lastErr: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, { headers });
+    const init: FetchInitWithDispatcher = { headers };
+    if (dispatcher) init.dispatcher = dispatcher;
+    const res = await fetch(finalUrl, init);
     if (res.ok) {
       return (await res.json()) as T;
     }
@@ -76,10 +187,23 @@ async function fetchJson<T>(url: string, brandHint?: string): Promise<T> {
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }
-    lastErr = new Error(`reddit ${url} -> ${res.status} ${res.statusText}`);
+    if (res.status === 401 && token) {
+      // Token might have been revoked or rotated mid-flight; bust cache and retry once.
+      log(STAGE, "401 from Reddit OAuth — refreshing token");
+      cachedToken = null;
+      continue;
+    }
+    if (res.status === 403 && !token) {
+      lastErr = new Error(
+        `reddit ${finalUrl} -> 403 (likely datacenter-IP block). ` +
+          `Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET (and optionally REDDIT_USER_AGENT) to use authenticated access.`,
+      );
+      break;
+    }
+    lastErr = new Error(`reddit ${finalUrl} -> ${res.status} ${res.statusText}`);
     break;
   }
-  throw lastErr ?? new Error(`reddit ${url} failed after retries`);
+  throw lastErr ?? new Error(`reddit ${finalUrl} failed after retries`);
 }
 
 function decodeEntities(s: string): string {

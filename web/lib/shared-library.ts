@@ -22,7 +22,11 @@ import { GAMEPLAY_EXTS, MUSIC_EXTS } from "@/lib/brand-io";
 
 export type LibraryKind = "gameplay" | "music";
 
-export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500MB per file
+// 10GB ceiling. Long-form gameplay source files routinely run several GB —
+// the pipeline crops a random slice per run so we keep the originals intact.
+// For files larger than this, drop them straight onto the host's shared/
+// volume via SCP rather than pushing through the browser.
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024;
 
 export interface LibraryEntry {
   filename: string;

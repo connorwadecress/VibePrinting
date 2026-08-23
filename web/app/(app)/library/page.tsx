@@ -1,4 +1,4 @@
-import { listLibrary } from "@/lib/shared-library";
+import { listLibrary, MAX_UPLOAD_BYTES } from "@/lib/shared-library";
 import { SharedLibraryEditor } from "@/components/SharedLibraryEditor";
 
 /**
@@ -38,6 +38,7 @@ export default function SharedLibraryPage() {
         title="Gameplay clips"
         description="Long-form .mp4 / .mov files. The pipeline crops a random slice equal to the narration length, so duplicates between brands are fine."
         initial={gameplay}
+        maxUploadBytes={MAX_UPLOAD_BYTES}
       />
 
       <SharedLibraryEditor
@@ -45,6 +46,7 @@ export default function SharedLibraryPage() {
         title="Music tracks"
         description=".mp3 / .m4a / .wav background music. Tracks shorter than the narration are looped."
         initial={music}
+        maxUploadBytes={MAX_UPLOAD_BYTES}
       />
     </section>
   );

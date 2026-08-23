@@ -330,6 +330,10 @@ All channel identity lives in `brands/<id>/channel.json` (gitignored). Copy from
 | `VP_LOGS_DIR` | No | `./logs` | Logs dir (upload-log.jsonl) |
 | `VP_BRANDS_DIR` | No | `./brands` | Brands dir (override for tests/containers) |
 | `VP_SHARED_DIR` | No | `./shared` | Cross-brand asset library dir (gameplay + music) |
+| `REDDIT_CLIENT_ID` | For VPS | — | Reddit app client ID — enables app-only OAuth (avoids the 403s anonymous requests get from datacenter IPs) |
+| `REDDIT_CLIENT_SECRET` | For VPS | — | Reddit app client secret — paired with `REDDIT_CLIENT_ID` |
+| `REDDIT_USER_AGENT` | No | `node:vibeprinting:0.1 (brand=...)` | Override Reddit User-Agent. Reddit's recommended format: `<platform>:<app id>:<version> (by /u/<username>)` |
+| `REDDIT_HTTP_PROXY` | No | — | Route Reddit traffic through an HTTP/HTTPS proxy. Used when Reddit blocks your VPS's datacenter IP and OAuth registration is unavailable. Accepts `http://host:port` or `http://user:pass@host:port`. SOCKS proxies need a microsocks/gost bridge. |
 
 ### Brand `.env` (`brands/<id>/.env`, per-brand credentials)
 

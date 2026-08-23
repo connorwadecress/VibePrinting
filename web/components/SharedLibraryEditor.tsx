@@ -29,6 +29,7 @@ interface Props {
   title: string;
   description: string;
   initial: SharedLibraryEntry[];
+  maxUploadBytes: number;
 }
 
 interface UploadState {
@@ -42,7 +43,7 @@ const ACCEPT_BY_KIND: Record<LibraryKind, string> = {
   music: ".mp3,.m4a,.wav,.aac,.ogg",
 };
 
-export function SharedLibraryEditor({ kind, title, description, initial }: Props) {
+export function SharedLibraryEditor({ kind, title, description, initial, maxUploadBytes }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [entries, setEntries] = useState<SharedLibraryEntry[]>(initial);
@@ -191,7 +192,7 @@ export function SharedLibraryEditor({ kind, title, description, initial }: Props
           Drop files here or click to browse
         </p>
         <p className="mt-1 text-[11px] text-fg-subtle">
-          Allowed: {ACCEPT_BY_KIND[kind].replaceAll(",", ", ")} · max 500MB per file
+          Allowed: {ACCEPT_BY_KIND[kind].replaceAll(",", ", ")} · max {formatBytes(maxUploadBytes)} per file
         </p>
       </label>
 
